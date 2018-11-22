@@ -1,5 +1,9 @@
 from __future__ import division
 
+import sys
+reload(sys)
+sys.setdefaultencoding('utf8')
+
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
@@ -22,7 +26,7 @@ def activation_function(func_name, x, derivative=False):
 
 
 def plot_learning_curve(empirical_risk, num_epochs):
-    plt.plot(range(1, num_epochs + 1), empirical_risk)
+    plt.plot(range(num_epochs), empirical_risk)
     plt.title('LEARNING CURVE FOR A {} EPOCHS TRAINING PERIOD'.
               format(num_epochs))
     plt.xlabel('EPOCHS')
