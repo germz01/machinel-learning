@@ -24,7 +24,7 @@ class NeuralNetwork(object):
         self.delta_W = [0 for i in range(self.n_layers)]
         self.max_epochs = max_epochs
         self.max_weight_init = max_weight_init
-        self.empirical_risk = list()
+        
 
     def init_weights(self):
         self.W = list()
@@ -38,6 +38,25 @@ class NeuralNetwork(object):
         self.W = list()
         for i in range(1,len(self.topology)):
             self.W.append( np.ones((self.topology[i], self.topology[i - 1])))
+
+
+    def target_scale(self, y):
+        if self.activation_function == 'sigmoid':
+            MIN = y.min()
+            MAX = y.max()
+            return (y-MIN)/ (MAX-MIN)
+        else:
+            # da implementare scaling per altre activations
+            return NotImplemented
+
+    def target_scale_back(self, y_pred):
+        if self.activation_function == 'sigmoid':
+            MIN = self.y.min()
+            MAX = self.y.max()
+            return y_pred*(MAX-MIN)+MIN
+        else:
+            # da implementare scaling per altre activations
+            return NotImplemented
 
     def feedforward(self):
         for i in range(self.n_layers):
@@ -61,8 +80,8 @@ class NeuralNetwork(object):
         total_instantaneous_error = []
 
     def backpropagation(self, eta):
-        for layer in reversed(range(len(self.W))):
-            if layer == len(self.W) - 1:
+        for layer in reversed(range(self.n_layers)):
+            if layer == self.n_layers - 1:
                 self.delta[layer] = (self.d - self.Y[layer]) * \
                     activation_function(self.activation_function,
                                         self.V[layer],
@@ -76,20 +95,21 @@ class NeuralNetwork(object):
                     derivative=True) * sum_tmp.T
 
                 if layer == 0:
-                    self.delta_W[layer] = (eta * self.delta[layer]).dot(
-                        self.X)
+                    self.delta_W[layer] = eta * self.delta[layer].dot(self.X)
                 else:
-                    print 'DA IMPLEMENTARE'
+                    self.delta_W[layer] = eta * self.delta[layer].dot(self.Y[layer-1].T)
 
-        for i in range(len(self.W)):
+        for i in range(self.n_layers):
             self.W[i] += self.delta_W[i]
+    ## end backpropagation ########################################
 
     def train(self, X, y, eta):
-
         # inizialization
         self.X = X
-        self.d = y
-
+        self.y = y # original target
+        self.d = self.target_scale(y) # internal target
+        self.empirical_risk = list()
+        
         self.topology =  [X.shape[1]] + \
                          list(self.hidden_sizes) + \
                          [ 1 if len(y.shape)==1 else y.shape[1] ] #out size
@@ -114,3 +134,11 @@ class NeuralNetwork(object):
 
         print '\nSTARTING EMPIRICAL ERROR: {}\nCLOSING EMPIRICAL ERROR: {}'.\
             format(self.empirical_risk[0], self.empirical_risk[-1])
+
+        # scaling back the output
+        y_pred = self.Y[-1]
+        # here rounding for classification
+        self.y_pred = self.target_scale_back(y_pred)
+
+        
+###########################################################
