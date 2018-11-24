@@ -38,3 +38,4 @@ def plot_learning_curve(empirical_risk, num_epochs):
     plt.legend(handles=[initial_risk, final_risk])
     plt.grid()
     plt.savefig('../images/learning_curve.pdf', bbox_inches='tight')
+    plt.close()
