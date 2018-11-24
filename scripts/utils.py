@@ -25,7 +25,7 @@ def activation_function(func_name, x, derivative=False):
             return ((np.exp(x) - np.exp(-x))/(np.exp(x) + np.exp(-x)))
 
 
-def plot_learning_curve(empirical_risk, num_epochs):
+def plot_learning_curve(empirical_risk, num_epochs, file_path = '../images/learning_curve.pdf'):
     plt.plot(range(num_epochs), empirical_risk)
     plt.title('LEARNING CURVE FOR A {} EPOCHS TRAINING PERIOD'.
               format(num_epochs))
@@ -37,5 +37,5 @@ def plot_learning_curve(empirical_risk, num_epochs):
                                 format(empirical_risk[-1]))
     plt.legend(handles=[initial_risk, final_risk])
     plt.grid()
-    plt.savefig('../images/learning_curve.pdf', bbox_inches='tight')
+    plt.savefig( file_path, bbox_inches='tight')
     plt.close()
