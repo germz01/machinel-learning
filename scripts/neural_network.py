@@ -3,44 +3,38 @@ from __future__ import division
 import numpy as np
 from utils import activation_function
 
+
 class NeuralNetwork(object):
     """Simple implementation of an Artificial Neural Network"""
 
-    def __init__(self, hidden_sizes, activation='sigmoid',
-                 max_epochs=1000, max_weight_init=0.7):
+    def __init__(self, X, y, topology, function, max_epochs):
+        print 'CREATING A {} x {} x {} NEURAL NETWORK'.format(topology[0],
+                                                              topology[1],
+                                                              topology[2])
 
-        #self.X = None
-        #self.W = None
-        #self.d = None
-
-        self.hidden_sizes = hidden_sizes
-        self.n_layers = len(hidden_sizes)+1 # considering the out layer
-        #self.topology = None
-
-        self.activation_function = activation
-        self.V = [0 for i in range(self.n_layers)]
-        self.Y = [0 for i in range(self.n_layers)]
-        self.delta = [0 for i in range(self.n_layers)]
-        self.delta_W = [0 for i in range(self.n_layers)]
+        self.X = X
+        self.W = self.generate_weights(topology)
+        self.d = y
+        self.activation_function = function
+        self.V = [0 for i in range(len(self.W))]
+        self.Y = [0 for i in range(len(self.W))]
+        self.delta = [0 for i in range(len(self.W))]
+        self.delta_W = [0 for i in range(len(self.W))]
         self.max_epochs = max_epochs
-        self.max_weight_init = max_weight_init
         self.empirical_risk = list()
 
-    def init_weights(self):
-        self.W = list()
-        for i in range(1,len(self.topology)):
-            self.W.append( np.random.uniform(
-                -self.max_weight_init, self.max_weight_init,
-                (self.topology[i], self.topology[i - 1] )))
+    def generate_weights(self, topology):
+        W = list()
+        for i in range(1, len(topology)):
+            # print 'FROM LAYER {} TO LAYER {}'.format(i - 1, i)
+            w_m = np.random.uniform(-0.5, 0.5, (topology[i], topology[i - 1]))
+            # print w_m
+            W.append(w_m)
 
-    def init_weights_test(self):
-        'weights init per testing' 
-        self.W = list()
-        for i in range(1,len(self.topology)):
-            self.W.append( np.ones((self.topology[i], self.topology[i - 1])))
+        return W
 
     def feedforward(self):
-        for i in range(self.n_layers):
+        for i in range(len(self.W)):
             self.V[i] = np.dot(self.W[i], self.X.T if i == 0 else
                                self.Y[i - 1])
             self.Y[i] = activation_function(self.activation_function,
@@ -84,29 +78,14 @@ class NeuralNetwork(object):
         for i in range(len(self.W)):
             self.W[i] += self.delta_W[i]
 
-    def train(self, X, y, eta):
-
-        # inizialization
-        self.X = X
-        self.d = y
-
-        self.topology =  [X.shape[1]] + \
-                         list(self.hidden_sizes) + \
-                         [ 1 if len(y.shape)==1 else y.shape[1] ] #out size
-
-        print 'CREATED A ' +  ' x '.join([str(i) for i in self.topology]) + ' NEURAL NETWORK'
-        
-        self.init_weights()
-
+    def train(self, eta):
         print 'STARTING WEIGHTS\n'
-        for i in range(self.n_layers):
+        for i in range(len(self.W)):
             print self.W[i]
-        ###########################################################
 
         for i in range(self.max_epochs):
             self.feedforward()
             self.backpropagation(eta)
-            # TODO: stopping criteria
 
         print '\nFINAL WEIGHTS\n'
         for i in range(len(self.W)):
