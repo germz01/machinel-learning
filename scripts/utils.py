@@ -26,6 +26,7 @@ def activation_function(func_name, x, derivative=False):
 
 
 def plot_learning_curve(empirical_risk, num_epochs):
+    #plt.close()
     plt.plot(range(num_epochs), empirical_risk)
     plt.title('LEARNING CURVE FOR A {} EPOCHS TRAINING PERIOD'.
               format(num_epochs))
@@ -38,3 +39,4 @@ def plot_learning_curve(empirical_risk, num_epochs):
     plt.legend(handles=[initial_risk, final_risk])
     plt.grid()
     plt.savefig('../images/learning_curve.pdf', bbox_inches='tight')
+    plt.close()
