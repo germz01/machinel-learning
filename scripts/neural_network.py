@@ -2,6 +2,8 @@ from __future__ import division
 
 import numpy as np
 from utils import activation_function
+from utils import add_bias_mul
+from utils import compose_topology
 
 
 class NeuralNetwork(object):
@@ -9,14 +11,8 @@ class NeuralNetwork(object):
 
     def __init__(self, hidden_sizes, activation='sigmoid',
                  max_epochs=1000, max_weight_init=0.7):
-
-        # self.X = None
-        # self.W = None
-        # self.d = None
-
         self.hidden_sizes = hidden_sizes
-        self.n_layers = len(hidden_sizes)+1 # considering the out layer
-        # self.topology = None
+        self.n_layers = len(hidden_sizes) + 1
 
         self.activation_function = activation
         self.V = [0 for i in range(self.n_layers)]
@@ -27,14 +23,17 @@ class NeuralNetwork(object):
         self.max_weight_init = max_weight_init
 
     def init_weights(self):
+        """ """
         self.W = list()
 
         for i in range(1, len(self.topology)):
             self.W.append(np.random.uniform(
                 -self.max_weight_init, self.max_weight_init,
-                (self.topology[i], self.topology[i - 1])))
+                (self.topology[i], self.topology[i - 1] if i == 1 else
+                 self.topology[i - 1] + 1)))
 
     def init_weights_test(self):
+        """ """
         'weights init per testing'
         self.W = list()
 
@@ -42,6 +41,17 @@ class NeuralNetwork(object):
             self.W.append(np.ones((self.topology[i], self.topology[i - 1])))
 
     def target_scale(self, y):
+        """
+
+        Parameters
+        ----------
+        y :
+
+
+        Returns
+        -------
+
+        """
         if self.activation_function == 'sigmoid':
             MIN = y.min()
             MAX = y.max()
@@ -51,6 +61,17 @@ class NeuralNetwork(object):
             return NotImplemented
 
     def target_scale_back(self, y_pred):
+        """
+
+        Parameters
+        ----------
+        y_pred :
+
+
+        Returns
+        -------
+
+        """
         if self.activation_function == 'sigmoid':
             MIN = self.y.min()
             MAX = self.y.max()
@@ -60,9 +81,10 @@ class NeuralNetwork(object):
             return NotImplemented
 
     def feedforward(self):
+        """ """
         for i in range(self.n_layers):
-            self.V[i] = np.dot(self.W[i], self.X.T if i == 0 else
-                               self.Y[i - 1])
+            self.V[i] = np.dot(self.W[i], self.X.T if i == 0
+                               else add_bias_mul(self.Y[i - 1]))
             self.Y[i] = activation_function(self.activation_function,
                                             self.V[i])
 
@@ -81,6 +103,17 @@ class NeuralNetwork(object):
         total_instantaneous_error = []
 
     def backpropagation(self, eta):
+        """
+
+        Parameters
+        ----------
+        eta :
+
+
+        Returns
+        -------
+
+        """
         for layer in reversed(range(self.n_layers)):
             if layer == self.n_layers - 1:
                 self.delta[layer] = (self.d - self.Y[layer]) * \
@@ -90,29 +123,44 @@ class NeuralNetwork(object):
                 self.delta_W[layer] = ((eta * self.delta[layer]).dot(
                                    self.Y[layer - 1].T))
             else:
-                sum_tmp = self.delta[layer + 1].T.dot(self.W[layer + 1])
+                sum_tmp = self.delta[layer + 1].T.dot(self.W[layer + 1][:, 1:])
                 self.delta[layer] = activation_function(
                     self.activation_function, self.V[layer],
                     derivative=True) * sum_tmp.T
 
                 if layer == 0:
-                    self.delta_W[layer] = eta * self.delta[layer].dot(self.X)
+                    self.delta_W[layer] = eta * self.delta[layer].\
+                        dot(self.X[:, 1:])
                 else:
                     self.delta_W[layer] = eta * self.delta[layer].dot(
-                        self.Y[layer-1].T)
+                        self.Y[layer - 1].T)
 
         for i in range(self.n_layers):
-            self.W[i] += self.delta_W[i]
+            self.W[i][:, 1:] += self.delta_W[i]
 
     def train(self, X, y, eta):
-        # inizialization
+        """
 
-        self.X = X
-        self.y = y # original target
-        self.d = self.target_scale(y) # internal target
+        Parameters
+        ----------
+        X : training set;
+
+        y : original target, also used in self.d as the internal (scaled)
+            target;
+
+        eta : learning rate;
+
+
+        Returns
+        -------
+
+        """
+
+        self.X = add_bias_mul(X, axis=1)
+        self.y = y
+        self.d = self.target_scale(y)
         self.empirical_risk = list()
-        self.topology = [X.shape[1]] + list(self.hidden_sizes) + \
-                        [1 if len(y.shape) == 1 else y.shape[1]] # out size
+        self.topology = compose_topology(self.X, self.hidden_sizes, y)
 
         print 'CREATED A ' + ' x '.join([str(i) for i in self.topology]) \
             + ' NEURAL NETWORK'
@@ -121,6 +169,7 @@ class NeuralNetwork(object):
         print 'STARTING WEIGHTS\n'
         for i in range(self.n_layers):
             print self.W[i]
+            print '\n'
 
         for i in range(self.max_epochs):
             self.feedforward()
@@ -130,6 +179,7 @@ class NeuralNetwork(object):
         print '\nFINAL WEIGHTS\n'
         for i in range(len(self.W)):
             print self.W[i]
+            print '\n'
 
         print '\nSTARTING EMPIRICAL ERROR: {}\nCLOSING EMPIRICAL ERROR: {}'.\
             format(self.empirical_risk[0], self.empirical_risk[-1])
