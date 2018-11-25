@@ -1,13 +1,26 @@
 from __future__ import division
 
-import sys
-reload(sys)
-sys.setdefaultencoding('utf8')
-
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.special import expit
+
+
+def add_bias_mul(X, axis=0):
+    if axis == 0:
+        return np.vstack((np.ones(X.shape[1]), X))
+    else:
+        tmp = np.ones(X.shape[0])
+        tmp.shape = (X.shape[0], 1)
+
+        return np.hstack((tmp, X))
+
+
+def compose_topology(X, hidden_sizes, y):
+    topology = [X.shape[1]] + list(hidden_sizes) + \
+        [1 if len(y.shape) == 1 else y.shape[1]]
+
+    return topology
 
 
 def activation_function(func_name, x, derivative=False):

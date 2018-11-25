@@ -9,10 +9,10 @@ if __name__ == '__main__':
                        axis=0)
     y = np.array([1, 1, 1, -1, -1])
 
-    # topology = [X.shape[1], 3, 2]
     nn = NeuralNetwork(hidden_sizes=(3,), activation='sigmoid',
                        max_epochs=1000)
 
-    nn.train(X, y, .05)
+    nn.train(X, y, .05, alpha=0.7)
 
-    utils.plot_learning_curve(nn.empirical_risk, nn.max_epochs)
+    if raw_input('\nDO YOU WANT TO PLOT THE LEARNING CURVE?[Y/N] ') == 'Y':
+        utils.plot_learning_curve(nn.empirical_risk, nn.max_epochs)
