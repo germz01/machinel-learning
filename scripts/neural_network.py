@@ -29,8 +29,7 @@ class NeuralNetwork(object):
         for i in range(1, len(self.topology)):
             self.W.append(np.random.uniform(
                 -self.max_weight_init, self.max_weight_init,
-                (self.topology[i], self.topology[i - 1] if i == 1 else
-                 self.topology[i - 1] + 1)))
+                (self.topology[i], self.topology[i - 1] + 1)))
 
     def init_weights_test(self):
         """ """
@@ -38,7 +37,7 @@ class NeuralNetwork(object):
         self.W = list()
 
         for i in range(1, len(self.topology)):
-            self.W.append(np.ones((self.topology[i], self.topology[i - 1])))
+            self.W.append(np.ones((self.topology[i], self.topology[i - 1]+1)))
 
     def target_scale(self, y):
         """
@@ -83,7 +82,7 @@ class NeuralNetwork(object):
     def feedforward(self):
         """ """
         for i in range(self.n_layers):
-            self.V[i] = np.dot(self.W[i], self.X.T if i == 0
+            self.V[i] = np.dot(self.W[i], self.X_T if i == 0
                                else add_bias_mul(self.Y[i - 1]))
             self.Y[i] = activation_function(self.activation_function,
                                             self.V[i])
@@ -176,13 +175,17 @@ class NeuralNetwork(object):
         -------
 
         """
-
-        self.X = add_bias_mul(X, axis=1)
+        # spostato prima compose_topology() in modo da non modificarla con il bias
+        self.X = X
+        self.topology = compose_topology(self.X, self.hidden_sizes, y)
+        
+        #self.X = add_bias_mul(X, axis=1)
+        self.X_T = add_bias_mul(X.T, axis = 0)
+        
         self.y = y
         self.d = self.target_scale(y)
         self.empirical_risk = list()
-        self.topology = compose_topology(self.X, self.hidden_sizes, y)
-
+                
         print 'CREATED A ' + ' x '.join([str(i) for i in self.topology]) \
             + ' NEURAL NETWORK'
 

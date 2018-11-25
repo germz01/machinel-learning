@@ -12,13 +12,15 @@ y = np.array([1, 1, 1, -1, -1])
 imp.reload(neural_network)
 imp.reload(utils)
 
-# cambiare i parametri a piacimento
+
 nn = neural_network.NeuralNetwork(hidden_sizes=(100, 3, 2),
                                   activation='sigmoid', max_epochs=500)
 nn.train(X, y, eta=2, alpha=0.7)
+nn.y_pred
+
 
 if raw_input('\nDO YOU WANT TO PLOT THE LEARNING CURVE?[Y/N] ') == 'Y':
         utils.plot_learning_curve(nn.empirical_risk, nn.max_epochs)
 
 # ann prediction
-nn.y_pred
+
