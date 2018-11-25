@@ -12,6 +12,7 @@ if __name__ == '__main__':
     nn = NeuralNetwork(hidden_sizes=(3,), activation='sigmoid',
                        max_epochs=1000)
 
-    nn.train(X, y, .05)
+    nn.train(X, y, .05, alpha=0.7)
 
-    utils.plot_learning_curve(nn.empirical_risk, nn.max_epochs)
+    if raw_input('\nDO YOU WANT TO PLOT THE LEARNING CURVE?[Y/N] ') == 'Y':
+        utils.plot_learning_curve(nn.empirical_risk, nn.max_epochs)

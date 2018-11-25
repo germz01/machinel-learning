@@ -102,12 +102,18 @@ class NeuralNetwork(object):
                                    sum(total_instantaneous_error))
         total_instantaneous_error = []
 
-    def backpropagation(self, eta):
+    def backpropagation(self, eta, epoch, alpha):
         """
 
         Parameters
         ----------
-        eta :
+        eta : the learning rate;
+
+        epoch : the current epoch in which the backpropagation phase of the
+                algorithm is execute, it is used during the momentum's
+                application;
+
+        alpha : the momentum constant;
 
 
         Returns
@@ -120,8 +126,12 @@ class NeuralNetwork(object):
                     activation_function(self.activation_function,
                                         self.V[layer],
                                         derivative=True)
-                self.delta_W[layer] = ((eta * self.delta[layer]).dot(
-                                   self.Y[layer - 1].T))
+                if epoch == 0:
+                    self.delta_W[layer] = ((eta * self.delta[layer]).dot(
+                                       self.Y[layer - 1].T))
+                else:
+                    self.delta_W[layer] = (alpha * self.delta_W[layer]) + \
+                        ((eta * self.delta[layer]).dot(self.Y[layer - 1].T))
             else:
                 sum_tmp = self.delta[layer + 1].T.dot(self.W[layer + 1][:, 1:])
                 self.delta[layer] = activation_function(
@@ -129,26 +139,37 @@ class NeuralNetwork(object):
                     derivative=True) * sum_tmp.T
 
                 if layer == 0:
-                    self.delta_W[layer] = eta * self.delta[layer].\
-                        dot(self.X[:, 1:])
+                    if epoch == 0:
+                        self.delta_W[layer] = eta * self.delta[layer].\
+                            dot(self.X[:, 1:])
+                    else:
+                        self.delta_W[layer] = (alpha * self.delta_W[layer]) + \
+                            (eta * self.delta[layer].dot(self.X[:, 1:]))
                 else:
-                    self.delta_W[layer] = eta * self.delta[layer].dot(
-                        self.Y[layer - 1].T)
+                    if epoch == 0:
+                        self.delta_W[layer] = eta * self.delta[layer].dot(
+                            self.Y[layer - 1].T)
+                    else:
+                        self.delta_W[layer] = (alpha * self.delta_W[layer]) + \
+                            (eta * self.delta[layer].dot(self.Y[layer - 1].T))
 
         for i in range(self.n_layers):
             self.W[i][:, 1:] += self.delta_W[i]
 
-    def train(self, X, y, eta):
+    def train(self, X, y, eta, alpha=0):
         """
 
         Parameters
         ----------
-        X : training set;
+        X : the training set;
 
-        y : original target, also used in self.d as the internal (scaled)
+        y : the original target, also used in self.d as the internal (scaled)
             target;
 
-        eta : learning rate;
+        eta : the learning rate;
+
+        alpha : the momentum constant, which default value represents the
+                momentumless execution of the algorithm;
 
 
         Returns
@@ -173,7 +194,7 @@ class NeuralNetwork(object):
 
         for i in range(self.max_epochs):
             self.feedforward()
-            self.backpropagation(eta)
+            self.backpropagation(eta, i, alpha)
             # TODO: stopping criteria
 
         print '\nFINAL WEIGHTS\n'
