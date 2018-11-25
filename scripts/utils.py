@@ -1,9 +1,5 @@
 from __future__ import division
 
-import sys
-reload(sys)
-sys.setdefaultencoding('utf8')
-
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np

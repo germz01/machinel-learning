@@ -175,17 +175,15 @@ class NeuralNetwork(object):
         -------
 
         """
-        # spostato prima compose_topology() in modo da non modificarla con il bias
         self.X = X
         self.topology = compose_topology(self.X, self.hidden_sizes, y)
-        
-        #self.X = add_bias_mul(X, axis=1)
-        self.X_T = add_bias_mul(X.T, axis = 0)
-        
+
+        self.X_T = add_bias_mul(X.T, axis=0)
+
         self.y = y
         self.d = self.target_scale(y)
         self.empirical_risk = list()
-                
+
         print 'CREATED A ' + ' x '.join([str(i) for i in self.topology]) \
             + ' NEURAL NETWORK'
 
