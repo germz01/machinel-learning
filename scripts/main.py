@@ -9,7 +9,6 @@ if __name__ == '__main__':
                        axis=0)
     y = np.array([1, 1, 1, -1, -1])
 
-    # topology = [X.shape[1], 3, 2]
     nn = NeuralNetwork(hidden_sizes=(3,), activation='sigmoid',
                        max_epochs=1000)
 
