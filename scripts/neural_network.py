@@ -123,7 +123,7 @@ class NeuralNetwork(object):
             alpha = 0
         else:
             alpha = self.alpha
-                
+
         for layer in reversed(range(self.n_layers)):
             # output layer
             if layer == self.n_layers - 1:
@@ -131,24 +131,28 @@ class NeuralNetwork(object):
                     activation_function(self.activation_function,
                                         self.V[layer],
                                         derivative=True)
+
                 self.delta_W[layer] = (alpha * self.delta_W[layer])+\
-                                      ((eta * self.delta[layer]).dot(self.Y[layer - 1].T))
+                                      ((eta * self.delta[layer]).dot( add_bias_mul(self.Y[layer - 1].T, axis = 1)) )
+
             else:
-                sum_tmp = self.delta[layer + 1].T.dot(self.W[layer + 1][:, 1:])
+                sum_tmp = self.delta[layer + 1].T.dot(self.W[layer + 1][:,1:])
                 self.delta[layer] = activation_function(
                     self.activation_function, self.V[layer],
                     derivative=True) * sum_tmp.T
-                
-                # input layer
+
+                # first hidden layer
                 if layer == 0:
                     self.delta_W[layer] = (alpha * self.delta_W[layer])+\
-                                          (eta * self.delta[layer].dot(self.X[:, 1:]))
-                # hidden layers
+                                          (eta * self.delta[layer].dot(self.X_T.T))
+
+                # deep layers
                 else:
                     self.delta_W[layer] = (alpha * self.delta_W[layer])+\
-                                          (eta * self.delta[layer].dot(self.Y[layer - 1].T))
-            # update weights
-            self.W[layer][:, 1:] += self.delta_W[layer]
+                                          (eta * self.delta[layer].dot( add_bias_mul(self.Y[layer - 1].T, axis = 1)))
+
+            # weights update
+            self.W[layer] += self.delta_W[layer]
 
     def train(self, X, y, eta, alpha=0):
         """
