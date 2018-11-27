@@ -151,7 +151,8 @@ class NeuralNetwork(object):
                     self.delta_W[layer] = (alpha * self.delta_W[layer])+\
                                           (eta * self.delta[layer].dot( add_bias_mul(self.Y[layer - 1].T, axis = 1)))
 
-            # weights update
+        # weights update
+        for layer in range(self.n_layers):
             self.W[layer] += self.delta_W[layer]
 
     def train(self, X, y, eta, alpha=0):
