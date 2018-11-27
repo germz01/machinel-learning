@@ -101,7 +101,7 @@ class NeuralNetwork(object):
                                    sum(total_instantaneous_error))
         total_instantaneous_error = []
 
-    def backpropagation(self, eta, epoch ):
+    def backpropagation(self, eta, epoch):
         """
 
         Parameters
@@ -125,31 +125,23 @@ class NeuralNetwork(object):
             alpha = self.alpha
 
         for layer in reversed(range(self.n_layers)):
-            # output layer
+            # deltas computation
             if layer == self.n_layers - 1:
+                # output layer
                 self.delta[layer] = (self.d - self.Y[layer]) * \
                     activation_function(self.activation_function,
                                         self.V[layer],
                                         derivative=True)
-
-                self.delta_W[layer] = (alpha * self.delta_W[layer])+\
-                                      ((eta * self.delta[layer]).dot( add_bias_mul(self.Y[layer - 1].T, axis = 1)) )
-
             else:
-                sum_tmp = self.delta[layer + 1].T.dot(self.W[layer + 1][:,1:])
+                # hidden layers
+                sum_tmp = self.delta[layer + 1].T.dot(self.W[layer + 1][:, 1:])
                 self.delta[layer] = activation_function(
                     self.activation_function, self.V[layer],
                     derivative=True) * sum_tmp.T
 
-                # first hidden layer
-                if layer == 0:
-                    self.delta_W[layer] = (alpha * self.delta_W[layer])+\
-                                          (eta * self.delta[layer].dot(self.X_T.T))
-
-                # deep layers
-                else:
-                    self.delta_W[layer] = (alpha * self.delta_W[layer])+\
-                                          (eta * self.delta[layer].dot( add_bias_mul(self.Y[layer - 1].T, axis = 1)))
+            # generalized delta rule
+            self.delta_W[layer] = (alpha * self.delta_W[layer])+\
+                                  (eta * self.delta[layer].dot( self.X_T.T if layer == 0 else add_bias_mul(self.Y[layer - 1].T, axis = 1) ))
 
         # weights update
         for layer in range(self.n_layers):
