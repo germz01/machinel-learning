@@ -101,7 +101,7 @@ class NeuralNetwork(object):
                                    sum(total_instantaneous_error))
         total_instantaneous_error = []
 
-    def backpropagation(self, eta, epoch, alpha):
+    def backpropagation(self, eta, epoch):
         """
 
         Parameters
@@ -119,41 +119,33 @@ class NeuralNetwork(object):
         -------
 
         """
+        if epoch == 0:
+            alpha = 0
+        else:
+            alpha = self.alpha
+
         for layer in reversed(range(self.n_layers)):
+            # deltas computation
             if layer == self.n_layers - 1:
+                # output layer
                 self.delta[layer] = (self.d - self.Y[layer]) * \
                     activation_function(self.activation_function,
                                         self.V[layer],
                                         derivative=True)
-                if epoch == 0:
-                    self.delta_W[layer] = ((eta * self.delta[layer]).dot(
-                                       self.Y[layer - 1].T))
-                else:
-                    self.delta_W[layer] = (alpha * self.delta_W[layer]) + \
-                        ((eta * self.delta[layer]).dot(self.Y[layer - 1].T))
             else:
+                # hidden layers
                 sum_tmp = self.delta[layer + 1].T.dot(self.W[layer + 1][:, 1:])
                 self.delta[layer] = activation_function(
                     self.activation_function, self.V[layer],
                     derivative=True) * sum_tmp.T
 
-                if layer == 0:
-                    if epoch == 0:
-                        self.delta_W[layer] = eta * self.delta[layer].\
-                            dot(self.X[:, 1:])
-                    else:
-                        self.delta_W[layer] = (alpha * self.delta_W[layer]) + \
-                            (eta * self.delta[layer].dot(self.X[:, 1:]))
-                else:
-                    if epoch == 0:
-                        self.delta_W[layer] = eta * self.delta[layer].dot(
-                            self.Y[layer - 1].T)
-                    else:
-                        self.delta_W[layer] = (alpha * self.delta_W[layer]) + \
-                            (eta * self.delta[layer].dot(self.Y[layer - 1].T))
+            # generalized delta rule
+            self.delta_W[layer] = (alpha * self.delta_W[layer])+\
+                                  (eta * self.delta[layer].dot( self.X_T.T if layer == 0 else add_bias_mul(self.Y[layer - 1].T, axis = 1) ))
 
-        for i in range(self.n_layers):
-            self.W[i][:, 1:] += self.delta_W[i]
+        # weights update
+        for layer in range(self.n_layers):
+            self.W[layer] += self.delta_W[layer]
 
     def train(self, X, y, eta, alpha=0):
         """
@@ -180,6 +172,9 @@ class NeuralNetwork(object):
 
         self.X_T = add_bias_mul(X.T, axis=0)
 
+        self.alpha = alpha
+        self.eta = eta
+       
         self.y = y
         self.d = self.target_scale(y)
         self.empirical_risk = list()
@@ -195,7 +190,7 @@ class NeuralNetwork(object):
 
         for i in range(self.max_epochs):
             self.feedforward()
-            self.backpropagation(eta, i, alpha)
+            self.backpropagation(eta, i)
             # TODO: stopping criteria
 
         print '\nFINAL WEIGHTS\n'
