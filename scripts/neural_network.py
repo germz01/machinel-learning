@@ -205,3 +205,17 @@ class NeuralNetwork(object):
         y_pred = self.Y[-1]
         # here rounding for classification
         self.y_pred = self.target_scale_back(y_pred)
+
+
+    def predict(self, X_test):
+
+        self.V_pred = [0 for i in range(self.n_layers)]
+        self.Y_pred = [0 for i in range(self.n_layers)]
+
+        for i in range(self.n_layers):
+            self.V_pred[i] = np.dot(self.W[i],
+                           add_bias_mul(X_test.T) if i == 0
+                           else add_bias_mul(self.Y_pred[i - 1]))
+            self.Y_pred[i] = activation_function(self.activation_function,  self.V_pred[i])
+
+        return self.target_scale_back(self.Y_pred[-1])
