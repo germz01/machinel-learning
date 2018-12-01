@@ -8,10 +8,10 @@ import utils as u
 
 
 class NeuralNetwork(object):
-    """Simple implementation of an Artificial Neural Network"""
+    """Implementation of an Artificial Neural Network"""
 
     def __init__(self, hidden_sizes, activation='sigmoid',
-                 max_epochs=1000, max_weight_init=0.7):
+                 max_epochs=1000, max_weight_init=0):
         self.hidden_sizes = hidden_sizes
         self.n_layers = len(hidden_sizes) + 1
 
@@ -26,11 +26,13 @@ class NeuralNetwork(object):
     def init_weights(self):
         """ """
         self.W = list()
+        interval = u.ACT_FUNC_INT[self.activation_function] if \
+            self.max_weight_init == 0 else \
+            [- self.max_weight_init, self.max_weight_init]
 
         for i in range(1, len(self.topology)):
-            self.W.append(np.random.uniform(
-                -self.max_weight_init, self.max_weight_init,
-                (self.topology[i], self.topology[i - 1] + 1)))
+            self.W.append(np.random.uniform(interval[0], interval[1],
+                          (self.topology[i], self.topology[i - 1] + 1)))
 
     def init_weights_test(self):
         """ """
