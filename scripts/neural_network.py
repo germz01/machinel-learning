@@ -4,7 +4,7 @@ import numpy as np
 from utils import activation_function
 from utils import add_bias_mul
 from utils import compose_topology
-
+import utils as u
 
 class NeuralNetwork(object):
     """Simple implementation of an Artificial Neural Network"""
@@ -87,6 +87,7 @@ class NeuralNetwork(object):
             self.Y[i] = activation_function(self.activation_function,
                                             self.V[i])
 
+        
         total_instantaneous_error = list()
         instantaneous_error = (self.d - self.Y[-1])**2
 
@@ -100,6 +101,11 @@ class NeuralNetwork(object):
         self.empirical_risk.append(1/len(self.X) *
                                    sum(total_instantaneous_error))
         total_instantaneous_error = []
+
+        # empirical_risk = rmse**2 /2
+        self.error_rmse.append(u.rmse(self.Y[-1].T, self.d))
+        self.error_mee.append(u.mee(self.Y[-1].T, self.d))
+        self.error_mee_dev.append(u.mee_dev(self.Y[-1].T, self.d))
 
     def backpropagation(self, eta, epoch):
         """
@@ -178,6 +184,9 @@ class NeuralNetwork(object):
         self.y = y
         self.d = self.target_scale(y)
         self.empirical_risk = list()
+        self.error_rmse = list()
+        self.error_mee = list()
+        self.error_mee_dev = list()
 
         print 'CREATED A ' + ' x '.join([str(i) for i in self.topology]) \
             + ' NEURAL NETWORK'
@@ -205,3 +214,17 @@ class NeuralNetwork(object):
         y_pred = self.Y[-1]
         # here rounding for classification
         self.y_pred = self.target_scale_back(y_pred)
+
+
+    def predict(self, X_test):
+
+        self.V_pred = [0 for i in range(self.n_layers)]
+        self.Y_pred = [0 for i in range(self.n_layers)]
+
+        for i in range(self.n_layers):
+            self.V_pred[i] = np.dot(self.W[i],
+                           add_bias_mul(X_test.T) if i == 0
+                           else add_bias_mul(self.Y_pred[i - 1]))
+            self.Y_pred[i] = activation_function(self.activation_function,  self.V_pred[i])
+
+        return self.target_scale_back(self.Y_pred[-1])
