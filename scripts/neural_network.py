@@ -131,21 +131,25 @@ class NeuralNetwork(object):
             alpha = self.alpha
 
         for layer in reversed(range(self.n_layers)):
-            # deltas computation
+            # APPLICATION OF THE NESTEROV'S MOMENTUM IF REQUIRED
+            if self.momentum == 'nesterov':
+                self.W[layer] += alpha * self.delta_W[layer]
+
+            # DELTA COMPUTATION
             if layer == self.n_layers - 1:
-                # output layer
+                # OUTPUT LAYER
                 self.delta[layer] = (self.d - self.Y[layer]) * \
                     activation_function(self.activation_function,
                                         self.V[layer],
                                         derivative=True)
             else:
-                # hidden layers
+                # HIDDEN LAYERS
                 sum_tmp = self.delta[layer + 1].T.dot(self.W[layer + 1][:, 1:])
                 self.delta[layer] = activation_function(
                     self.activation_function, self.V[layer],
                     derivative=True) * sum_tmp.T
 
-            # generalized delta rule
+            # GENERALIZED DELTA RULE
             self.delta_W[layer] = (alpha * self.delta_W[layer]) + \
                                   (eta * self.delta[layer].
                                       dot(self.X_T.T if layer == 0 else
@@ -156,7 +160,7 @@ class NeuralNetwork(object):
         for layer in range(self.n_layers):
             self.W[layer] += self.delta_W[layer]
 
-    def train(self, X, y, eta, alpha=0):
+    def train(self, X, y, eta, momentum='classic', alpha=0):
         """
 
         Parameters
@@ -167,6 +171,9 @@ class NeuralNetwork(object):
             target;
 
         eta : the learning rate;
+
+        momentum : the momentum's type that will be applied during the
+                   backpropagation phase. Is either 'classic' or 'nesterov';
 
         alpha : the momentum constant, which default value represents the
                 momentumless execution of the algorithm;
@@ -179,6 +186,7 @@ class NeuralNetwork(object):
         self.X = X
         self.topology = compose_topology(self.X, self.hidden_sizes, y)
         self.X_T = add_bias_mul(X.T, axis=0)
+        self.momentum = momentum
         self.alpha = alpha
         self.eta = eta
         self.y = y

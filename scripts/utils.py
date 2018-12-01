@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.special import expit
 
+IMGS = '../images/'
+
 
 def add_bias_mul(X, axis=0):
     if axis == 0:
@@ -43,21 +45,23 @@ def activation_function(func_name, x, derivative=False):
 # plotting
 
 
-def plot_learning_curve(empirical_risk, num_epochs,
+def plot_learning_curve(stats, num_epochs, momentum,
                         fname='../images/learning_curve.pdf'):
-    plt.plot(range(num_epochs), empirical_risk)
-    plt.title('LEARNING CURVE FOR A {} EPOCHS TRAINING PERIOD'.
-              format(num_epochs))
-    plt.xlabel('EPOCHS')
-    plt.ylabel('EMPIRICAL RISK')
-    initial_risk = mpatches.Patch(label='Initial E.R.: {}'.
-                                  format(empirical_risk[0]))
-    final_risk = mpatches.Patch(label='Final E.R.: {}'.
-                                format(empirical_risk[-1]))
-    plt.legend(handles=[initial_risk, final_risk])
-    plt.grid()
-    plt.savefig(fname, bbox_inches='tight')
-    plt.close()
+    for i in range(len(stats)):
+        plt.plot(range(num_epochs), stats[i])
+        plt.title('LEARNING CURVE FOR A {} EPOCHS TRAINING PERIOD'.
+                  format(num_epochs))
+        plt.xlabel('EPOCHS')
+        plt.ylabel('EMPIRICAL RISK')
+        initial_risk = mpatches.Patch(label='Initial E.R.: {}'.
+                                      format(stats[i][0]))
+        final_risk = mpatches.Patch(label='Final E.R.: {}'.
+                                    format(stats[i][-1]))
+        plt.legend(handles=[initial_risk, final_risk])
+        plt.grid()
+        plt.savefig(IMGS + fname[i] + momentum + '.png' if len(fname) != 1
+                    else fname, bbox_inches='tight')
+        plt.close()
 
 # ##########################################################
 # error functions
