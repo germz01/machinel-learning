@@ -42,8 +42,9 @@ def activation_function(func_name, x, derivative=False):
 ###########################################################
 # plotting
 
+
 def plot_learning_curve(empirical_risk, num_epochs,
-                        fname = '../images/learning_curve.pdf'):
+                        fname='../images/learning_curve.pdf'):
     plt.plot(range(num_epochs), empirical_risk)
     plt.title('LEARNING CURVE FOR A {} EPOCHS TRAINING PERIOD'.
               format(num_epochs))
@@ -58,36 +59,38 @@ def plot_learning_curve(empirical_risk, num_epochs,
     plt.savefig(fname, bbox_inches='tight')
     plt.close()
 
-###########################################################    
+# ##########################################################
 # error functions
 
-def rmse(d, y):
-        '''root mean square error'''
-        p = d.shape[0]
-        if len(d.shape) == 1:
-                d = d.reshape((p,1))
-        if len(y.shape) == 1:
-               y  = y.reshape((p,1))
 
-               return np.sqrt( np.einsum('pk->', (d-y)**2) /p)
+def rmse(d, y):
+    '''root mean square error'''
+    p = d.shape[0]
+    if len(d.shape) == 1:
+        d = d.reshape((p, 1))
+    if len(y.shape) == 1:
+        y = y.reshape((p, 1))
+
+        return np.sqrt(np.einsum('pk->', (d-y)**2) / p)
 
 
 def mee(d, y):
-        ''' mean euclidean error'''
-        p = d.shape[0]
-        if len(d.shape) == 1:
-                d = d.reshape((p,1))
-        if len(y.shape) == 1:
-               y  = y.reshape((p,1))
+    ''' mean euclidean error'''
+    p = d.shape[0]
+    if len(d.shape) == 1:
+        d = d.reshape((p, 1))
+    if len(y.shape) == 1:
+        y = y.reshape((p, 1))
 
-               return np.mean( np.sqrt(np.einsum('pk->p', (d-y)**2)) )
+        return np.mean(np.sqrt(np.einsum('pk->p', (d-y)**2)))
+
 
 def mee_dev(d, y):
-        ''' std. deviation for the euclidean error'''
-        p = d.shape[0]
-        if len(d.shape) == 1:
-                d = d.reshape((p,1))
-        if len(y.shape) == 1:
-               y  = y.reshape((p,1))
+    ''' std. deviation for the euclidean error'''
+    p = d.shape[0]
+    if len(d.shape) == 1:
+        d = d.reshape((p, 1))
+    if len(y.shape) == 1:
+        y = y.reshape((p, 1))
 
-               return np.std( np.sqrt(np.einsum('pk->p', (d-y)**2)) )
+        return np.std(np.sqrt(np.einsum('pk->p', (d-y)**2)))
