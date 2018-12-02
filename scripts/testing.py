@@ -17,36 +17,32 @@ y = np.array([1, 1, 1, -1, -1])
 imp.reload(neural_network)
 imp.reload(utils)
 
+momentum = raw_input('MOMENTUM[classic/nesterov]: ')
 
 nn = neural_network.NeuralNetwork(hidden_sizes=(20, 5),
                                   activation='sigmoid', max_epochs=2000,
                                   max_weight_init=0.7)
 
-nn.train(X, y, eta=0.2, alpha=0.7)
-
+nn.train(X, y, eta=0.2, momentum=momentum, alpha=0.7)
 
 np.round(nn.y_pred, 2)
-utils.plot_learning_curve(nn.empirical_risk, nn.max_epochs,
-                          fname='../images/empirical_risk.png')
-utils.plot_learning_curve(nn.error_rmse, nn.max_epochs,
-                          fname='../images/error_rmse.png')
-utils.plot_learning_curve(nn.error_mee, nn.max_epochs,
-                          fname='../images/error_mee.png')
 
+utils.plot_learning_curve([nn.empirical_risk, nn.error_rmse, nn.error_mee,
+                          np.array(nn.error_mee)+np.array(nn.error_mee_dev)],
+                          nn.max_epochs, momentum=momentum,
+                          fname=['empirical_risk_', 'error_rmse_',
+                          'error_mee_', 'error_mee_dev_'])
 
-utils.plot_learning_curve(np.array(nn.error_mee)+np.array(nn.error_mee_dev),
-                          nn.max_epochs, fname='../images/error_mee_dev.png')
+# plt.plot(range(nn.max_epochs), np.array(nn.error_mee)+np.
+#          array(nn.error_mee_dev))
+# plt.plot(range(nn.max_epochs), np.array(nn.error_mee)-np.
+#          array(nn.error_mee_dev))
+# plt.plot(range(nn.max_epochs), np.array(nn.error_mee))
+# plt.show()
 
-plt.plot(range(nn.max_epochs), np.array(nn.error_mee)+np.
-         array(nn.error_mee_dev))
-plt.plot(range(nn.max_epochs), np.array(nn.error_mee)-np.
-         array(nn.error_mee_dev))
-plt.plot(range(nn.max_epochs), np.array(nn.error_mee))
-plt.show()
-
-plt.plot(range(nn.max_epochs), np.array(nn.error_mee_dev))
-plt.plot(range(nn.max_epochs), -np.array(nn.error_mee_dev))
-plt.show()
+# plt.plot(range(nn.max_epochs), np.array(nn.error_mee_dev))
+# plt.plot(range(nn.max_epochs), -np.array(nn.error_mee_dev))
+# plt.show()
 
 
 for iy in nn.Y:
