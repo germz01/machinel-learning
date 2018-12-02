@@ -24,7 +24,10 @@ class NeuralNetwork(object):
         self.max_weight_init = max_weight_init
 
     def init_weights(self):
-        """ """
+        """
+        Initilize the network's weights using either the interval given
+        during the creation of the network or activation function's one.
+        """
         self.W = list()
         interval = u.ACT_FUNC_INT[self.activation_function] if \
             self.max_weight_init == 0 else \
@@ -33,14 +36,6 @@ class NeuralNetwork(object):
         for i in range(1, len(self.topology)):
             self.W.append(np.random.uniform(interval[0], interval[1],
                           (self.topology[i], self.topology[i - 1] + 1)))
-
-    def init_weights_test(self):
-        """ """
-        'weights init per testing'
-        self.W = list()
-
-        for i in range(1, len(self.topology)):
-            self.W.append(np.ones((self.topology[i], self.topology[i - 1]+1)))
 
     def target_scale(self, y):
         """
@@ -83,7 +78,9 @@ class NeuralNetwork(object):
             return NotImplemented
 
     def feedforward(self):
-        """ """
+        """
+        The feedforward phase of the backpropagation algorithm.
+        """
         for i in range(self.n_layers):
             self.V[i] = np.dot(self.W[i], self.X_T if i == 0
                                else add_bias_mul(self.Y[i - 1]))
@@ -111,6 +108,7 @@ class NeuralNetwork(object):
 
     def backpropagation(self, eta, epoch):
         """
+        The backpropagation phase of the backpropagation algorithm.
 
         Parameters
         ----------
@@ -119,9 +117,6 @@ class NeuralNetwork(object):
         epoch : the current epoch in which the backpropagation phase of the
                 algorithm is execute, it is used during the momentum's
                 application;
-
-        alpha : the momentum constant;
-
 
         Returns
         -------
@@ -162,8 +157,10 @@ class NeuralNetwork(object):
         for layer in range(self.n_layers):
             self.W[layer] += self.delta_W[layer]
 
-    def train(self, X, y, eta, momentum='classic', alpha=0):
+    def train(self, X, y, eta, momentum='classic', alpha=0,
+              epsilon=0):
         """
+        A wrapper function that is used in order to train the network.
 
         Parameters
         ----------
@@ -180,19 +177,24 @@ class NeuralNetwork(object):
         alpha : the momentum constant, which default value represents the
                 momentumless execution of the algorithm;
 
+        epsilon: the threshold that enables the early stopping of the
+                 neural network's training;
+
 
         Returns
         -------
 
         """
         self.X = X
-        self.topology = compose_topology(self.X, self.hidden_sizes, y)
         self.X_T = add_bias_mul(X.T, axis=0)
+        self.topology = compose_topology(self.X, self.hidden_sizes, y)
         self.momentum = momentum
         self.alpha = alpha
         self.eta = eta
+        self.epsilon = epsilon
         self.y = y
         self.d = self.target_scale(y)
+
         self.empirical_risk = list()
         self.error_rmse = list()
         self.error_mee = list()
@@ -210,7 +212,14 @@ class NeuralNetwork(object):
         for i in range(self.max_epochs):
             self.feedforward()
             self.backpropagation(eta, i)
-            # TODO: stopping criteria
+
+            diff = 0 if i == 0 else self.empirical_risk[i - 1] - \
+                self.empirical_risk[i]
+
+            # EARLY STOPPING ENABLED ONLY IF EPSILON != 0
+            if epsilon != 0 and i != 0 and diff < self.epsilon:
+                print 'EARLY STOPPING AT EPOCH {}'.format(i)
+                break
 
         print '\nFINAL WEIGHTS\n'
         for i in range(len(self.W)):
@@ -226,7 +235,18 @@ class NeuralNetwork(object):
         self.y_pred = self.target_scale_back(y_pred)
 
     def predict(self, X_test):
+        """
+        This function is used in order to give a prediction on a test set given
+        in input.
 
+        Parameters
+        ----------
+        X_test : the test set;
+
+        Returns
+        -------
+        The prediction made by the network's output layer.
+        """
         self.V_pred = [0 for i in range(self.n_layers)]
         self.Y_pred = [0 for i in range(self.n_layers)]
 

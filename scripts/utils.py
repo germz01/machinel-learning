@@ -3,6 +3,7 @@ from __future__ import division
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
+
 from scipy.special import expit
 
 # CONSTANTS
@@ -18,6 +19,7 @@ ACT_FUNC_INT = {
     'tanh': [-1, 1],
     'relu': [0, np.Inf]
 }
+
 
 # UTILITIES RELATED FUNCTIONS
 
@@ -149,6 +151,7 @@ def plot_learning_curve(stats, num_epochs, momentum,
         plt.savefig(IMGS + fname[i] + momentum + '.png' if len(fname) != 1
                     else fname, bbox_inches='tight')
         plt.close()
+
 
 # ERROR RELATED FUNCTIONS
 
