@@ -20,10 +20,10 @@ imp.reload(utils)
 momentum = raw_input('MOMENTUM[classic/nesterov]: ')
 
 nn = neural_network.NeuralNetwork(hidden_sizes=(20, 5),
-                                  activation='sigmoid', max_epochs=2000,
+                                  activation='sigmoid', max_epochs=1000,
                                   max_weight_init=0.7)
 
-nn.train(X, y, eta=0.2, momentum=momentum, alpha=0.7)
+nn.train(X, y, eta=0.2, alpha=0.7)
 
 np.round(nn.y_pred, 2)
 
@@ -32,6 +32,7 @@ utils.plot_learning_curve([nn.empirical_risk, nn.error_rmse, nn.error_mee,
                           nn.max_epochs, momentum=momentum,
                           fname=['empirical_risk_', 'error_rmse_',
                           'error_mee_', 'error_mee_dev_'])
+
 
 # plt.plot(range(nn.max_epochs), np.array(nn.error_mee)+np.
 #          array(nn.error_mee_dev))
@@ -108,3 +109,4 @@ def mee(d, y):
 
 
 # y = np.round(np.random.uniform(-1,1, (p,k)),1)
+

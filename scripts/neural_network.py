@@ -10,18 +10,29 @@ import utils as u
 class NeuralNetwork(object):
     """Implementation of an Artificial Neural Network"""
 
-    def __init__(self, hidden_sizes, activation='sigmoid',
+    def __init__(self, hidden_sizes, task = 'classifier',
+                 activation='sigmoid',
                  max_epochs=1000, max_weight_init=0):
         self.hidden_sizes = hidden_sizes
         self.n_layers = len(hidden_sizes) + 1
 
-        self.activation_function = activation
         self.V = [0 for i in range(self.n_layers)]
         self.Y = [0 for i in range(self.n_layers)]
         self.delta = [0 for i in range(self.n_layers)]
         self.delta_W = [0 for i in range(self.n_layers)]
         self.max_epochs = max_epochs
         self.max_weight_init = max_weight_init
+
+        self.activation = activation
+        # list of activation functions
+        self.acts = [u.ACTS[activation]['f']
+                     for l in range(self.n_layers)]
+        self.acts_dev = [u.ACTS[activation]['fdev']
+                     for l in range(self.n_layers)]
+
+        if task == 'regression':
+            self.acts[-1] = u.ACTS['identity']['f']
+            self.acts_dev[-1] = u.ACTS['identity']['fdev']
 
     def init_weights(self):
         """
@@ -49,7 +60,7 @@ class NeuralNetwork(object):
         -------
 
         """
-        if self.activation_function == 'sigmoid':
+        if self.activation == 'sigmoid':
             MIN = y.min()
             MAX = y.max()
             return (y-MIN) / (MAX-MIN)
@@ -69,7 +80,7 @@ class NeuralNetwork(object):
         -------
 
         """
-        if self.activation_function == 'sigmoid':
+        if self.activation == 'sigmoid':
             MIN = self.y.min()
             MAX = self.y.max()
             return y_pred * (MAX - MIN) + MIN
@@ -81,11 +92,10 @@ class NeuralNetwork(object):
         """
         The feedforward phase of the backpropagation algorithm.
         """
-        for i in range(self.n_layers):
-            self.V[i] = np.dot(self.W[i], self.X_T if i == 0
-                               else add_bias_mul(self.Y[i - 1]))
-            self.Y[i] = activation_function(self.activation_function,
-                                            self.V[i])
+        for l in range(self.n_layers):
+            self.V[l] = np.dot(self.W[l], self.X_T if l == 0
+                               else add_bias_mul(self.Y[l - 1]))
+            self.Y[l] = self.acts[l](self.V[l])
 
         total_instantaneous_error = list()
         instantaneous_error = (self.d - self.Y[-1])**2
@@ -136,15 +146,12 @@ class NeuralNetwork(object):
             if layer == self.n_layers - 1:
                 # OUTPUT LAYER
                 self.delta[layer] = (self.d - self.Y[layer]) * \
-                    activation_function(self.activation_function,
-                                        self.V[layer],
-                                        derivative=True)
+                    self.acts_dev[layer](self.V[layer])
+
             else:
                 # HIDDEN LAYERS
                 sum_tmp = self.delta[layer + 1].T.dot(self.W[layer + 1][:, 1:])
-                self.delta[layer] = activation_function(
-                    self.activation_function, self.V[layer],
-                    derivative=True) * sum_tmp.T
+                self.delta[layer] = self.acts_dev[layer](self.V[layer]) * sum_tmp.T
 
             # GENERALIZED DELTA RULE
             self.delta_W[layer] = (alpha * self.delta_W[layer]) + \
@@ -232,7 +239,9 @@ class NeuralNetwork(object):
         # scaling back the output
         y_pred = self.Y[-1]
         # here rounding for classification
-        self.y_pred = self.target_scale_back(y_pred)
+        if self.activation == 'sigmoid':
+            # da sistemare target_scale
+            self.y_pred = self.target_scale_back(y_pred)
 
     def predict(self, X_test):
         """
@@ -250,11 +259,10 @@ class NeuralNetwork(object):
         self.V_pred = [0 for i in range(self.n_layers)]
         self.Y_pred = [0 for i in range(self.n_layers)]
 
-        for i in range(self.n_layers):
-            self.V_pred[i] = np.dot(self.W[i],
-                                    add_bias_mul(X_test.T) if i == 0
-                                    else add_bias_mul(self.Y_pred[i - 1]))
-            self.Y_pred[i] = activation_function(self.activation_function,
-                                                 self.V_pred[i])
+        for l in range(self.n_layers):
+            self.V_pred[l] = np.dot(self.W[l],
+                                    add_bias_mul(X_test.T) if l == 0
+                                    else add_bias_mul(self.Y_pred[l - 1]))
+            self.Y_pred[l] = self.acts[l](self.V_pred[l])
 
         return self.target_scale_back(self.Y_pred[-1])

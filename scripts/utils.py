@@ -11,6 +11,38 @@ from scipy.special import expit
 # This is the path for the directory in which the images are saved.
 IMGS = '../images/'
 
+# UTILITIES RELATED FUNCTIONS
+
+# ACTS = {'activation_name': {'f':f(), 'fdev':fdev(), 'range': (a,b) }}
+
+ACTS = {
+    'identity':
+    {
+        'f': lambda x: x,
+        'fdev': lambda x: 1,
+        'range': (np.NINF, np.Inf)
+    },
+    'sigmoid':
+    {
+        'f': lambda x: expit(x),
+        'fdev': lambda x: expit(x) * (1. - expit(x)),
+        'range' : (0,1)
+    },
+    'tanh':
+    {
+        'f': lambda x: np.tanh(x),
+        'fdev': lambda x: 1 - np.tanh(x)**2,
+        'range': (-1,-1)
+    },
+    'relu':
+    {
+        'f': lambda x: 0 if x < 0 else x,
+        'fdev': lambda x: 0 if x < 0 else 1,
+        'range': (0, np.Inf)
+    }
+}
+
+
 # This dictionary contains the intervals in which the activation functions
 # defined in the activation_function function are defined.
 ACT_FUNC_INT = {
@@ -19,10 +51,6 @@ ACT_FUNC_INT = {
     'tanh': [-1, 1],
     'relu': [0, np.Inf]
 }
-
-
-# UTILITIES RELATED FUNCTIONS
-
 
 def activation_function(func_name, x, derivative=False):
     """
