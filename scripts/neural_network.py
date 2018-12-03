@@ -1,7 +1,6 @@
 from __future__ import division
 
 import numpy as np
-from utils import activation_function
 from utils import add_bias_mul
 from utils import compose_topology
 import utils as u
@@ -10,8 +9,7 @@ import utils as u
 class NeuralNetwork(object):
     """Implementation of an Artificial Neural Network"""
 
-    def __init__(self, hidden_sizes, task = 'classifier',
-                 activation='sigmoid',
+    def __init__(self, hidden_sizes, task='classifier', activation=['sigmoid'],
                  max_epochs=1000, max_weight_init=0):
         self.hidden_sizes = hidden_sizes
         self.n_layers = len(hidden_sizes) + 1
@@ -24,11 +22,10 @@ class NeuralNetwork(object):
         self.max_weight_init = max_weight_init
 
         self.activation = activation
-        # list of activation functions
-        self.acts = [u.ACTS[activation]['f']
-                     for l in range(self.n_layers)]
-        self.acts_dev = [u.ACTS[activation]['fdev']
-                     for l in range(self.n_layers)]
+        if len(activation) == 1:
+            self.acts = [u.ACTS[activation[0]] for l in range(self.n_layers)]
+        else:
+            self.acts = [u.ACTS[activation[i]] for i in activation]
 
         if task == 'regression':
             self.acts[-1] = u.ACTS['identity']['f']
@@ -40,7 +37,7 @@ class NeuralNetwork(object):
         during the creation of the network or activation function's one.
         """
         self.W = list()
-        interval = u.ACT_FUNC_INT[self.activation_function] if \
+        interval = self.acts[0]['range'] if \
             self.max_weight_init == 0 else \
             [- self.max_weight_init, self.max_weight_init]
 
@@ -60,7 +57,7 @@ class NeuralNetwork(object):
         -------
 
         """
-        if self.activation == 'sigmoid':
+        if self.activation[0] == 'sigmoid':
             MIN = y.min()
             MAX = y.max()
             return (y-MIN) / (MAX-MIN)
@@ -80,7 +77,7 @@ class NeuralNetwork(object):
         -------
 
         """
-        if self.activation == 'sigmoid':
+        if self.activation[0] == 'sigmoid':
             MIN = self.y.min()
             MAX = self.y.max()
             return y_pred * (MAX - MIN) + MIN
@@ -95,7 +92,7 @@ class NeuralNetwork(object):
         for l in range(self.n_layers):
             self.V[l] = np.dot(self.W[l], self.X_T if l == 0
                                else add_bias_mul(self.Y[l - 1]))
-            self.Y[l] = self.acts[l](self.V[l])
+            self.Y[l] = self.acts[l]['f'](self.V[l])
 
         total_instantaneous_error = list()
         instantaneous_error = (self.d - self.Y[-1])**2
@@ -146,12 +143,13 @@ class NeuralNetwork(object):
             if layer == self.n_layers - 1:
                 # OUTPUT LAYER
                 self.delta[layer] = (self.d - self.Y[layer]) * \
-                    self.acts_dev[layer](self.V[layer])
+                    self.acts[layer]['fdev'](self.V[layer])
 
             else:
                 # HIDDEN LAYERS
                 sum_tmp = self.delta[layer + 1].T.dot(self.W[layer + 1][:, 1:])
-                self.delta[layer] = self.acts_dev[layer](self.V[layer]) * sum_tmp.T
+                self.delta[layer] = self.acts[layer]['fdev'](self.V[layer]) * \
+                    sum_tmp.T
 
             # GENERALIZED DELTA RULE
             self.delta_W[layer] = (alpha * self.delta_W[layer]) + \
@@ -239,7 +237,7 @@ class NeuralNetwork(object):
         # scaling back the output
         y_pred = self.Y[-1]
         # here rounding for classification
-        if self.activation == 'sigmoid':
+        if self.activation[0] == 'sigmoid':
             # da sistemare target_scale
             self.y_pred = self.target_scale_back(y_pred)
 

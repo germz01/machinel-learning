@@ -26,13 +26,13 @@ ACTS = {
     {
         'f': lambda x: expit(x),
         'fdev': lambda x: expit(x) * (1. - expit(x)),
-        'range' : (0,1)
+        'range': (0, 1)
     },
     'tanh':
     {
         'f': lambda x: np.tanh(x),
         'fdev': lambda x: 1 - np.tanh(x)**2,
-        'range': (-1,-1)
+        'range': (-1, -1)
     },
     'relu':
     {
@@ -42,15 +42,6 @@ ACTS = {
     }
 }
 
-
-# This dictionary contains the intervals in which the activation functions
-# defined in the activation_function function are defined.
-ACT_FUNC_INT = {
-    'identity': [np.NINF, np.Inf],
-    'sigmoid': [0, 1],
-    'tanh': [-1, 1],
-    'relu': [0, np.Inf]
-}
 
 def activation_function(func_name, x, derivative=False):
     """
