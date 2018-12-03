@@ -23,7 +23,7 @@ nn = neural_network.NeuralNetwork(hidden_sizes=(20, 5),
                                   activation=['sigmoid'], max_epochs=1000,
                                   max_weight_init=0.7)
 
-nn.train(X, y, eta=0.2, alpha=0.7)
+nn.train(X, y, eta=0.2, momentum=momentum, alpha=0.7)
 
 np.round(nn.y_pred, 2)
 
