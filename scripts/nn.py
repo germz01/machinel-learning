@@ -7,6 +7,7 @@ import regularizers as reg
 
 
 class NeuralNetwork(object):
+    """ """
     def __init__(self, topology):
         self.W = self.set_weights(topology)
         self.b = self.set_bias(topology)
@@ -18,6 +19,19 @@ class NeuralNetwork(object):
         self.loss = []
 
     def set_weights(self, topology):
+        """
+        This function initializes the network's weights matrices following
+        the rule in Deep Learning, pag. 295
+
+        Parameters
+        ----------
+        topology : a list of integer in which each number represents how many
+                   neurons must to be added to the current layer
+
+        Returns
+        -------
+        A list of matrices in which each matrix is a weights matrix
+        """
         W = []
 
         for i in range(1, len(topology)):
@@ -30,10 +44,26 @@ class NeuralNetwork(object):
         return W
 
     def get_weights(self):
+        """
+        This function returns the list containing the network's weights'
+        matrices
+        """
         for i in range(len(self.W)):
             print 'W{}: \n{}'.format(i, self.W[i])
 
     def set_bias(self, topology):
+        """
+        This function initializes the bias for the neural network
+
+        Parameters
+        ----------
+        topology : a list of integer in which each number represents how many
+                   neurons must to be added to the current layer
+
+        Returns
+        -------
+        A list of matrices in which each matrix is a bias matrix
+        """
         b = []
 
         for i in range(1, len(topology)):
@@ -42,10 +72,28 @@ class NeuralNetwork(object):
         return b
 
     def get_bias(self):
+        """
+        This function returns the list containing the network's bias'
+        matrices
+        """
         for i in range(len(self.b)):
             print 'b{}: \n{}'.format(i, self.b[i])
 
     def forward_propagation(self, x, y):
+        """
+        This function implements the forward propagation algorithm following
+        Deep Learning, pag. 205
+
+        Parameters
+        ----------
+        x : a record, or batch, from the dataset
+
+        y : the target value, or array, for the record/batch given in input
+
+        Returns
+        -------
+        The loss between the predicted output and the target output
+        """
         for i in range(len(self.W)):
             self.a[i] = self.b[i] + (self.W[i].dot(x.reshape(-1, 1) if i == 0
                                                    else self.h[i - 1]))
@@ -54,6 +102,23 @@ class NeuralNetwork(object):
         return lss.mean_squared_error(self.h[-1], y)
 
     def back_propagation(self, x, y, eta):
+        """
+        This function implements the back propagation algorithm following
+        Deep Learning, pag. 206
+
+        Parameters
+        ----------
+        x : a record, or batch, from the dataset
+
+        y : the target value, or target array, for the record/batch given in
+            input
+
+        eta : the learning rate
+
+        Returns
+        -------
+
+        """
         g = lss.mean_squared_error(self.h[-1], y, gradient=True)
 
         for layer in reversed(range(len(self.W))):
@@ -69,6 +134,31 @@ class NeuralNetwork(object):
             g = self.W[layer].T.dot(g)
 
     def train(self, X, y, eta, alpha, regularizer, epochs):
+        """
+        This function traines the neural network whit the hyperparameters given
+        in input
+
+        Parameters
+        ----------
+        X : the dataset
+
+        y : the target array
+
+        eta : the learning rate
+
+        alpha : the momentum constant
+
+        regularizer : a list of two items, in which the first item represents
+        the regularization constant and the second items represents the type
+        of regularization, either L1 or L2, that has to be applied
+
+        epochs : the (maximum) number of epochs for which the neural network
+        has to be trained
+
+        Returns
+        -------
+
+        """
         velocity_W = [0 for i in range(len(self.W))]
         velocity_b = [0 for i in range(len(self.W))]
 
