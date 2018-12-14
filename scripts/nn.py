@@ -1,6 +1,7 @@
 from __future__ import division
 
 import activations as act
+import losses as lss
 import numpy as np
 import regularizers as reg
 
@@ -50,10 +51,10 @@ class NeuralNetwork(object):
                                                    else self.h[i - 1]))
             self.h[i] = act.A_F['sigmoid']['f'](self.a[i])
 
-        return 0.5 * np.sum(np.square(self.h[-1] - y))
+        return lss.mean_squared_error(self.h[-1], y)
 
     def back_propagation(self, x, y, eta):
-        g = self.h[-1] - y
+        g = lss.mean_squared_error(self.h[-1], y, gradient=True)
 
         for layer in reversed(range(len(self.W))):
             g = np.multiply(g, act.A_F['sigmoid']['fdev'](self.a[layer]))
