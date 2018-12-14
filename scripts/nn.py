@@ -1,16 +1,8 @@
 from __future__ import division
 
+import activations as act
 import numpy as np
 import regularizers as reg
-
-from scipy.special import expit
-
-
-def sigmoid(x, derivative=False):
-    if derivative:
-        return expit(x) * (1. - expit(x))
-    else:
-        return expit(x)
 
 
 class NeuralNetwork(object):
@@ -56,7 +48,7 @@ class NeuralNetwork(object):
         for i in range(len(self.W)):
             self.a[i] = self.b[i] + (self.W[i].dot(x.reshape(-1, 1) if i == 0
                                                    else self.h[i - 1]))
-            self.h[i] = sigmoid(self.a[i])
+            self.h[i] = act.A_F['sigmoid']['f'](self.a[i])
 
         return 0.5 * np.sum(np.square(self.h[-1] - y))
 
@@ -64,7 +56,7 @@ class NeuralNetwork(object):
         g = self.h[-1] - y
 
         for layer in reversed(range(len(self.W))):
-            g = np.multiply(g, sigmoid(self.a[layer], derivative=True))
+            g = np.multiply(g, act.A_F['sigmoid']['fdev'](self.a[layer]))
 
             self.delta_b[layer] = g
 
