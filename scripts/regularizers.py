@@ -1,38 +1,25 @@
 import numpy as np
 
 
-def l1(w, lamb):
+def regularization(w, lamb, l_n):
     """
-    This functions implements the L1 regularization for the weights' decay
-    as described in Deep Learning, pag. 228.
+    This functions implements the L1/L2 regularization for the weights' decay
+    as described in Deep Learning, pag. 224 and 228.
 
     Parameters
     ----------
-    w : a matrix of weights
+    w : the weights' matrix
 
     lamb : the regularization constant
+
+    l_n: the type of regularization to apply, either L1 or L2
 
 
     Returns
     -------
-    The L1 regularization factor
+    The regularization factor
     """
-    return lamb * np.sign(w)
-
-
-def l2(w, lamb):
-    """
-    This functions implements the L2 regularization for the weights' decay
-    as described in Deep Learning, pag. 224.
-    Parameters
-    ----------
-    w : a matrix of weights
-
-    lamb : the regularization constant
-
-
-    Returns
-    -------
-    The L2 regularization factor
-    """
-    return lamb * w
+    if l_n == 'l1':
+        return lamb * np.sign(w)
+    else:
+        return lamb * w

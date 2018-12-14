@@ -1,7 +1,7 @@
 from __future__ import division
 
-import matplotlib.pyplot as plt
 import numpy as np
+import regularizers as reg
 
 from scipy.special import expit
 
@@ -75,25 +75,29 @@ class NeuralNetwork(object):
 
             g = self.W[layer].T.dot(g)
 
-    def train(self, X, y, eta, alpha, epochs):
+    def train(self, X, y, eta, alpha, regularizer, epochs):
         velocity_W = [0 for i in range(len(self.W))]
         velocity_b = [0 for i in range(len(self.W))]
 
         for e in range(epochs):
             for i in range(X.shape[0]):
                 loss = self.forward_propagation(X[i], y[i])
-                self.loss.append(loss)
-
                 self.back_propagation(X[i], y[i], eta)
 
                 for layer in range(len(self.W)):
+                    weight_decay = reg.regularization(self.W[layer],
+                                                      regularizer[0],
+                                                      regularizer[1])
+
                     velocity_b[layer] = (alpha * velocity_b[layer]) - \
                         (eta * self.delta_b[layer])
                     self.b[layer] += velocity_b[layer]
 
                     velocity_W[layer] = (alpha * velocity_W[layer]) - \
-                        (eta * self.delta_W[layer])
+                        (eta * (weight_decay + self.delta_W[layer]))
                     self.W[layer] += velocity_W[layer]
+
+                self.loss.append(loss)
 
         print 'STARTED WITH LOSS {}, ENDED WITH {}'.format(self.loss[0],
                                                            self.loss[-1])
@@ -106,4 +110,4 @@ if __name__ == '__main__':
     y = np.array([1, 1, 1, 0, 0]).reshape(5, 1)
 
     nn = NeuralNetwork([X.shape[1], 3, 1])
-    nn.train(X, y, .1, .9, 100)
+    nn.train(X, y, .1, .9, [0.01, 'l2'], 1000)
