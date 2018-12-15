@@ -4,21 +4,21 @@ import activations as act
 import losses as lss
 import numpy as np
 import regularizers as reg
-
+import utils as u
 
 class NeuralNetwork(object):
     """ """
-    def __init__(self, topology):
-        self.W = self.set_weights(topology)
-        self.b = self.set_bias(topology)
+    def __init__(self, hidden_sizes, task='classifier'):
 
-        self.delta_W = [0 for i in range(len(self.W))]
-        self.delta_b = [0 for i in range(len(self.W))]
-        self.a = [0 for i in range(len(self.W))]
-        self.h = [0 for i in range(len(self.W))]
-        self.loss = []
+        self.hidden_sizes = hidden_sizes
+        self.n_layers = len(hidden_sizes) + 1
 
-    def set_weights(self, topology):
+        self.delta_W = [0 for i in range(self.n_layers)]
+        self.delta_b = [0 for i in range(self.n_layers)]
+        self.a = [0 for i in range(self.n_layers)]
+        self.h = [0 for i in range(self.n_layers)]
+
+    def set_weights(self):
         """
         This function initializes the network's weights matrices following
         the rule in Deep Learning, pag. 295
@@ -32,6 +32,7 @@ class NeuralNetwork(object):
         -------
         A list of matrices in which each matrix is a weights matrix
         """
+        topology = self.topology
         W = []
 
         for i in range(1, len(topology)):
@@ -48,10 +49,10 @@ class NeuralNetwork(object):
         This function returns the list containing the network's weights'
         matrices
         """
-        for i in range(len(self.W)):
+        for i in range(self.n_layers):
             print 'W{}: \n{}'.format(i, self.W[i])
 
-    def set_bias(self, topology):
+    def set_bias(self):
         """
         This function initializes the bias for the neural network
 
@@ -66,8 +67,8 @@ class NeuralNetwork(object):
         """
         b = []
 
-        for i in range(1, len(topology)):
-            b.append(np.random.uniform(-.7, .7, (topology[i], 1)))
+        for i in range(1, len(self.topology)):
+            b.append(np.random.uniform(-.7, .7, (self.topology[i], 1)))
 
         return b
 
@@ -94,7 +95,7 @@ class NeuralNetwork(object):
         -------
         The loss between the predicted output and the target output
         """
-        for i in range(len(self.W)):
+        for i in range(self.n_layers):
             self.a[i] = self.b[i] + (self.W[i].dot(x.reshape(-1, 1) if i == 0
                                                    else self.h[i - 1]))
             self.h[i] = act.A_F['sigmoid']['f'](self.a[i])
@@ -121,7 +122,7 @@ class NeuralNetwork(object):
         """
         g = lss.mean_squared_error(self.h[-1], y, gradient=True)
 
-        for layer in reversed(range(len(self.W))):
+        for layer in reversed(range(self.n_layers)):
             g = np.multiply(g, act.A_F['sigmoid']['fdev'](self.a[layer]))
 
             self.delta_b[layer] = g
@@ -159,15 +160,24 @@ class NeuralNetwork(object):
         -------
 
         """
-        velocity_W = [0 for i in range(len(self.W))]
-        velocity_b = [0 for i in range(len(self.W))]
+        self.topology = u.compose_topology(X, self.hidden_sizes, y)
+        self.epochs = epochs
+
+        self.W = self.set_weights()
+        self.b = self.set_bias()
+        self.loss_online = []
+        self.loss_epochs = []
+
+
+        velocity_W = [0 for i in range(self.n_layers)]
+        velocity_b = [0 for i in range(self.n_layers)]
 
         for e in range(epochs):
             for i in range(X.shape[0]):
                 loss = self.forward_propagation(X[i], y[i])
                 self.back_propagation(X[i], y[i], eta)
 
-                for layer in range(len(self.W)):
+                for layer in range(self.n_layers):
                     weight_decay = reg.regularization(self.W[layer],
                                                       regularizer[0],
                                                       regularizer[1])
@@ -180,10 +190,10 @@ class NeuralNetwork(object):
                         (eta * (weight_decay + self.delta_W[layer]))
                     self.W[layer] += velocity_W[layer]
 
-                self.loss.append(loss)
+                self.loss_online.append(loss)
+            self.loss_epochs.append(loss)
 
-        print 'STARTED WITH LOSS {}, ENDED WITH {}'.format(self.loss[0],
-                                                           self.loss[-1])
+        print 'STARTED WITH LOSS {}, ENDED WITH {}'.format(self.loss_epochs[0], self.loss_epochs[-1])
 
 
 if __name__ == '__main__':
