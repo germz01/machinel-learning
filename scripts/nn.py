@@ -18,7 +18,7 @@ class NeuralNetwork(object):
         self.a = [0 for i in range(self.n_layers)]
         self.h = [0 for i in range(self.n_layers)]
 
-    def set_weights(self):
+    def set_weights(self, w_par = 6):
         """
         This function initializes the network's weights matrices following
         the rule in Deep Learning, pag. 295
@@ -36,12 +36,12 @@ class NeuralNetwork(object):
         W = []
 
         for i in range(1, len(topology)):
-            low = - np.sqrt(6 / (topology[i - 1] + topology[i]))
-            high = np.sqrt(6 / (topology[i - 1] + topology[i]))
+            low = - np.sqrt(w_par / (topology[i - 1] + topology[i]))
+            high = np.sqrt(w_par / (topology[i - 1] + topology[i]))
 
             W.append(np.random.uniform(low, high, (topology[i],
                                                    topology[i - 1])))
-
+        self.W = W
         return W
 
     def get_weights(self):
@@ -102,6 +102,121 @@ class NeuralNetwork(object):
 
         return lss.mean_squared_error(self.h[-1], y)
 
+    def forward_propagation_mb(self, x, y):
+
+        for l in range(self.n_layers):
+            # bias added using numpy broadcast
+            self.a[l] =  self.W[l].dot(x.T if l == 0 else self.h[l - 1])+self.b[l]
+            
+            self.h[l] = act.A_F['sigmoid']['f'](self.a[l])
+
+        #print self.h[-1]
+        #print y.T
+
+        d = self.h[-1]
+        y = y.T
+        #print('---------')
+        
+        return np.mean(np.sqrt(np.einsum('kp->p', (d-y)**2)))
+
+        #return lss.mee(self.h[-1], y.T)
+    def predict(self, x):
+
+        for l in range(self.n_layers):
+            # bias added using numpy broadcast
+            self.a[l] =  self.W[l].dot(x.T if l == 0 else self.h[l - 1])+self.b[l]
+            
+            self.h[l] = act.A_F['sigmoid']['f'](self.a[l])
+
+        return self.h[-1]
+    
+        
+    
+    def back_propagation_mb(self, x, y):
+        # computing the (mini-)batch gradient
+        g = (self.h[-1] - y.T)
+
+        for layer in reversed(range(self.n_layers)):
+            
+            g = np.multiply(g, act.A_F['sigmoid']['fdev'](self.a[layer]))
+            self.delta_b[layer] = g.sum(axis = 1) # sum over patterns
+                        
+            # the dot product is summing over patterns
+            self.delta_W[layer] = g.dot(self.h[layer - 1].T if layer != 0 else x)
+            # summing over previous layer units
+            g = self.W[layer].T.dot(g)
+
+
+    def train_mb(self, X, y, eta, epochs = 1000, batch_size = 4, w_par = 6):
+        self.topology = u.compose_topology(X, self.hidden_sizes, y)
+        self.epochs = epochs
+        
+        self.W = self.set_weights(w_par)
+        self.b = self.set_bias()
+        self.loss_batch = []
+        self.loss_epochs = []
+        velocity_W = [0 for i in range(self.n_layers)]
+        velocity_b = [0 for i in range(self.n_layers)]
+
+        eta = float(eta)
+        
+        for e in range(epochs):
+            print '-- epoch --'
+            # shuffle 
+            Xy = np.hstack((X,y))
+            np.random.shuffle(Xy)
+            X, y = np.hsplit(Xy, [X.shape[1]])
+
+            chunks = 0
+            b = 0
+            while(b < X.shape[0]):
+
+                x_batch = X[b:b+batch_size,]
+                y_batch = y[b:b+batch_size,]
+                            
+                error = self.forward_propagation_mb(
+                    x_batch, y_batch
+                )
+                                
+                #print error
+                self.loss_batch.append(error)
+                self.back_propagation_mb(
+                        x_batch, y_batch
+                )
+                mb = x_batch.shape[0]
+                
+                # weight updates
+                for layer in range(self.n_layers):
+                    #print '-- layer --'
+                    velocity_W[layer] = -eta/mb * self.delta_W[layer]
+                    velocity_b[layer] = np.multiply(-eta/mb , self.delta_b[layer])
+                    #print '-- velocity --'
+                    #print(velocity_b[layer])
+                    #print(velocity_b[layer].shape)
+                    #print '-- bias --'
+                    #print self.b[layer]
+
+                    self.W[layer] += velocity_W[layer]
+                    # check bias shapes! 
+                    self.b[layer] += velocity_b[layer].reshape(-1,1)
+                
+                #print b
+                #print 'chunks'+str(chunks)
+                chunks+=1
+                b += batch_size
+
+
+            self.loss_epochs.append(error)
+            print error
+
+        print 'STARTED WITH LOSS {}, ENDED WITH {}'.format(self.loss_epochs[0], self.loss_epochs[-1])
+
+
+    ###########################################################
+
+    
+
+    ###########################################################
     def back_propagation(self, x, y, eta):
         """
         This function implements the back propagation algorithm following
@@ -120,11 +235,17 @@ class NeuralNetwork(object):
         -------
 
         """
+        
         g = lss.mean_squared_error(self.h[-1], y, gradient=True)
-
+        
+        # g = mean over the minibatch patterns
+        
         for layer in reversed(range(self.n_layers)):
             g = np.multiply(g, act.A_F['sigmoid']['fdev'](self.a[layer]))
+            # here a[layer] has a p dimension, for each pattern,
+            # before assigning to g I need the mean
 
+            
             self.delta_b[layer] = g
 
             # x.reshape(1, -1) ritorna x dentro un array in modo da farla
@@ -132,6 +253,8 @@ class NeuralNetwork(object):
             self.delta_W[layer] = g.dot(self.h[layer - 1].T if layer != 0 else
                                         x.reshape(1, -1))
 
+            # also here for mb, I need the mean before assigning g (?)
+            
             g = self.W[layer].T.dot(g)
 
     def train(self, X, y, eta, alpha, regularizer, epochs):
