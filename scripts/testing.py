@@ -6,8 +6,8 @@ import utils as u
 import losses as lss
 
 
-p_class1 = 700 # number of patterns
-p_class2 = 300
+p_class1 = 70 # number of patterns for each class
+p_class2 = 30
 n = 10 # attributes/features
 
 X = np.vstack((np.random.normal(2., 1., (p_class1, n)),
@@ -22,52 +22,50 @@ y = np.vstack((
 
 imp.reload(NN)
 imp.reload(u)
-nn = NN.NeuralNetwork(hidden_sizes = [100 ] )
+
+nn = NN.NeuralNetwork(hidden_sizes = [10 ] )
 
 nn.train_mb(X,y,
             eta = 0.2,
-            epochs = 1000,
-            batch_size = 100,
+            epochs = 500,
+            batch_size = 10,
+            alpha = 0.1,
             w_par = 6)
 
+
 y_pred = nn.predict(X)
-np.round(y_pred,2)
+np.round(y_pred,1)
 y.T
-np.mean(np.sqrt(np.einsum('kp->p', (y_pred-y.T)**2)))
+np.abs((np.round(y_pred,0)-y.T)).sum()
 
 
-plt.plot(range(len(nn.loss_epochs)), nn.loss_epochs)
-plt.savefig('learning_curve.pdf')
+nn.error_mse_epochs[-1]
+#(np.einsum('kp->', (y_pred-y.T)**2) / X.shape[0])
+
+plt.plot(range(len(nn.error_mse_epochs)), nn.error_mse_epochs)
+plt.ylabel('MSE error by epoch')
+plt.xlabel('Epochs')
+plt.grid()
+plt.savefig('../images/learning_curve.pdf')
 plt.close()
 
-plt.plot(range(len(nn.loss_batch)), nn.loss_batch)
-plt.savefig('learning_curve_batch.pdf')
+plt.plot(range(len(nn.error_se_batch)), nn.error_se_batch)
+plt.ylabel('SE error by batch')
+plt.xlabel('Epochs*Batches')
+plt.grid()
+plt.savefig('../images/learning_curve_batch.pdf')
 plt.close()
 
-plt.close()
 
-g.sum(axis = 1)/(g.shape[1])
 
+
+###########################################################
 def lapply(l, f):
-    ''' 
-    Apply function f to each element of the list l 
+    '''
+    Apply function f to each element of the list l
     (R style)
     '''
     return [f(el) for el in l]
 
-lapply(nn.a, len)    
+#lapply(nn.a, len)    
 
-
-
-nn.topology
-
-
-epochs = 500
-# nota: loss online e epochs sono su range diversi
-# da sistemare successivamente a batch/minibatch/online implementation
-fig, ax = plt.subplots(figsize = (15,7))
-plt.plot(range(len(nn.loss_online[:epochs])), nn.loss_online[:epochs])
-plt.plot(range(len(nn.loss_epochs[:epochs])), nn.loss_epochs[:epochs])
-
-plt.savefig('../images/temp_loss.pdf')
-plt.close()
