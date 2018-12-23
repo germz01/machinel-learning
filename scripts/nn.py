@@ -6,6 +6,7 @@ import numpy as np
 import regularizers as reg
 import utils as u
 
+
 class NeuralNetwork(object):
     """ """
     def __init__(self, hidden_sizes, task='classifier'):
@@ -18,29 +19,28 @@ class NeuralNetwork(object):
         self.a = [0 for i in range(self.n_layers)]
         self.h = [0 for i in range(self.n_layers)]
 
-    def set_weights(self, w_par = 6):
+    def set_weights(self, w_par=6):
         """
         This function initializes the network's weights matrices following
         the rule in Deep Learning, pag. 295
 
         Parameters
         ----------
-        topology : a list of integer in which each number represents how many
-                   neurons must to be added to the current layer
+        w_par : a parameter which is plugged into the formula for estimating
+                the uniform interval for defining the network's weights
 
         Returns
         -------
         A list of matrices in which each matrix is a weights matrix
         """
-        topology = self.topology
         W = []
 
-        for i in range(1, len(topology)):
-            low = - np.sqrt(w_par / (topology[i - 1] + topology[i]))
-            high = np.sqrt(w_par / (topology[i - 1] + topology[i]))
+        for i in range(1, len(self.topology)):
+            low = - np.sqrt(w_par / (self.topology[i - 1] + self.topology[i]))
+            high = np.sqrt(w_par / (self.topology[i - 1] + self.topology[i]))
 
-            W.append(np.random.uniform(low, high, (topology[i],
-                                                   topology[i - 1])))
+            W.append(np.random.uniform(low, high, (self.topology[i],
+                                                   self.topology[i - 1])))
         self.W = W
         return W
 
@@ -103,41 +103,35 @@ class NeuralNetwork(object):
         return lss.mean_squared_error(self.h[-1], y)
 
     def forward_propagation_mb(self, x):
-
         for l in range(self.n_layers):
-            # bias added using numpy broadcast
-            self.a[l] =  self.W[l].dot(x.T if l == 0 else self.h[l - 1])+self.b[l]
+            self.a[l] = self.b[l] + (self.W[l].dot(x.T if l == 0
+                                                   else self.h[l - 1]))
             self.h[l] = act.A_F['sigmoid']['f'](self.a[l])
 
-
     def predict(self, x):
-        
         for l in range(self.n_layers):
-            # bias added using numpy broadcast
-            self.a[l] =  self.W[l].dot(x.T if l == 0 else self.h[l - 1])+self.b[l]
-            
+            self.a[l] = self.W[l].dot(x.T if l == 0 else
+                                      self.h[l - 1])+self.b[l]
             self.h[l] = act.A_F['sigmoid']['f'](self.a[l])
 
         return self.h[-1]
-    
-    
+
     def back_propagation_mb(self, x, y):
         # computing the (mini-)batch gradient
         g = (self.h[-1] - y.T)
 
         for layer in reversed(range(self.n_layers)):
-            
             g = np.multiply(g, act.A_F['sigmoid']['fdev'](self.a[layer]))
             # update bias, sum over patterns
-            self.delta_b[layer] = g.sum(axis = 1).reshape(-1,1) 
-                        
+            self.delta_b[layer] = g.sum(axis=1).reshape(-1, 1)
+
             # the dot product is summing over patterns
-            self.delta_W[layer] = g.dot(self.h[layer - 1].T if layer != 0 else x)
+            self.delta_W[layer] = g.dot(self.h[layer - 1].T if layer != 0
+                                        else x)
             # summing over previous layer units
             g = self.W[layer].T.dot(g)
 
-
-    def train_mb(self, X, y, eta, alpha = 0, epochs = 1000, batch_size = 4, w_par = 6):
+    def train_mb(self, X, y, eta, alpha=0, epochs=1000, batch_size=4, w_par=6):
         self.topology = u.compose_topology(X, self.hidden_sizes, y)
         self.epochs = epochs
         self.X = X
@@ -146,7 +140,7 @@ class NeuralNetwork(object):
 
         velocity_W = [0 for i in range(self.n_layers)]
         velocity_b = [0 for i in range(self.n_layers)]
-        
+
         self.error_mse_epochs = []
         self.error_se_batch = []
 
@@ -155,51 +149,51 @@ class NeuralNetwork(object):
             error_se_batch = [] # squared errors for each batch
 
             # shuffle at each epoch
-            Xy = np.hstack((X,y))
+            Xy = np.hstack((X, y))
             np.random.shuffle(Xy)
             X, y = np.hsplit(Xy, [X.shape[1]])
 
             b = 0
             while(b < X.shape[0]):
 
-                x_batch = X[b:b+batch_size,]
-                y_batch = y[b:b+batch_size,]
-                            
+                x_batch = X[b:b+batch_size, ]
+                y_batch = y[b:b+batch_size, ]
+
                 self.forward_propagation_mb(x_batch, )
 
                 # squared error, sum over outputs and batch patterns
-                error = ( (self.h[-1]-y_batch.T)**2 ).sum()
+                error = ((self.h[-1]-y_batch.T)**2).sum()
 
                 self.error_se_batch.append(error)
                 error_se_batch.append(error)
-                                
+
                 self.back_propagation_mb(x_batch, y_batch)
 
                 # computing batch size (needed for the last chunk)
-                mb = x_batch.shape[0] 
-                
+                mb = x_batch.shape[0]
+
                 for layer in range(self.n_layers):
                     # weight updates
                     velocity_W[layer] = alpha * velocity_W[layer] \
-                                        -eta/mb * self.delta_W[layer]
+                        - eta/mb * self.delta_W[layer]
                     velocity_b[layer] = alpha * velocity_b[layer] \
-                                        -eta/mb * self.delta_b[layer]
+                        - eta/mb * self.delta_b[layer]
 
                     self.W[layer] += velocity_W[layer]
                     self.b[layer] += velocity_b[layer]
-                
+
                 b += batch_size
                 # end while
 
-            # summing up errors to compute overall MSE 
-            self.error_mse_epochs.append( np.sum(error_se_batch)/X.shape[0])
-            # status 
-            if ( e/epochs*100 % 10) == 0.0:
-                print  'status:'+ str(int(e/epochs*100)) + '%'
-                
-            # end epoch
-        print 'STARTED WITH LOSS {}, ENDED WITH {}'.format(self.error_mse_epochs[0], self.error_mse_epochs[-1])
+            # summing up errors to compute overall MSE
+            self.error_mse_epochs.append(np.sum(error_se_batch)/X.shape[0])
+            # status
+            if (e/epochs*100 % 10) == 0.0:
+                print 'status:' + str(int(e/epochs*100)) + '%'
 
+            # end epoch
+        print 'STARTED WITH LOSS {}, ENDED WITH {}'.\
+            format(self.error_mse_epochs[0], self.error_mse_epochs[-1])
 
     ###########################################################
     def back_propagation(self, x, y, eta):
@@ -220,17 +214,16 @@ class NeuralNetwork(object):
         -------
 
         """
-        
+
         g = lss.mean_squared_error(self.h[-1], y, gradient=True)
-        
+
         # g = mean over the minibatch patterns
-        
+
         for layer in reversed(range(self.n_layers)):
             g = np.multiply(g, act.A_F['sigmoid']['fdev'](self.a[layer]))
             # here a[layer] has a p dimension, for each pattern,
             # before assigning to g I need the mean
 
-            
             self.delta_b[layer] = g
 
             # x.reshape(1, -1) ritorna x dentro un array in modo da farla
@@ -239,7 +232,7 @@ class NeuralNetwork(object):
                                         x.reshape(1, -1))
 
             # also here for mb, I need the mean before assigning g (?)
-            
+
             g = self.W[layer].T.dot(g)
 
     def train(self, X, y, eta, alpha, regularizer, epochs):
@@ -276,7 +269,6 @@ class NeuralNetwork(object):
         self.loss_online = []
         self.loss_epochs = []
 
-
         velocity_W = [0 for i in range(self.n_layers)]
         velocity_b = [0 for i in range(self.n_layers)]
 
@@ -301,7 +293,8 @@ class NeuralNetwork(object):
                 self.loss_online.append(loss)
             self.loss_epochs.append(loss)
 
-        print 'STARTED WITH LOSS {}, ENDED WITH {}'.format(self.loss_epochs[0], self.loss_epochs[-1])
+        print 'STARTED WITH LOSS {}, ENDED WITH {}'.\
+            format(self.loss_epochs[0], self.loss_epochs[-1])
 
 
 if __name__ == '__main__':
