@@ -6,6 +6,9 @@ import numpy as np
 import regularizers as reg
 import utils as u
 
+from tqdm import tqdm
+
+
 class NeuralNetwork(object):
     """ """
     def __init__(self, hidden_sizes, task='classifier'):
@@ -18,29 +21,28 @@ class NeuralNetwork(object):
         self.a = [0 for i in range(self.n_layers)]
         self.h = [0 for i in range(self.n_layers)]
 
-    def set_weights(self):
+    def set_weights(self, w_par=6):
         """
         This function initializes the network's weights matrices following
         the rule in Deep Learning, pag. 295
 
         Parameters
         ----------
-        topology : a list of integer in which each number represents how many
-                   neurons must to be added to the current layer
+        w_par : a parameter which is plugged into the formula for estimating
+                the uniform interval for defining the network's weights
+            (Default value = 6)
 
         Returns
         -------
-        A list of matrices in which each matrix is a weights matrix
         """
-        topology = self.topology
         W = []
 
-        for i in range(1, len(topology)):
-            low = - np.sqrt(6 / (topology[i - 1] + topology[i]))
-            high = np.sqrt(6 / (topology[i - 1] + topology[i]))
+        for i in range(1, len(self.topology)):
+            low = - np.sqrt(w_par / (self.topology[i - 1] + self.topology[i]))
+            high = np.sqrt(w_par / (self.topology[i - 1] + self.topology[i]))
 
-            W.append(np.random.uniform(low, high, (topology[i],
-                                                   topology[i - 1])))
+            W.append(np.random.uniform(low, high, (self.topology[i],
+                                                   self.topology[i - 1])))
 
         return W
 
@@ -48,6 +50,12 @@ class NeuralNetwork(object):
         """
         This function returns the list containing the network's weights'
         matrices
+
+        Parameters
+        ----------
+
+        Returns
+        -------
         """
         for i in range(self.n_layers):
             print 'W{}: \n{}'.format(i, self.W[i])
@@ -55,15 +63,6 @@ class NeuralNetwork(object):
     def set_bias(self):
         """
         This function initializes the bias for the neural network
-
-        Parameters
-        ----------
-        topology : a list of integer in which each number represents how many
-                   neurons must to be added to the current layer
-
-        Returns
-        -------
-        A list of matrices in which each matrix is a bias matrix
         """
         b = []
 
@@ -76,6 +75,12 @@ class NeuralNetwork(object):
         """
         This function returns the list containing the network's bias'
         matrices
+
+        Parameters
+        ----------
+
+        Returns
+        -------
         """
         for i in range(len(self.b)):
             print 'b{}: \n{}'.format(i, self.b[i])
@@ -89,20 +94,20 @@ class NeuralNetwork(object):
         ----------
         x : a record, or batch, from the dataset
 
-        y : the target value, or array, for the record/batch given in input
+        y : the target array for the batch given in input
+
 
         Returns
         -------
-        The loss between the predicted output and the target output
         """
         for i in range(self.n_layers):
-            self.a[i] = self.b[i] + (self.W[i].dot(x.reshape(-1, 1) if i == 0
+            self.a[i] = self.b[i] + (self.W[i].dot(x.T if i == 0
                                                    else self.h[i - 1]))
             self.h[i] = act.A_F['sigmoid']['f'](self.a[i])
 
-        return lss.mean_squared_error(self.h[-1], y)
+        return lss.mean_squared_error(self.h[-1].T, y)
 
-    def back_propagation(self, x, y, eta):
+    def back_propagation(self, x, y):
         """
         This function implements the back propagation algorithm following
         Deep Learning, pag. 206
@@ -114,93 +119,121 @@ class NeuralNetwork(object):
         y : the target value, or target array, for the record/batch given in
             input
 
-        eta : the learning rate
-
         Returns
         -------
-
         """
-        g = lss.mean_squared_error(self.h[-1], y, gradient=True)
+        g = lss.mean_squared_error(self.h[-1], y.T, gradient=True)
 
         for layer in reversed(range(self.n_layers)):
             g = np.multiply(g, act.A_F['sigmoid']['fdev'](self.a[layer]))
+            # update bias, sum over patterns
+            self.delta_b[layer] = g.sum(axis=1).reshape(-1, 1)
 
-            self.delta_b[layer] = g
-
-            # x.reshape(1, -1) ritorna x dentro un array in modo da farla
-            # passare come una matrice
-            self.delta_W[layer] = g.dot(self.h[layer - 1].T if layer != 0 else
-                                        x.reshape(1, -1))
-
+            # the dot product is summing over patterns
+            self.delta_W[layer] = g.dot(self.h[layer - 1].T if layer != 0
+                                        else x)
+            # summing over previous layer units
             g = self.W[layer].T.dot(g)
 
-    def train(self, X, y, eta, alpha, regularizer, epochs):
+    def train(self, X, y, eta, regularizer, alpha=0, epochs=1000, batch_size=1,
+              w_par=6):
         """
-        This function traines the neural network whit the hyperparameters given
+        This function trains the neural network whit the hyperparameters given
         in input
 
         Parameters
         ----------
-        X : the dataset
+        X : the design matrix
 
-        y : the target array
+        y : the target column vector
 
         eta : the learning rate
 
-        alpha : the momentum constant
-
         regularizer : a list of two items, in which the first item represents
-        the regularization constant and the second items represents the type
-        of regularization, either L1 or L2, that has to be applied
+                      the regularization constant and the second items
+                      represents the type of regularization, either L1 or L2,
+                      that has to be applied
+
+        alpha : the momentum constant
+             (Default value = 0)
 
         epochs : the (maximum) number of epochs for which the neural network
-        has to be trained
+                 has to be trained
+             (Default value = 1000)
+
+        batch_size : the batch size
+             (Default value = 1)
+        w_par : a parameter which is plugged into the formula for estimating
+                the uniform interval for defining the network's weights
+             (Default value = 6)
 
         Returns
         -------
-
         """
         self.topology = u.compose_topology(X, self.hidden_sizes, y)
         self.epochs = epochs
-
-        self.W = self.set_weights()
+        self.X = X
+        self.W = self.set_weights(w_par)
         self.b = self.set_bias()
-        self.loss_online = []
-        self.loss_epochs = []
-
 
         velocity_W = [0 for i in range(self.n_layers)]
         velocity_b = [0 for i in range(self.n_layers)]
 
-        for e in range(epochs):
-            for i in range(X.shape[0]):
-                loss = self.forward_propagation(X[i], y[i])
-                self.back_propagation(X[i], y[i], eta)
+        self.error_per_epochs = []
+        self.error_per_batch = []
+
+        for e in tqdm(range(epochs), desc='TRAINING'):
+            error_per_batch = []
+
+            dataset = np.hstack((X, y))
+            np.random.shuffle(dataset)
+            X, y = np.hsplit(dataset, [X.shape[1]])
+
+            for b_start in np.arange(0, X.shape[0], batch_size):
+                x_batch = X[b_start:b_start + batch_size, :]
+                y_batch = y[b_start:b_start + batch_size, :]
+
+                error = self.forward_propagation(x_batch, y_batch)
+                self.error_per_batch.append(error)
+                error_per_batch.append(error)
+
+                self.back_propagation(x_batch, y_batch)
 
                 for layer in range(self.n_layers):
                     weight_decay = reg.regularization(self.W[layer],
                                                       regularizer[0],
                                                       regularizer[1])
 
-                    velocity_b[layer] = (alpha * velocity_b[layer]) - \
-                        (eta * self.delta_b[layer])
+                    velocity_b[layer] = (alpha * velocity_b[layer]) \
+                        - (eta / x_batch.shape[0]) * self.delta_b[layer]
                     self.b[layer] += velocity_b[layer]
 
-                    velocity_W[layer] = (alpha * velocity_W[layer]) - \
-                        (eta * (weight_decay + self.delta_W[layer]))
+                    velocity_W[layer] = (alpha * velocity_W[layer]) \
+                        - ((eta / x_batch.shape[0])
+                           * (weight_decay + self.delta_W[layer]))
                     self.W[layer] += velocity_W[layer]
 
-                self.loss_online.append(loss)
-            self.loss_epochs.append(loss)
+            # summing up errors to compute overall MSE
+            self.error_per_epochs.append(np.sum(error_per_batch)/X.shape[0])
 
-        print 'STARTED WITH LOSS {}, ENDED WITH {}'.format(self.loss_epochs[0], self.loss_epochs[-1])
+        print 'STARTED WITH LOSS {}, ENDED WITH {}'.\
+            format(self.error_per_epochs[0], self.error_per_epochs[-1])
+
+    def predict(self, x):
+        """
+
+        Parameters
+        ----------
+        x :
 
 
-if __name__ == '__main__':
-    X = np.concatenate((np.random.normal(2., 1., (3, 2)),
-                        np.random.normal(5., 1., (2, 2))),
-                       axis=0)
-    y = np.array([1, 1, 1, 0, 0]).reshape(5, 1)
+        Returns
+        -------
 
-    nn = NeuralNetwork([X.shape[1], 3, 1])
-    nn.train(X, y, .1, .9, [0.01, 'l2'], 1000)
+        """
+        for l in range(self.n_layers):
+            self.a[l] = self.W[l].dot(x.T if l == 0 else
+                                      self.h[l - 1])+self.b[l]
+            self.h[l] = act.A_F['sigmoid']['f'](self.a[l])
+
+        return self.h[-1]
