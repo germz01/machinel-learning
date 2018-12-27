@@ -228,7 +228,6 @@ class HyperGrid():
     def next(self):
         """
         Return next grid parameters as a dictionary
-        
         """
         out = self.grid.next()
 
@@ -240,7 +239,7 @@ class HyperGrid():
 
     def reset_grid(self):
         """
-        Re-create the grid iterator, maintaining the same 
+        Re-create the grid iterator, maintaining the same
         parameters
         """
         self.grid = self.get_grid()
