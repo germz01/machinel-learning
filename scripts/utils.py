@@ -121,3 +121,59 @@ def plot_error(nn, fname='../images/learning_curve.pdf'):
     plt.savefig(fname)
     plt.tight_layout()
     plt.close()
+
+
+
+def binarize_attribute(attribute, n_categories):
+    """
+    Binarize a vector of categorical values
+
+    Parameters
+    ----------
+    attribute : numpy.ndarray or list
+         numpy array with shape (p,1) or (p,) or list, containing
+         categorical values.
+
+    n_categories : int
+        number of categories.
+    Returns
+    -------
+    bin_att : numpy.ndarray
+        binarized numpy array with shape (p, n_categories)
+    """
+    n_patterns = len(attribute)
+    bin_att = np.zeros((n_patterns, n_categories), dtype=int)
+    for p in range(n_patterns):
+        bin_att[p, attribute[p]-1] = 1
+
+    return bin_att
+
+
+def binarize(X, categories_sizes):
+    """
+    Binarization of the dataset XWhat it does?
+    
+    Parameters
+    ----------
+    X : numpy.darray
+        dataset of categorical values to be binarized.
+
+    categories_sizes : list
+        number of categories of each X column
+    
+    Returns
+    -------
+    out : numpy.darray
+        Binarized dataset
+    """
+    
+    atts = list()
+    for col in range(X.shape[1]):
+        atts.append(binarize_attribute(X[:, col], categories_sizes[col]))
+
+    # h stack of the binarized attributes
+    out = atts[0]
+    for att in atts[1:]:
+        out = np.hstack([out, att])
+
+    return out
