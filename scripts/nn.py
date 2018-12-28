@@ -135,8 +135,9 @@ class NeuralNetwork(object):
             # summing over previous layer units
             g = self.W[layer].T.dot(g)
 
-    def train(self, X, y, eta, regularizer, alpha=0, epochs=1000, batch_size=1,
-              w_par=6):
+    def train(self, X, y, eta, alpha=0, epochs=1000,
+              batch_size=1, reg_lambda=0.0, reg_method='l2',
+              regularizer=[0.0, 'l2'], w_par=6):
         """
         This function trains the neural network whit the hyperparameters given
         in input
@@ -176,6 +177,15 @@ class NeuralNetwork(object):
         self.W = self.set_weights(w_par)
         self.b = self.set_bias()
 
+        self.params = dict()
+        self.params['eta'] = eta
+        self.params['alpha'] = alpha
+        self.params['batch_size'] = batch_size
+        self.params['regularizer'] = regularizer
+        self.params['hidden_sizes'] = self.hidden_sizes
+        self.params['reg_method'] = reg_method
+        self.params['reg_lambda'] = reg_lambda
+
         velocity_W = [0 for i in range(self.n_layers)]
         velocity_b = [0 for i in range(self.n_layers)]
 
@@ -201,8 +211,8 @@ class NeuralNetwork(object):
 
                 for layer in range(self.n_layers):
                     weight_decay = reg.regularization(self.W[layer],
-                                                      regularizer[0],
-                                                      regularizer[1])
+                                                      reg_lambda,
+                                                      reg_method)
 
                     velocity_b[layer] = (alpha * velocity_b[layer]) \
                         - (eta / x_batch.shape[0]) * self.delta_b[layer]
@@ -219,21 +229,36 @@ class NeuralNetwork(object):
         print 'STARTED WITH LOSS {}, ENDED WITH {}'.\
             format(self.error_per_epochs[0], self.error_per_epochs[-1])
 
-    def predict(self, x):
+    def predict(self, x, y):
         """
 
         Parameters
         ----------
         x :
-
+        y :
 
         Returns
         -------
 
         """
-        for l in range(self.n_layers):
-            self.a[l] = self.W[l].dot(x.T if l == 0 else
-                                      self.h[l - 1])+self.b[l]
-            self.h[l] = act.A_F['sigmoid']['f'](self.a[l])
+        for layer in range(self.n_layers):
+            self.a[layer] = self.W[layer].dot(x.T if layer == 0 else
+                                              self.h[layer - 1])+self.b[layer]
+            self.h[layer] = act.A_F['sigmoid']['f'](self.a[layer])
 
-        return self.h[-1]
+        return lss.mean_squared_error(self.h[-1].T, y)
+        # return self.h[-1]
+
+    def get_params(self):
+        """
+        Return the parameters of the nn instance
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        params : dict
+            parameters dictionary
+        """
+        return self.params

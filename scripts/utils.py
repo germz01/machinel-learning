@@ -99,3 +99,25 @@ def plot_learning_curve(stats, num_epochs, momentum,
         plt.savefig(IMGS + fname[i] + momentum + '.png' if len(fname) != 1
                     else fname, bbox_inches='tight')
         plt.close()
+
+
+def plot_error(nn, fname='../images/learning_curve.pdf'):
+    """ plotting learning curve """
+
+    par_str = r"""$\eta= {}, \alpha= {}, \lambda= {}$,'batch= {}, h-sizes={}""".format(
+        np.round(nn.params['eta'], 2),
+        np.round(nn.params['alpha'], 2),
+        np.round(nn.params['reg_lambda'], 3),
+        nn.params['batch_size'],
+        nn.params['hidden_sizes']
+    )
+
+    plt.plot(range(len(nn.error_per_epochs)), nn.error_per_epochs)
+    plt.ylabel('MSE error by epoch')
+    plt.xlabel('Epochs')
+    plt.grid()
+    plt.suptitle('Learning curve')
+    plt.title(par_str, fontsize=10)
+    plt.savefig(fname)
+    plt.tight_layout()
+    plt.close()
