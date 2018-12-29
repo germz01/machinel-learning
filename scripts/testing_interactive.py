@@ -33,15 +33,15 @@ if raw_input('PLAIN EXECUTION WITHOUT TESTING?[Y/N] ') == 'Y':
         plt.close()
 
 if raw_input('TESTING K-FOLD CROSS VALIDATION?[Y/N] ') == 'Y':
-    results = val.kfold_cross_validation(X, y, nfold=5, hidden_sizes=[10],
-                                         eta=eta, alpha=alpha,
-                                         regularizer=[0.01, 'l2'],
-                                         epochs=1000)
-    print '\nMEAN VALIDATION ERROR: {}'.format(np.mean(results))
+    cross_val = val.KFoldCrossValidation(X, y, nfold=5, hidden_sizes=[10],
+                                         eta=eta, alpha=alpha, epochs=500,
+                                         batch_size=10, reg_lambda=0.01,
+                                         reg_method='l2')
+    print 'VALIDATION ERRORS {}'.format(cross_val.results)
+    print 'MEAN VALIDATION ERROR: {}'.format(cross_val.mean_result)
 
 if raw_input('TESTING GRID SEARCH?[Y/N] ') == 'Y':
     best_val_score = val.grid_search(X, y, random_search=True)
 
     print '\n'
     print best_val_score
-

@@ -7,68 +7,120 @@ from sklearn.utils.extmath import cartesian
 from tqdm import tqdm
 
 
-def kfold_cross_validation(X, y, nfold=3, **kwargs):
+class KFoldCrossValidation(object):
     """
-    An implementation of the k-fold cross validation algorithm as described in
-    Deep Learning, pag 120. The default value for the number of folds is 3,
-    and it is possible to pass along all the hyperparameters for the
-    neural network's initialization.
-
-    Parameters
-    ----------
-    X : the design matrix
-
-    y : the target column vector
-
-    nfold : the number of folds to be applied in the algorithm
-         (Default value = 3)
-
-    **kwargs : a dictionary which contains the parameters for the neural
-               network's initialization
-
-    Returns
-    -------
-    A list containing the validation scores for each one of the algorithm's
-    iterations.
+    This class represents a wrapper for the implementation of the classic
+    k-fold cross validation algorithm, as described in Deep Learning pag.
+    120.
     """
-    assert X.shape[0] == y.shape[0]
 
-    full_dataset = np.hstack((X, y.reshape(-1, 1)))
-    np.random.shuffle(full_dataset)
-    folds = list()
-    results = list()
+    def __init__(self, X, y, nfold=3, **kwargs):
+        """
+        The class' constructor.
 
-    record_per_fold = int(full_dataset.shape[0] / nfold)
-    low = 0
-    high = low + record_per_fold
+        Parameters
+        ----------
+        X: numpy.ndarray
+            the design matrix
 
-    for i in np.arange(nfold):
-        folds.append(full_dataset[low:high] if i != nfold - 1 else
-                     full_dataset[low:])
+        y: numpy.ndarray
+            the target column vector
 
-        low = high
-        high += record_per_fold
+        nfold: int
+            the number of folds to be applied in the algorithm
+            (Default value = 3)
 
-    neural_net = nn.NeuralNetwork(X.shape[1], kwargs['hidden_sizes'], 1)
+        kwargs: dict
+            a dictionary which contains the parameters for the neural
+            network's initialization
 
-    for i in tqdm(np.arange(nfold),
-                  desc='{}-FOLD CROSS VALIDATION PROGRESS'.format(nfold)):
-        train_set = [folds[j] for j in np.arange(len(folds)) if j != i]
-        train_set = np.vstack(train_set)
-        train_set, train_target = train_set[:, :-1], train_set[:, -1].\
-            reshape(-1, 1)
-        test_set, test_target = folds[i][:, :-1], folds[i][:, -1].\
-            reshape(-1, 1)
+        Returns
+        -------
+        """
+        assert X.shape[0] == y.shape[0]
 
-        neural_net.train(train_set, train_target, kwargs['eta'],
-                         kwargs['alpha'], kwargs['regularizer'],
-                         kwargs['epochs'])
+        self.full_dataset = np.hstack((X, y.reshape(-1, 1)))
+        self.folds = list()
+        self.results = list()
+        self.mean_results = 0.0
+        self.record_per_fold = int(self.full_dataset.shape[0] / nfold)
+        self.low = 0
+        self.high = self.low + self.record_per_fold
 
-        loss = neural_net.predict(test_set, test_target)
-        results.append(loss)
-        neural_net.reset()
+        np.random.shuffle(self.full_dataset)
+        self.set_folds(nfold)
 
-    return results
+        self.neural_net = nn.NeuralNetwork(kwargs['hidden_sizes'])
+
+        self.validate(X, y, nfold, eta=kwargs['eta'], alpha=kwargs['alpha'],
+                      epochs=kwargs['epochs'], batch_size=kwargs['batch_size'],
+                      reg_lambda=kwargs['reg_lambda'],
+                      reg_method=kwargs['reg_method'])
+
+    def set_folds(self, nfold):
+        """
+        This function splits the dataset into nfold folds.
+
+        Parameters
+        ----------
+        nfold: int
+            the number of folds to be applied in the algorithm
+
+        Returns
+        -------
+        """
+        for i in np.arange(nfold):
+            self.folds.append(self.full_dataset[self.low:self.high] if i !=
+                              nfold - 1 else self.full_dataset[self.low:])
+
+            self.low = self.high
+            self.high += self.record_per_fold
+
+    def validate(self, X, y, nfold, **kwargs):
+        """
+        This function implements the core of the k-fold cross validation
+        algorithm. For each fold, the neural network is trained using the
+        training set created for that fold, and is tested on the respective
+        test set. Finally, the error between the test's target and the
+        predicted one is collected.
+
+        Parameters
+        ----------
+        X. numpy.ndarray
+            the design matrix
+
+        y: numpy.ndarray
+            the target column vector
+
+        nfold: int
+            the number of folds to be applied in the algorithm
+
+        kwargs: dict
+            a dictionary which contains the parameters for the neural
+            network's initialization
+
+        Returns
+        -------
+        """
+        for i in tqdm(np.arange(nfold),
+                      desc='{}-FOLD CROSS VALIDATION PROGRESS'.format(nfold)):
+            train_set_full = np.vstack([self.folds[j] for j in np.arange(
+                len(self.folds)) if j != i])
+            train_set = train_set_full[:, :-1]
+            train_target = train_set_full[:, -1].reshape(-1, 1)
+            test_set = self.folds[i][:, :-1]
+            test_target = self.folds[i][:, -1].reshape(-1, 1)
+
+            self.neural_net.train(train_set, train_target, kwargs['eta'],
+                                  kwargs['alpha'], kwargs['epochs'],
+                                  kwargs['batch_size'], kwargs['reg_lambda'],
+                                  kwargs['reg_method'])
+
+            loss = self.neural_net.predict(test_set, test_target)
+            self.results.append(loss)
+            # self.neural_net.reset()
+
+        self.mean_result = np.mean(self.results)
 
 
 def grid_search(X, y, random_search=False, **kwargs):

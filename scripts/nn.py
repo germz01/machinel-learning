@@ -226,8 +226,8 @@ class NeuralNetwork(object):
             # summing up errors to compute overall MSE
             self.error_per_epochs.append(np.sum(error_per_batch)/X.shape[0])
 
-        print 'STARTED WITH LOSS {}, ENDED WITH {}'.\
-            format(self.error_per_epochs[0], self.error_per_epochs[-1])
+        # print 'STARTED WITH LOSS {}, ENDED WITH {}'.\
+        #     format(self.error_per_epochs[0], self.error_per_epochs[-1])
 
     def predict(self, x, y):
         """
