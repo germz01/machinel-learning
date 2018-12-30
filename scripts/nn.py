@@ -11,10 +11,16 @@ from tqdm import tqdm
 
 class NeuralNetwork(object):
     """ """
-    def __init__(self, hidden_sizes, task='classifier'):
+    def __init__(self, X, y, hidden_sizes=[10], w_par=6, task='classifier'):
 
         self.hidden_sizes = hidden_sizes
         self.n_layers = len(hidden_sizes) + 1
+        self.topology = u.compose_topology(X, self.hidden_sizes, y)
+
+        self.W = self.set_weights(w_par)
+        self.W_copy = [w.copy() for w in self.W]
+        self.b = self.set_bias()
+        self.b_copy = [b.copy() for b in self.b]
 
         self.delta_W = [0 for i in range(self.n_layers)]
         self.delta_b = [0 for i in range(self.n_layers)]
@@ -85,6 +91,20 @@ class NeuralNetwork(object):
         for i in range(len(self.b)):
             print 'b{}: \n{}'.format(i, self.b[i])
 
+    def get_params(self):
+        """
+        Return the parameters of the nn instance
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        params : dict
+            parameters dictionary
+        """
+        return self.params
+
     def forward_propagation(self, x, y):
         """
         This function implements the forward propagation algorithm following
@@ -137,7 +157,7 @@ class NeuralNetwork(object):
 
     def train(self, X, y, eta, alpha=0, epochs=1000,
               batch_size=1, reg_lambda=0.0, reg_method='l2',
-              regularizer=[0.0, 'l2'], w_par=6):
+              regularizer=[0.0, 'l2']):
         """
         This function trains the neural network whit the hyperparameters given
         in input
@@ -171,11 +191,8 @@ class NeuralNetwork(object):
         Returns
         -------
         """
-        self.topology = u.compose_topology(X, self.hidden_sizes, y)
         self.epochs = epochs
         self.X = X
-        self.W = self.set_weights(w_par)
-        self.b = self.set_bias()
 
         self.params = dict()
         self.params['eta'] = eta
@@ -249,16 +266,20 @@ class NeuralNetwork(object):
         return lss.mean_squared_error(self.h[-1].T, y)
         # return self.h[-1]
 
-    def get_params(self):
+    def reset(self):
         """
-        Return the parameters of the nn instance
+        This function is used in order to reset the neural network inner
+        variables. It is mainly used during the validation process.
 
         Parameters
         ----------
 
         Returns
         -------
-        params : dict
-            parameters dictionary
         """
-        return self.params
+        self.W = [w.copy() for w in self.W_copy]
+        self.b = [b.copy() for b in self.b_copy]
+        self.delta_W = [0 for i in range(self.n_layers)]
+        self.delta_b = [0 for i in range(self.n_layers)]
+        self.a = [0 for i in range(self.n_layers)]
+        self.h = [0 for i in range(self.n_layers)]

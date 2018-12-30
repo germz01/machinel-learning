@@ -41,7 +41,15 @@ if raw_input('TESTING K-FOLD CROSS VALIDATION?[Y/N] ') == 'Y':
     print 'MEAN VALIDATION ERROR: {}'.format(cross_val.mean_result)
 
 if raw_input('TESTING GRID SEARCH?[Y/N] ') == 'Y':
-    best_val_score = val.grid_search(X, y, random_search=True)
+    par_ranges = dict()
+    par_ranges['eta'] = (0.1, 0.9)
+    par_ranges['alpha'] = (0.1, 0.9)
+    par_ranges['reg_lambda'] = (0.001, 0.01)
+    par_ranges['batch_size'] = (1, 100)
+    par_ranges['epochs'] = (10, 1000)
 
-    print '\n'
-    print best_val_score
+    grid_search = val.GridSearch(X, y, random_search=True,
+                                 par_ranges=par_ranges)
+    print '\n\nBEST RESULT {} FROM RECORD: {}'.\
+        format(grid_search.best_result['error'],
+               grid_search.best_result['parameters'])
