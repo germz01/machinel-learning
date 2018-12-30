@@ -1,6 +1,7 @@
 from __future__ import division
 
 import nn
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import random
@@ -99,7 +100,7 @@ class KFoldCrossValidation(object):
             low = high
             high += record_per_fold
 
-    def validate(self, X, y, neural_net, nfold, **kwargs):
+    def validate(self, X, y, neural_net, nfold, plot_curves=False, **kwargs):
         """
         This function implements the core of the k-fold cross validation
         algorithm. For each fold, the neural network is trained using the
@@ -120,6 +121,10 @@ class KFoldCrossValidation(object):
 
         nfold: int
             the number of folds to be applied in the algorithm
+
+        plot_curves: bool
+            whether or not to plot the learning curve for each one of the
+            cross validation's iterations
 
         kwargs: dict
             a dictionary which contains the parameters for the neural
@@ -146,7 +151,23 @@ class KFoldCrossValidation(object):
             self.results.append(loss)
             neural_net.reset()
 
+            if plot_curves:
+                plt.plot(range(len(neural_net.error_per_epochs)),
+                         neural_net.error_per_epochs,
+                         label='FOLD {}'.format(i))
+
         self.mean_result = np.mean(self.results)
+
+        if plot_curves:
+            plt.title('LEARNING CURVES FOR A {}-FOLD CROSS VALIDATION'.
+                      format(nfold))
+            plt.ylabel('ERROR PER EPOCH')
+            plt.xlabel('EPOCHS')
+            plt.grid()
+            plt.legend()
+            plt.savefig('../images/{}_fold_cross_val_lcs.pdf'.
+                        format(nfold), bbox_inches='tight')
+            plt.close()
 
 
 class Holdout():
