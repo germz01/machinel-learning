@@ -33,7 +33,9 @@ if raw_input('PLAIN EXECUTION WITHOUT TESTING?[Y/N] ') == 'Y':
         plt.close()
 
 if raw_input('TESTING K-FOLD CROSS VALIDATION?[Y/N] ') == 'Y':
-    cross_val = val.KFoldCrossValidation(X, y, nfold=5, hidden_sizes=[10],
+    neural_net = nn.NeuralNetwork(X, y)
+
+    cross_val = val.KFoldCrossValidation(X, y, neural_net,
                                          eta=eta, alpha=alpha, epochs=500,
                                          batch_size=10, reg_lambda=0.01,
                                          reg_method='l2')

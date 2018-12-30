@@ -156,37 +156,43 @@ class NeuralNetwork(object):
             g = self.W[layer].T.dot(g)
 
     def train(self, X, y, eta, alpha=0, epochs=1000,
-              batch_size=1, reg_lambda=0.0, reg_method='l2',
-              regularizer=[0.0, 'l2']):
+              batch_size=1, reg_lambda=0.0, reg_method='l2'):
         """
         This function trains the neural network whit the hyperparameters given
         in input
 
         Parameters
         ----------
-        X : the design matrix
+        X : numpy.ndarray
+            the design matrix
 
-        y : the target column vector
+        y : numpy.ndarray
+            the target column vector
 
-        eta : the learning rate
+        eta : float
+            the learning rate
 
-        regularizer : a list of two items, in which the first item represents
-                      the regularization constant and the second items
-                      represents the type of regularization, either L1 or L2,
-                      that has to be applied
+        alpha : float
+            the momentum constant
+            (Default value = 0)
 
-        alpha : the momentum constant
-             (Default value = 0)
+        epochs : int
+            the (maximum) number of epochs for which the neural network
+            has to be trained
+            (Default value = 1000)
 
-        epochs : the (maximum) number of epochs for which the neural network
-                 has to be trained
-             (Default value = 1000)
+        batch_size : int
+            the batch size
+            (Default value = 1)
 
-        batch_size : the batch size
-             (Default value = 1)
-        w_par : a parameter which is plugged into the formula for estimating
-                the uniform interval for defining the network's weights
-             (Default value = 6)
+        reg_lambda: float
+            the regularization factor
+            (Default value = 0.0)
+
+        reg_method: str
+            the regularization method, either l1 or l2 regularization are
+            availables
+            (Default value = 'l2')
 
         Returns
         -------
@@ -198,7 +204,6 @@ class NeuralNetwork(object):
         self.params['eta'] = eta
         self.params['alpha'] = alpha
         self.params['batch_size'] = batch_size
-        self.params['regularizer'] = regularizer
         self.params['hidden_sizes'] = self.hidden_sizes
         self.params['reg_method'] = reg_method
         self.params['reg_lambda'] = reg_lambda

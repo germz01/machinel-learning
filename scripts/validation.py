@@ -31,9 +31,6 @@ class KFoldCrossValidation(object):
 
     mean_results: float
         the mean generalization error
-
-    neural_net: nn.NeuralNetwork
-        the neural network that has to be cross validated
     """
 
     def __init__(self, X, y, neural_net, nfold=3, **kwargs):
@@ -47,6 +44,9 @@ class KFoldCrossValidation(object):
 
         y: numpy.ndarray
             the target column vector
+
+        neural_net: nn.NeuralNetwork
+            the neural network that has to be cross validated
 
         nfold: int
             the number of folds to be applied in the algorithm
@@ -68,8 +68,6 @@ class KFoldCrossValidation(object):
 
         np.random.shuffle(self.full_dataset)
         self.set_folds(nfold)
-
-        # self.neural_net = nn.NeuralNetwork(X, y, kwargs['hidden_sizes'])
 
         self.validate(X, y, neural_net, nfold, eta=kwargs['eta'],
                       alpha=kwargs['alpha'], epochs=kwargs['epochs'],
@@ -115,6 +113,9 @@ class KFoldCrossValidation(object):
 
         y: numpy.ndarray
             the target column vector
+
+        neural_net: nn.NeuralNetwork
+            the neural network that has to be cross validated
 
         nfold: int
             the number of folds to be applied in the algorithm
