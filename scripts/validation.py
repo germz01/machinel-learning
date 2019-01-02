@@ -36,7 +36,7 @@ class KFoldCrossValidation(object):
         the mean generalization error
 
     std_result: float
-        the standard deviaion (variance) for the mean generalization error
+        the standard deviation (variance) for the mean generalization error
     """
 
     def __init__(self, X, y, neural_net, nfold=3, **kwargs):
