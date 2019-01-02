@@ -1,5 +1,6 @@
 from __future__ import division
 
+import csv
 import nn
 import matplotlib.pyplot as plt
 import numpy as np
@@ -526,7 +527,8 @@ class GridSearch(object):
         The best result returned by the search phase
     """
 
-    def __init__(self, X, y, random_search=False, **kwargs):
+    def __init__(self, X, y, random_search=False, save_results=False,
+                 **kwargs):
         """
         The class' constructor.
 
@@ -543,6 +545,10 @@ class GridSearch(object):
             initialization
             (Default value = False)
 
+        save_results: bool
+            whether or not so save the results deriving from the search phase
+            in a csv file
+
         kwargs: dict
             either the parameters' range if random_search is True or
             the parameters' records if random_search is False
@@ -556,6 +562,9 @@ class GridSearch(object):
         self.best_result = {'error': min(self.results.keys()),
                             'parameters': self.results[min(
                                               self.results.keys())]}
+
+        if save_results:
+            self.save_results()
 
     def set_grid(self, random_search, par_or_par_ranges, num_par=3):
         """
@@ -624,10 +633,34 @@ class GridSearch(object):
                 alpha=record[1], reg_method='l2', reg_lambda=record[2],
                 batch_size=int(record[3]), epochs=int(record[4]))
 
-            results[cross_val.mean_results] = {'eta': record[0],
-                                               'alpha': record[1],
-                                               'reg_lambda': record[2],
-                                               'batch_size': int(record[3]),
-                                               'epochs': int(record[4])}
+            results[cross_val.mean_result] = {'eta': record[0],
+                                              'alpha': record[1],
+                                              'reg_lambda': record[2],
+                                              'batch_size': int(record[3]),
+                                              'epochs': int(record[4])}
 
         return results
+
+    def save_results(self):
+        """
+        This functions writes the results deriving from the search phase in a
+        csv file, and saves the resulting file in ../datasets.
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        """
+        with open('../datasets/grid_search_results.csv', 'wb') as csvfile:
+            fieldnames = ['ETA', 'ALPHA', 'LAMBDA', 'BATCH SIZE', 'EPOCHS',
+                          'ERROR']
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+
+            for key in self.results:
+                r = self.results[key]
+                writer.writerow({'ETA': r['eta'], 'ALPHA': r['alpha'],
+                                 'LAMBDA': r['reg_lambda'],
+                                 'BATCH SIZE': r['batch_size'],
+                                 'EPOCHS': r['epochs'], 'ERROR': key})
