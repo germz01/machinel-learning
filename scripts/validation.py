@@ -67,7 +67,8 @@ class KFoldCrossValidation(object):
         self.full_dataset = np.hstack((X, y.reshape(-1, 1)))
         self.folds = list()
         self.results = list()
-        self.mean_results = 0.0
+        self.mean_result = 0.0
+        self.std_result = 0.0
 
         np.random.shuffle(self.full_dataset)
         self.set_folds(nfold)
@@ -155,17 +156,22 @@ class KFoldCrossValidation(object):
             if plot_curves:
                 plt.plot(range(len(neural_net.error_per_epochs)),
                          neural_net.error_per_epochs,
-                         label='FOLD {}'.format(i))
+                         label='FOLD {}, VALIDATION ERROR: {}'.
+                         format(i, round(loss, 2)))
 
         self.mean_result = np.mean(self.results)
+        self.std_result = np.std(self.results)
 
         if plot_curves:
-            plt.title('LEARNING CURVES FOR A {}-FOLD CROSS VALIDATION'.
-                      format(nfold))
+            plt.title('LEARNING CURVES FOR A {}-FOLD CROSS VALIDATION.\nMEAN '
+                      'VALIDATION ERROR {}, VARIANCE {}.'.
+                      format(nfold, round(self.mean_result, 2),
+                             round(self.std_result, 2)),
+                      fontsize=8)
             plt.ylabel('ERROR PER EPOCH')
             plt.xlabel('EPOCHS')
             plt.grid()
-            plt.legend()
+            plt.legend(fontsize=8)
             plt.savefig('../images/{}_fold_cross_val_lcs.pdf'.
                         format(nfold), bbox_inches='tight')
             plt.close()

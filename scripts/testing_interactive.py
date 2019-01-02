@@ -2,6 +2,8 @@ import nn
 import numpy as np
 import validation as val
 
+from tqdm import tqdm
+
 X = np.concatenate((np.random.normal(2., 1., (50, 2)),
                     np.random.normal(5., 1., (50, 2))),
                    axis=0)
@@ -25,8 +27,9 @@ if raw_input('TESTING K-FOLD CROSS VALIDATION?[Y/N] ') == 'Y':
                                          eta=eta, alpha=alpha, epochs=500,
                                          batch_size=10, reg_lambda=0.01,
                                          reg_method='l2')
-    print 'VALIDATION ERRORS {}'.format(cross_val.results)
-    print 'MEAN VALIDATION ERROR: {}'.format(cross_val.mean_result)
+    tqdm.write('VALIDATION ERRORS {}'.format(cross_val.results))
+    tqdm.write('MEAN VALIDATION ERROR: {}'.format(cross_val.mean_result))
+    tqdm.write('VARIANCE FOR VALIDATION ERROR {}'.format(cross_val.std_result))
 
 if raw_input('TESTING GRID SEARCH?[Y/N] ') == 'Y':
     par_ranges = dict()
