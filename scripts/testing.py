@@ -7,6 +7,9 @@ import hypergrid as hg
 # import pandas as pd
 from pprint import pprint
 import holdout as holdout
+import validation as val
+import time
+
 
 # number of patterns for each class
 p_class1 = 70
@@ -24,12 +27,12 @@ y = np.vstack((np.hstack((np.ones(p_class1), np.zeros(p_class2))),
 imp.reload(NN)
 imp.reload(u)
 
-nn = NN.NeuralNetwork(hidden_sizes=[10])
-
-nn.train(X, y, eta=0.2, alpha=0.1,
+nn = NN.NeuralNetwork(X, y, eta=0.2, alpha=0.1,
          reg_method='l2', reg_lambda=0.01,
          epochs=500, batch_size=10,
          w_par=6)
+
+nn.train(X, y)
 
 nn.predict(X, y)
 y_pred = nn.h[-1]
@@ -65,12 +68,11 @@ par_ranges = dict()
 par_ranges['eta'] = (0.02, 2.0)
 par_ranges['alpha'] = (0.0, 0.5)
 par_ranges['batch_size'] = (1, 100)
-par_ranges['hidden_sizes'] = (1, 100)
-# par_ranges['hidden_sizes_2'] = (1,10)
+#par_ranges['hidden_sizes'] = (1, 100)
+#par_ranges['hidden_sizes_2'] = (1,10)
 par_ranges['reg_lambda'] = (0.0, 0.1)
 
 grid_size = 100
-
 grid = hg.HyperRandomGrid(par_ranges, N = grid_size )
 
 for params in grid:
@@ -78,7 +80,38 @@ for params in grid:
 
 hold = holdout.Holdout(X, y)
 
-model = hold.model_selection(grid, plot=True)
+# model = hold.model_selection(grid, plot=True)
 
-hold.best_index
-pprint(model.get_params())
+# hold.best_index
+# pprint(model.get_params())
+
+###########################################################
+
+# Testing Cross Validation
+
+imp.reload(val)
+
+# defining grid
+par_ranges = dict()
+par_ranges['eta'] = (0.02, 2.0)
+par_ranges['alpha'] = (0.0, 0.5)
+par_ranges['batch_size'] = (1, 100)
+# par_ranges['hidden_sizes'] = (1, 100)
+par_ranges['reg_lambda'] = (0.0, 0.1)
+
+grid_size = 4
+grid = hg.HyperRandomGrid(par_ranges, N=grid_size)
+
+selection = val.ModelSelectionCV(X, y, grid=grid,
+                                 nfolds=3, repetitions=2)
+
+start = time.time()
+selection.search()
+end = time.time()
+
+print end-start
+results = selection.load_results()
+
+selection.select_best_hyperparams(top=3)
+
+best_model = selection.select_best_model()

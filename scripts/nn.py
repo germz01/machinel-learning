@@ -10,17 +10,69 @@ from tqdm import tqdm
 
 
 class NeuralNetwork(object):
-    """ """
-    def __init__(self, X, y, hidden_sizes=[10], w_par=6, task='classifier'):
+    """ Neural Network """
+    def __init__(self, X, y, hidden_sizes=[10],
+                 eta=0.5, alpha=0, epochs=1000,
+                 batch_size=1, reg_lambda=0.0, reg_method='l2',
+                 w_par=6, task='classifier'):
+        """
+        TODO: fix documentation
+
+        Parameters
+        ----------
+        eta : float
+            the learning rate
+
+        alpha : float
+            the momentum constant
+            (Default value = 0)
+
+        epochs : int
+            the (maximum) number of epochs for which the neural network
+            has to be trained
+            (Default value = 1000)
+
+        batch_size : int
+            the batch size
+            (Default value = 1)
+
+        reg_lambda: float
+            the regularization factor
+            (Default value = 0.0)
+
+        reg_method: str
+            the regularization method, either l1 or l2 regularization are
+            availables
+            (Default value = 'l2')
+
+        par : type
+            par_description
+
+        Returns
+        -------
+        out : type
+            out_description
+        """
 
         self.hidden_sizes = hidden_sizes
         self.n_layers = len(hidden_sizes) + 1
         self.topology = u.compose_topology(X, self.hidden_sizes, y)
 
+        self.X = X
+
+        self.eta = eta
+        self.alpha = alpha
+        self.batch_size = batch_size
+        self.reg_method = reg_method
+        self.reg_lambda = reg_lambda
+        self.epochs = epochs
+
         self.W = self.set_weights(w_par)
         self.W_copy = [w.copy() for w in self.W]
         self.b = self.set_bias()
         self.b_copy = [b.copy() for b in self.b]
+
+        self.params = self.get_params()
 
         self.delta_W = [0 for i in range(self.n_layers)]
         self.delta_b = [0 for i in range(self.n_layers)]
@@ -103,6 +155,15 @@ class NeuralNetwork(object):
         params : dict
             parameters dictionary
         """
+        self.params = dict()
+        self.params['eta'] = self.eta
+        self.params['alpha'] = self.alpha
+        self.params['batch_size'] = self.batch_size
+        self.params['hidden_sizes'] = self.hidden_sizes
+        self.params['reg_method'] = self.reg_method
+        self.params['reg_lambda'] = self.reg_lambda
+        self.params['epochs'] = self.epochs
+
         return self.params
 
     def forward_propagation(self, x, y):
@@ -155,8 +216,7 @@ class NeuralNetwork(object):
             # summing over previous layer units
             g = self.W[layer].T.dot(g)
 
-    def train(self, X, y, eta, alpha=0, epochs=1000,
-              batch_size=1, reg_lambda=0.0, reg_method='l2'):
+    def train(self, X, y):
         """
         This function trains the neural network whit the hyperparameters given
         in input
@@ -169,61 +229,26 @@ class NeuralNetwork(object):
         y : numpy.ndarray
             the target column vector
 
-        eta : float
-            the learning rate
-
-        alpha : float
-            the momentum constant
-            (Default value = 0)
-
-        epochs : int
-            the (maximum) number of epochs for which the neural network
-            has to be trained
-            (Default value = 1000)
-
-        batch_size : int
-            the batch size
-            (Default value = 1)
-
-        reg_lambda: float
-            the regularization factor
-            (Default value = 0.0)
-
-        reg_method: str
-            the regularization method, either l1 or l2 regularization are
-            availables
-            (Default value = 'l2')
 
         Returns
         -------
         """
-        self.epochs = epochs
-        self.X = X
-
-        self.params = dict()
-        self.params['eta'] = eta
-        self.params['alpha'] = alpha
-        self.params['batch_size'] = batch_size
-        self.params['hidden_sizes'] = self.hidden_sizes
-        self.params['reg_method'] = reg_method
-        self.params['reg_lambda'] = reg_lambda
-
         velocity_W = [0 for i in range(self.n_layers)]
         velocity_b = [0 for i in range(self.n_layers)]
 
         self.error_per_epochs = []
         self.error_per_batch = []
 
-        for e in tqdm(range(epochs), desc='TRAINING'):
+        for e in tqdm(range(self.epochs), desc='TRAINING'):
             error_per_batch = []
 
             dataset = np.hstack((X, y))
             np.random.shuffle(dataset)
             X, y = np.hsplit(dataset, [X.shape[1]])
 
-            for b_start in np.arange(0, X.shape[0], batch_size):
-                x_batch = X[b_start:b_start + batch_size, :]
-                y_batch = y[b_start:b_start + batch_size, :]
+            for b_start in np.arange(0, X.shape[0], self.batch_size):
+                x_batch = X[b_start:b_start + self.batch_size, :]
+                y_batch = y[b_start:b_start + self.batch_size, :]
 
                 error = self.forward_propagation(x_batch, y_batch)
                 self.error_per_batch.append(error)
@@ -233,15 +258,15 @@ class NeuralNetwork(object):
 
                 for layer in range(self.n_layers):
                     weight_decay = reg.regularization(self.W[layer],
-                                                      reg_lambda,
-                                                      reg_method)
+                                                      self.reg_lambda,
+                                                      self.reg_method)
 
-                    velocity_b[layer] = (alpha * velocity_b[layer]) \
-                        - (eta / x_batch.shape[0]) * self.delta_b[layer]
+                    velocity_b[layer] = (self.alpha * velocity_b[layer]) \
+                        - (self.eta / x_batch.shape[0]) * self.delta_b[layer]
                     self.b[layer] += velocity_b[layer]
 
-                    velocity_W[layer] = (alpha * velocity_W[layer]) \
-                        - ((eta / x_batch.shape[0])
+                    velocity_W[layer] = (self.alpha * velocity_W[layer]) \
+                        - ((self.eta / x_batch.shape[0])
                            * (weight_decay + self.delta_W[layer]))
                     self.W[layer] += velocity_W[layer]
 
