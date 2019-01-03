@@ -16,7 +16,6 @@ class NeuralNetwork(object):
                  batch_size=1, reg_lambda=0.0, reg_method='l2',
                  w_par=6, task='classifier'):
         """
-        What it does? 
         TODO: fix documentation
 
         Parameters
@@ -74,7 +73,7 @@ class NeuralNetwork(object):
         self.b_copy = [b.copy() for b in self.b]
 
         self.params = self.get_params()
-        
+
         self.delta_W = [0 for i in range(self.n_layers)]
         self.delta_b = [0 for i in range(self.n_layers)]
         self.a = [0 for i in range(self.n_layers)]
