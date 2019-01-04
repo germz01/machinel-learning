@@ -3,8 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import imp
 import utils as u
-import hypergrid as hg
-# import pandas as pd
+import pandas as pd
 from pprint import pprint
 import holdout as holdout
 import validation as val
@@ -28,9 +27,9 @@ imp.reload(NN)
 imp.reload(u)
 
 nn = NN.NeuralNetwork(X, y, eta=0.2, alpha=0.1,
-         reg_method='l2', reg_lambda=0.01,
-         epochs=500, batch_size=10,
-         w_par=6)
+                      reg_method='l2', reg_lambda=0.01,
+                      epochs=500, batch_size=10,
+                      w_par=6)
 
 nn.train(X, y)
 
@@ -68,19 +67,18 @@ par_ranges = dict()
 par_ranges['eta'] = (0.02, 2.0)
 par_ranges['alpha'] = (0.0, 0.5)
 par_ranges['batch_size'] = (1, 100)
-#par_ranges['hidden_sizes'] = (1, 100)
-#par_ranges['hidden_sizes_2'] = (1,10)
+par_ranges['hidden_sizes'] = [(1, 100)]
 par_ranges['reg_lambda'] = (0.0, 0.1)
 
-grid_size = 100
-grid = hg.HyperRandomGrid(par_ranges, N = grid_size )
+nn = NN.NeuralNetwork(X, y)
 
-for params in grid:
-    print params
+pars = nn.get_params().keys()
+
+grid_size = 100
+grid = val.HyperRandomGrid(par_ranges, N=grid_size )
 
 hold = holdout.Holdout(X, y)
-
-# model = hold.model_selection(grid, plot=True)
+# model = hold.model_selection(grid)
 
 # hold.best_index
 # pprint(model.get_params())
@@ -89,21 +87,25 @@ hold = holdout.Holdout(X, y)
 
 # Testing Cross Validation
 
-imp.reload(val)
-
 # defining grid
-par_ranges = dict()
-par_ranges['eta'] = (0.02, 2.0)
-par_ranges['alpha'] = (0.0, 0.5)
-par_ranges['batch_size'] = (1, 100)
-# par_ranges['hidden_sizes'] = (1, 100)
-par_ranges['reg_lambda'] = (0.0, 0.1)
+param_ranges = dict()
+param_ranges['eta'] = (0.02, 2.0)
+param_ranges['alpha'] = 0.001
+param_ranges['batch_size'] = (1, 100)
+param_ranges['hidden_sizes'] = [(1, 100), (10, 20)]
+param_ranges['reg_lambda'] = (0.0, 0.1)
+param_ranges['reg_method'] = 'l2'
+param_ranges['epochs'] = 200
 
-grid_size = 4
-grid = hg.HyperRandomGrid(par_ranges, N=grid_size)
+grid_size = 10
+grid = val.HyperRandomGrid(param_ranges, N=grid_size)
 
+for hyperparam in grid:
+    pprint(hyperparam)
+
+imp.reload(val)
 selection = val.ModelSelectionCV(X, y, grid=grid,
-                                 nfolds=3, repetitions=2)
+                                 nfolds=7, repetitions=2)
 
 start = time.time()
 selection.search()
@@ -112,6 +114,6 @@ end = time.time()
 print end-start
 results = selection.load_results()
 
-selection.select_best_hyperparams(top=3)
+pprint(selection.select_best_hyperparams(top=7))
 
 best_model = selection.select_best_model()

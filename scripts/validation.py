@@ -39,7 +39,7 @@ class KFoldCrossValidation(object):
 
     """
 
-    def __init__(self, X, y, neural_net, nfolds=3, **kwargs):
+    def __init__(self, X, y, neural_net, nfolds=3, shuffle=False, **kwargs):
         """
         The class' constructor.
 
@@ -58,6 +58,10 @@ class KFoldCrossValidation(object):
             the number of folds to be applied in the algorithm
             (Default value = 3)
 
+        shuffle: bool
+             choosing if the dataset must be shuffled
+                    (Default value = False)
+
         kwargs: dict
             a dictionary which contains the parameters for the neural
             network's initialization
@@ -71,7 +75,8 @@ class KFoldCrossValidation(object):
         self.folds = list()
         self.results = list()
 
-        np.random.shuffle(self.dataset)
+        if shuffle:
+            np.random.selfhuffle(self.dataset)
         self.set_folds(nfolds)
         self.validate(X, y, neural_net, nfolds)
 
@@ -214,7 +219,6 @@ class KFoldCrossValidation(object):
         out = {metric: {'values': []} for metric in metrics}
         for res in self.results:
             for metric in metrics:
-                print res
                 out[metric]['values'].append(res[metric])
 
         for metric in metrics:
@@ -244,7 +248,7 @@ class ModelSelectionCV():
 
         repetitions: int
             Cross Validation Repetitions
-            (Default value = 0)
+            (Default value = 1)
 
         Returns
         -------
@@ -278,27 +282,29 @@ class ModelSelectionCV():
             with open(self.fname, 'w') as f:
                 f.write('{"out":[ ')
         i = 0
-        for hyperparams in tqdm(self.grid, desc='GRID SEARCH PROGRESS'):
-            for rep in range(self.repetitions):
+        for rep in range(self.repetitions):
+
+            dataset = np.hstack((self.X_design, self.y_design))
+            np.random.shuffle(dataset)
+            X_design, y_design = np.hsplit(dataset,
+                                           [self.X_design.shape[1]])
+
+            for hyperparams in tqdm(self.grid, desc='GRID SEARCH PROGRESS'):
                 # instanciate neural network
                 # TODO(?): generalize instanciation to any model
-                neural_net = NN.NeuralNetwork(self.X_design, self.y_design,
+                neural_net = NN.NeuralNetwork(X_design, y_design,
                                               **hyperparams)
 
                 cross_val = KFoldCrossValidation(
-                    self.X_design, self.y_design, neural_net,
-                    nfolds=self.nfolds)
+                    X_design, y_design, neural_net,
+                    nfolds=self.nfolds, shuffle=False)
 
                 i += 1
                 out = dict()
-                # out['hyperparams'] = hyperparams
                 out['hyperparams'] = neural_net.get_params()
                 out['errors'] = cross_val.aggregated_results
-                # out.update(hyperparams)
-                # out.update(cross_val.aggregated_results)
 
                 with open(self.fname, 'a') as f:
-                    # f.write('{'+ ' "a{}": '.format(indice))
                     json.dump(out, f)
                     if i != self.n_iter:
                         f.write(',\n')
@@ -424,8 +430,8 @@ class Holdout():
         errors_va = []
         for i, pars in enumerate(grid):
             # TODO: handle multiple layers
-            nn = nn.NeuralNetwork(hidden_sizes=[pars.pop('hidden_sizes')])
-            nn.train(self.X_train, self.y_train, epochs=500, **pars)
+            nn = nn.NeuralNetwork(self.X_train, self.y_train, **pars)
+            nn.train(self.X_train, self.y_train)
             print('trained')
             params.append(nn.get_params())
             # assess on validation set
@@ -498,7 +504,7 @@ class HyperRandomGrid():
             random.seed()
             self.seed = random.randint(0, 2**32)
             random.seed(self.seed)
-
+            
     def get_types(self):
         """
         Get the type of each parameter
@@ -514,7 +520,13 @@ class HyperRandomGrid():
 
         types = dict()
         for par, interval in self.param_ranges.items():
-            if type(interval[0]) is int and type(interval[1] is int):
+            if (type(interval) is int) or \
+               (type(interval) is float) or \
+               (type(interval) is str):
+                types[par] = 'constant'
+            elif type(interval) is list:
+                types[par] = list
+            elif type(interval[0]) is int and type(interval[1] is int):
                 types[par] = int
             elif type(interval[0]) is float and type(interval[1] is float):
                 types[par] = float
@@ -544,8 +556,17 @@ class HyperRandomGrid():
         for par, interval in self.param_ranges.items():
             if self.types[par] is int:
                 x_grid[par] = random.randint(interval[0], interval[1])
-            else:
+            elif self.types[par] is float:
                 x_grid[par] = random.uniform(interval[0], interval[1])
+            elif self.types[par] is list:
+                x_grid[par] = []
+                for el in interval:
+                    if (type(el) is int):
+                        x_grid[par].append(el)
+                    elif type(el) is tuple:
+                        x_grid[par].append(random.randint(el[0], el[1]))
+            elif self.types[par] == 'constant':
+                x_grid[par] = interval
 
         self.n += 1
         if self.n == self.N+1:
