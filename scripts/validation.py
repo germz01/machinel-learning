@@ -58,8 +58,8 @@ class KFoldCrossValidation(object):
             (Default value = 3)
 
         shuffle: bool
-             choosing if the dataset must be shuffled
-                    (Default value = False)
+            choosing if the dataset must be shuffled
+            (Default value = False)
 
         kwargs: dict
             a dictionary which contains the parameters for the neural
@@ -75,7 +75,7 @@ class KFoldCrossValidation(object):
         self.results = list()
 
         if shuffle:
-            np.random.selfhuffle(self.dataset)
+            np.random.shuffle(self.dataset)
 
         self.set_folds(nfolds)
         self.validate(X, y, neural_net, nfolds)
@@ -152,18 +152,20 @@ class KFoldCrossValidation(object):
             # self.results.append(loss)
             neural_net.reset()
 
-            # TODO: fix plots, adjusting for new modifications
             if plot_curves:
                 plt.plot(range(len(neural_net.error_per_epochs)),
                          neural_net.error_per_epochs,
                          label='FOLD {}, VALIDATION ERROR: {}'.
-                         format(i, round(loss, 2)))
+                         format(i, round(assessment['mse'], 2)))
+
+        self.aggregated_results = self.aggregate_assessments()
 
         if plot_curves:
             plt.title('LEARNING CURVES FOR A {}-FOLD CROSS VALIDATION.\nMEAN '
                       'VALIDATION ERROR {}, VARIANCE {}.'.
-                      format(nfolds, round(self.mean_result, 2),
-                             round(self.std_result, 2)),
+                      format(nfolds, round(
+                        self.aggregated_results['mse']['mean'], 2),
+                        round(self.aggregated_results['mse']['std'], 2)),
                       fontsize=8)
             plt.ylabel('ERROR PER EPOCH')
             plt.xlabel('EPOCHS')
@@ -172,8 +174,6 @@ class KFoldCrossValidation(object):
             plt.savefig('../images/{}_fold_cross_val_lcs.pdf'.
                         format(nfolds), bbox_inches='tight')
             plt.close()
-
-        self.aggregated_results = self.aggregate_assessments()
 
         return self.aggregated_results
 

@@ -22,9 +22,11 @@ if raw_input('PLAIN EXECUTION WITHOUT TESTING?[Y/N] ') == 'Y':
         pass
 
 if raw_input('TESTING K-FOLD CROSS VALIDATION?[Y/N] ') == 'Y':
-    neural_net = nn.NeuralNetwork(X, y)
+    neural_net = nn.NeuralNetwork(X, y, eta=eta, alpha=alpha, epochs=500,
+                                  batch_size=10, reg_lambda=0.01,
+                                  reg_method='l2')
 
-    cross_val = val.KFoldCrossValidation(X, y, neural_net,
+    cross_val = val.KFoldCrossValidation(X, y, neural_net, nfolds=5,
                                          eta=eta, alpha=alpha, epochs=500,
                                          batch_size=10, reg_lambda=0.01,
                                          reg_method='l2')
