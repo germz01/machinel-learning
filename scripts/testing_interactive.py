@@ -2,6 +2,7 @@ import nn
 import numpy as np
 import validation as val
 
+from pprint import pprint
 from tqdm import tqdm
 
 X = np.concatenate((np.random.normal(2., 1., (50, 2)),
@@ -27,20 +28,34 @@ if raw_input('TESTING K-FOLD CROSS VALIDATION?[Y/N] ') == 'Y':
                                          eta=eta, alpha=alpha, epochs=500,
                                          batch_size=10, reg_lambda=0.01,
                                          reg_method='l2')
-    tqdm.write('VALIDATION ERRORS {}'.format(cross_val.results))
-    tqdm.write('MEAN VALIDATION ERROR: {}'.format(cross_val.mean_result))
-    tqdm.write('VARIANCE FOR VALIDATION ERROR {}'.format(cross_val.std_result))
+    tqdm.write('AGGREGATED RESULTS: \n')
+    pprint(cross_val.aggregated_results)
 
 if raw_input('TESTING GRID SEARCH?[Y/N] ') == 'Y':
-    par_ranges = dict()
-    par_ranges['eta'] = (0.1, 0.9)
-    par_ranges['alpha'] = (0.1, 0.9)
-    par_ranges['reg_lambda'] = (0.001, 0.01)
-    par_ranges['batch_size'] = (1, 100)
-    par_ranges['epochs'] = (10, 1000)
+    param_ranges = dict()
+    param_ranges['eta'] = (0.02, 2.0)
+    param_ranges['alpha'] = 0.001
+    param_ranges['batch_size'] = (1, 100)
+    param_ranges['hidden_sizes'] = [(1, 100), (10, 20)]
+    param_ranges['reg_lambda'] = (0.0, 0.1)
+    param_ranges['reg_method'] = 'l2'
+    param_ranges['epochs'] = 200
 
-    grid_search = val.GridSearch(X, y, random_search=True,
-                                 par_ranges=par_ranges)
-    print '\n\nBEST RESULT {} FROM RECORD: {}'.\
-        format(grid_search.best_result['error'],
-               grid_search.best_result['parameters'])
+    grid_size = 10
+    grid = val.HyperRandomGrid(param_ranges, N=grid_size)
+
+    grid = [v for v in grid]
+
+    selection = val.ModelSelectionCV(grid)
+    selection.search(X, y)
+    results = selection.load_results()
+
+    best_model = selection.select_best_model(X, y)
+
+    # print best_model
+
+    # grid_search = val.GridSearch(X, y, random_search=True,
+    #                              par_ranges=par_ranges)
+    # print '\n\nBEST RESULT {} FROM RECORD: {}'.\
+    #     format(grid_search.best_result['error'],
+    #            grid_search.best_result['parameters'])
