@@ -10,18 +10,36 @@ from tqdm import tqdm
 
 
 class NeuralNetwork(object):
-    """ Neural Network """
+    """
+    This class represents an implementation for a simple neural network.
+
+    Attributes
+    ----------
+    TODO
+    """
     def __init__(self, X, y, hidden_sizes=[10],
                  eta=0.5, alpha=0, epochs=1000,
                  batch_size=1, reg_lambda=0.0, reg_method='l2',
                  w_par=6, task='classifier'):
         """
-        TODO: fix documentation
+        The class' constructor.
 
         Parameters
         ----------
+        X: numpy.ndarray
+            the design matrix
+
+        y: numpy.ndarray
+            the target column vector
+
+        hidden_sizes: list
+            a list of integers. The list's length represents the number of
+            neural network's hidden layers and each integer represents the
+            number of neurons in a hidden layer
+
         eta : float
             the learning rate
+            (Default value = 0.5)
 
         alpha : float
             the momentum constant
@@ -45,13 +63,18 @@ class NeuralNetwork(object):
             availables
             (Default value = 'l2')
 
-        par : type
-            par_description
+        w_par: int
+            the parameter for initializing the network's weights matrices
+            following the rule in Deep Learning, pag. 295
+            (Default value = 6)
+
+        task: str
+            the task that the neural network has to perform, either
+            'classifier' or 'regression'
+            (Default value = 'classifier')
 
         Returns
         -------
-        out : type
-            out_description
         """
 
         self.hidden_sizes = hidden_sizes
