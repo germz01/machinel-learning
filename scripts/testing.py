@@ -97,18 +97,19 @@ param_ranges['reg_lambda'] = (0.0, 0.1)
 param_ranges['reg_method'] = 'l2'
 param_ranges['epochs'] = 200
 
+imp.reload(val)
 grid_size = 10
 grid = val.HyperRandomGrid(param_ranges, N=grid_size)
+len(grid)
 
 for hyperparam in grid:
     pprint(hyperparam)
 
-imp.reload(val)
-selection = val.ModelSelectionCV(X, y, grid=grid,
-                                 nfolds=7, repetitions=2)
+
+selection = val.ModelSelectionCV(grid=grid, repetitions=2)
 
 start = time.time()
-selection.search()
+selection.search(X, y, nfolds=3)
 end = time.time()
 
 print end-start
@@ -116,4 +117,4 @@ results = selection.load_results()
 
 pprint(selection.select_best_hyperparams(top=7))
 
-best_model = selection.select_best_model()
+best_model = selection.select_best_model(X, y)

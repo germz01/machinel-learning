@@ -6,7 +6,6 @@ import numpy as np
 import pandas as pd
 import random
 import utils as u
-import nn as NN
 import json
 
 from itertools import product
@@ -315,7 +314,7 @@ class ModelSelectionCV(object):
             for hyperparams in tqdm(self.grid, desc='GRID SEARCH PROGRESS'):
                 # instanciate neural network
                 # TODO(?): generalize instanciation to any model
-                neural_net = NN.NeuralNetwork(X_design, y_design,
+                neural_net = nn.NeuralNetwork(X_design, y_design,
                                               **hyperparams)
 
                 cross_val = KFoldCrossValidation(X_design, y_design,
@@ -402,7 +401,7 @@ class ModelSelectionCV(object):
         best = self.select_best_hyperparams(top=1)
         best_hyperparams = best[0]['hyperparams']
 
-        neural_net = NN.NeuralNetwork(X_design, y_design,
+        neural_net = nn.NeuralNetwork(X_design, y_design,
                                       **best_hyperparams)
         neural_net.train(X_design, y_design)
 
@@ -469,17 +468,17 @@ class Holdout():
         params = []
         errors_va = []
         for i, pars in enumerate(grid):
-            # TODO: handle multiple layers
-            nn = nn.NeuralNetwork(self.X_train, self.y_train, **pars)
-            nn.train(self.X_train, self.y_train)
+
+            net = nn.NeuralNetwork(self.X_train, self.y_train, **pars)
+            net.train(self.X_train, self.y_train)
             print('trained')
-            params.append(nn.get_params())
+            params.append(net.get_params())
             # assess on validation set
             errors_va.append(
-                nn.predict(self.X_va, self.y_va)/(self.X_va.shape[0])
+                net.predict(self.X_va, self.y_va)/(self.X_va.shape[0])
             )
             if plot is True:
-                u.plot_error(nn, fname=fpath
+                u.plot_error(net, fname=fpath
                              + 'learning_curve_{}.png'.format(i))
 
         # choosing the best hyperparameters
@@ -487,9 +486,9 @@ class Holdout():
         best_hyperparams = params[self.best_index]
 
         # retraining on design set
-        nn_retrained = nn.NeuralNetwork(hidden_sizes=best_hyperparams
+        net_retrained = nn.NeuralNetwork(hidden_sizes=best_hyperparams
                                         .pop('hidden_sizes'))
-        nn_retrained.train(self.X_design, self.y_design, **best_hyperparams)
+        net_retrained.train(self.X_design, self.y_design, **best_hyperparams)
 
         df_pars = pd.DataFrame(list(grid))
         df_pars['error'] = errors_va
@@ -627,6 +626,10 @@ class HyperRandomGrid():
         for i in range(index+1):
             params = self.next()
         return params
+
+    def __len__(self):
+        """ Returns grid length """
+        return self.N
 
 
 class HyperGrid():
