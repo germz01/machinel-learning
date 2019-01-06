@@ -4,6 +4,8 @@ import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 
+from collections import defaultdict
+
 # CONSTANTS
 
 # This is the path for the directory in which the images are saved.
@@ -57,6 +59,32 @@ def compose_topology(X, hidden_sizes, y):
         [1 if len(y.shape) == 1 else y.shape[1]]
 
     return topology
+
+
+def from_dict_to_list(grid):
+    """
+    This function is used in order to convert an HyperGrid or HyperRandomGrid
+    object in a dictionary in which each key is an hyperparameter's name and
+    each value is an array of possible values for that hyperparameter.
+
+    Parameters
+    ----------
+    grid: HyperGrid or HyperRandomGrid
+        the grid object to convert
+
+    Returns
+    -------
+    A dictionary. Each one of the dictionary's keys is a hyperparameter name,
+    i.e 'eta', alpha,..., and the corresponding value is an array of possible
+    value for that hyperparameter.
+    """
+    to_ret = defaultdict(list)
+
+    for record in grid:
+        for parameter, value in record.items():
+            to_ret[parameter].append(value)
+
+    return to_ret
 
 # PLOTTING RELATED FUNCTIONS
 
@@ -123,7 +151,6 @@ def plot_error(nn, fname='../images/learning_curve.pdf'):
     plt.close()
 
 
-
 def binarize_attribute(attribute, n_categories):
     """
     Binarize a vector of categorical values
@@ -152,7 +179,7 @@ def binarize_attribute(attribute, n_categories):
 def binarize(X, categories_sizes):
     """
     Binarization of the dataset XWhat it does?
-    
+
     Parameters
     ----------
     X : numpy.darray
@@ -160,13 +187,13 @@ def binarize(X, categories_sizes):
 
     categories_sizes : list
         number of categories of each X column
-    
+
     Returns
     -------
     out : numpy.darray
         Binarized dataset
     """
-    
+
     atts = list()
     for col in range(X.shape[1]):
         atts.append(binarize_attribute(X[:, col], categories_sizes[col]))

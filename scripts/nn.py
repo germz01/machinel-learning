@@ -10,11 +10,92 @@ from tqdm import tqdm
 
 
 class NeuralNetwork(object):
-    """ """
-    def __init__(self, hidden_sizes, task='classifier'):
+    """
+    This class represents an implementation for a simple neural network.
+
+    Attributes
+    ----------
+    TODO
+    """
+    def __init__(self, X, y, hidden_sizes=[10],
+                 eta=0.5, alpha=0, epochs=1000,
+                 batch_size=1, reg_lambda=0.0, reg_method='l2',
+                 w_par=6, task='classifier'):
+        """
+        The class' constructor.
+
+        Parameters
+        ----------
+        X: numpy.ndarray
+            the design matrix
+
+        y: numpy.ndarray
+            the target column vector
+
+        hidden_sizes: list
+            a list of integers. The list's length represents the number of
+            neural network's hidden layers and each integer represents the
+            number of neurons in a hidden layer
+
+        eta : float
+            the learning rate
+            (Default value = 0.5)
+
+        alpha : float
+            the momentum constant
+            (Default value = 0)
+
+        epochs : int
+            the (maximum) number of epochs for which the neural network
+            has to be trained
+            (Default value = 1000)
+
+        batch_size : int
+            the batch size
+            (Default value = 1)
+
+        reg_lambda: float
+            the regularization factor
+            (Default value = 0.0)
+
+        reg_method: str
+            the regularization method, either l1 or l2 regularization are
+            availables
+            (Default value = 'l2')
+
+        w_par: int
+            the parameter for initializing the network's weights matrices
+            following the rule in Deep Learning, pag. 295
+            (Default value = 6)
+
+        task: str
+            the task that the neural network has to perform, either
+            'classifier' or 'regression'
+            (Default value = 'classifier')
+
+        Returns
+        -------
+        """
 
         self.hidden_sizes = hidden_sizes
         self.n_layers = len(hidden_sizes) + 1
+        self.topology = u.compose_topology(X, self.hidden_sizes, y)
+
+        self.X = X
+
+        self.eta = eta
+        self.alpha = alpha
+        self.batch_size = batch_size
+        self.reg_method = reg_method
+        self.reg_lambda = reg_lambda
+        self.epochs = epochs
+
+        self.W = self.set_weights(w_par)
+        self.W_copy = [w.copy() for w in self.W]
+        self.b = self.set_bias()
+        self.b_copy = [b.copy() for b in self.b]
+
+        self.params = self.get_params()
 
         self.delta_W = [0 for i in range(self.n_layers)]
         self.delta_b = [0 for i in range(self.n_layers)]
@@ -85,6 +166,29 @@ class NeuralNetwork(object):
         for i in range(len(self.b)):
             print 'b{}: \n{}'.format(i, self.b[i])
 
+    def get_params(self):
+        """
+        Return the parameters of the nn instance
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        params : dict
+            parameters dictionary
+        """
+        self.params = dict()
+        self.params['eta'] = self.eta
+        self.params['alpha'] = self.alpha
+        self.params['batch_size'] = self.batch_size
+        self.params['hidden_sizes'] = self.hidden_sizes
+        self.params['reg_method'] = self.reg_method
+        self.params['reg_lambda'] = self.reg_lambda
+        self.params['epochs'] = self.epochs
+
+        return self.params
+
     def forward_propagation(self, x, y):
         """
         This function implements the forward propagation algorithm following
@@ -135,73 +239,39 @@ class NeuralNetwork(object):
             # summing over previous layer units
             g = self.W[layer].T.dot(g)
 
-    def train(self, X, y, eta, alpha=0, epochs=1000,
-              batch_size=1, reg_lambda=0.0, reg_method='l2',
-              regularizer=[0.0, 'l2'], w_par=6):
+    def train(self, X, y):
         """
         This function trains the neural network whit the hyperparameters given
         in input
 
         Parameters
         ----------
-        X : the design matrix
+        X : numpy.ndarray
+            the design matrix
 
-        y : the target column vector
+        y : numpy.ndarray
+            the target column vector
 
-        eta : the learning rate
-
-        regularizer : a list of two items, in which the first item represents
-                      the regularization constant and the second items
-                      represents the type of regularization, either L1 or L2,
-                      that has to be applied
-
-        alpha : the momentum constant
-             (Default value = 0)
-
-        epochs : the (maximum) number of epochs for which the neural network
-                 has to be trained
-             (Default value = 1000)
-
-        batch_size : the batch size
-             (Default value = 1)
-        w_par : a parameter which is plugged into the formula for estimating
-                the uniform interval for defining the network's weights
-             (Default value = 6)
 
         Returns
         -------
         """
-        self.topology = u.compose_topology(X, self.hidden_sizes, y)
-        self.epochs = epochs
-        self.X = X
-        self.W = self.set_weights(w_par)
-        self.b = self.set_bias()
-
-        self.params = dict()
-        self.params['eta'] = eta
-        self.params['alpha'] = alpha
-        self.params['batch_size'] = batch_size
-        self.params['regularizer'] = regularizer
-        self.params['hidden_sizes'] = self.hidden_sizes
-        self.params['reg_method'] = reg_method
-        self.params['reg_lambda'] = reg_lambda
-
         velocity_W = [0 for i in range(self.n_layers)]
         velocity_b = [0 for i in range(self.n_layers)]
 
         self.error_per_epochs = []
         self.error_per_batch = []
 
-        for e in tqdm(range(epochs), desc='TRAINING'):
+        for e in tqdm(range(self.epochs), desc='TRAINING'):
             error_per_batch = []
 
             dataset = np.hstack((X, y))
             np.random.shuffle(dataset)
             X, y = np.hsplit(dataset, [X.shape[1]])
 
-            for b_start in np.arange(0, X.shape[0], batch_size):
-                x_batch = X[b_start:b_start + batch_size, :]
-                y_batch = y[b_start:b_start + batch_size, :]
+            for b_start in np.arange(0, X.shape[0], self.batch_size):
+                x_batch = X[b_start:b_start + self.batch_size, :]
+                y_batch = y[b_start:b_start + self.batch_size, :]
 
                 error = self.forward_propagation(x_batch, y_batch)
                 self.error_per_batch.append(error)
@@ -211,23 +281,23 @@ class NeuralNetwork(object):
 
                 for layer in range(self.n_layers):
                     weight_decay = reg.regularization(self.W[layer],
-                                                      reg_lambda,
-                                                      reg_method)
+                                                      self.reg_lambda,
+                                                      self.reg_method)
 
-                    velocity_b[layer] = (alpha * velocity_b[layer]) \
-                        - (eta / x_batch.shape[0]) * self.delta_b[layer]
+                    velocity_b[layer] = (self.alpha * velocity_b[layer]) \
+                        - (self.eta / x_batch.shape[0]) * self.delta_b[layer]
                     self.b[layer] += velocity_b[layer]
 
-                    velocity_W[layer] = (alpha * velocity_W[layer]) \
-                        - ((eta / x_batch.shape[0])
+                    velocity_W[layer] = (self.alpha * velocity_W[layer]) \
+                        - ((self.eta / x_batch.shape[0])
                            * (weight_decay + self.delta_W[layer]))
                     self.W[layer] += velocity_W[layer]
 
             # summing up errors to compute overall MSE
             self.error_per_epochs.append(np.sum(error_per_batch)/X.shape[0])
 
-        print 'STARTED WITH LOSS {}, ENDED WITH {}'.\
-            format(self.error_per_epochs[0], self.error_per_epochs[-1])
+        # print 'STARTED WITH LOSS {}, ENDED WITH {}'.\
+        #     format(self.error_per_epochs[0], self.error_per_epochs[-1])
 
     def predict(self, x, y):
         """
@@ -249,16 +319,20 @@ class NeuralNetwork(object):
         return lss.mean_squared_error(self.h[-1].T, y)
         # return self.h[-1]
 
-    def get_params(self):
+    def reset(self):
         """
-        Return the parameters of the nn instance
+        This function is used in order to reset the neural network inner
+        variables. It is mainly used during the validation process.
 
         Parameters
         ----------
 
         Returns
         -------
-        params : dict
-            parameters dictionary
         """
-        return self.params
+        self.W = [w.copy() for w in self.W_copy]
+        self.b = [b.copy() for b in self.b_copy]
+        self.delta_W = [0 for i in range(self.n_layers)]
+        self.delta_b = [0 for i in range(self.n_layers)]
+        self.a = [0 for i in range(self.n_layers)]
+        self.h = [0 for i in range(self.n_layers)]

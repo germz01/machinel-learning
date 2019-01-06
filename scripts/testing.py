@@ -3,10 +3,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import imp
 import utils as u
-import hypergrid as hg
-# import pandas as pd
+import pandas as pd
 from pprint import pprint
 import holdout as holdout
+import validation as val
+import time
+
 
 # number of patterns for each class
 p_class1 = 70
@@ -24,12 +26,12 @@ y = np.vstack((np.hstack((np.ones(p_class1), np.zeros(p_class2))),
 imp.reload(NN)
 imp.reload(u)
 
-nn = NN.NeuralNetwork(hidden_sizes=[10])
+nn = NN.NeuralNetwork(X, y, eta=0.2, alpha=0.1,
+                      reg_method='l2', reg_lambda=0.01,
+                      epochs=500, batch_size=10,
+                      w_par=6)
 
-nn.train(X, y, eta=0.2, alpha=0.1,
-         reg_method='l2', reg_lambda=0.01,
-         epochs=500, batch_size=10,
-         w_par=6)
+nn.train(X, y)
 
 nn.predict(X, y)
 y_pred = nn.h[-1]
@@ -65,20 +67,54 @@ par_ranges = dict()
 par_ranges['eta'] = (0.02, 2.0)
 par_ranges['alpha'] = (0.0, 0.5)
 par_ranges['batch_size'] = (1, 100)
-par_ranges['hidden_sizes'] = (1, 100)
-# par_ranges['hidden_sizes_2'] = (1,10)
+par_ranges['hidden_sizes'] = [(1, 100)]
 par_ranges['reg_lambda'] = (0.0, 0.1)
 
+nn = NN.NeuralNetwork(X, y)
+
+pars = nn.get_params().keys()
+
 grid_size = 100
-
-grid = hg.HyperRandomGrid(par_ranges, N = grid_size )
-
-for params in grid:
-    print params
+grid = val.HyperRandomGrid(par_ranges, N=grid_size )
 
 hold = holdout.Holdout(X, y)
+# model = hold.model_selection(grid)
 
-model = hold.model_selection(grid, plot=True)
+# hold.best_index
+# pprint(model.get_params())
 
-hold.best_index
-pprint(model.get_params())
+###########################################################
+
+# Testing Cross Validation
+
+# defining grid
+param_ranges = dict()
+param_ranges['eta'] = (0.02, 2.0)
+param_ranges['alpha'] = 0.001
+param_ranges['batch_size'] = (1, 100)
+param_ranges['hidden_sizes'] = [(1, 100), (10, 20)]
+param_ranges['reg_lambda'] = (0.0, 0.1)
+param_ranges['reg_method'] = 'l2'
+param_ranges['epochs'] = 200
+
+imp.reload(val)
+grid_size = 10
+grid = val.HyperRandomGrid(param_ranges, N=grid_size)
+len(grid)
+
+for hyperparam in grid:
+    pprint(hyperparam)
+
+
+selection = val.ModelSelectionCV(grid=grid, repetitions=2)
+
+start = time.time()
+selection.search(X, y, nfolds=3)
+end = time.time()
+
+print end-start
+results = selection.load_results()
+
+pprint(selection.select_best_hyperparams(top=7))
+
+best_model = selection.select_best_model(X, y)
