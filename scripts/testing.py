@@ -98,12 +98,21 @@ param_ranges['reg_method'] = 'l2'
 param_ranges['epochs'] = 200
 
 imp.reload(val)
-grid_size = 10
-grid = val.HyperRandomGrid(param_ranges, N=grid_size)
-len(grid)
 
+# uniform grid
+grid_size = 3
+grid = val.HyperGrid(param_ranges, size=grid_size, random=False)
+
+i=0
 for hyperparam in grid:
     pprint(hyperparam)
+    i+=1
+
+# random grid
+grid_size = 10
+grid = val.HyperGrid(param_ranges, size=grid_size, random=True)
+len(grid)
+
 
 
 selection = val.ModelSelectionCV(grid=grid, repetitions=2)
