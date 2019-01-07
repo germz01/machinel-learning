@@ -44,7 +44,7 @@ if raw_input('TESTING GRID SEARCH?[Y/N] ') == 'Y':
     param_ranges['epochs'] = 200
 
     grid_size = 10
-    grid = val.HyperRandomGrid(param_ranges, N=grid_size)
+    grid = val.HyperGrid(param_ranges, size=grid_size)
 
     grid = [v for v in grid]
 

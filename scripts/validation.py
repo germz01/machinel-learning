@@ -4,7 +4,7 @@ import nn
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import random
+import random as rnd
 import utils as u
 import json
 
@@ -487,7 +487,7 @@ class Holdout():
 
         # retraining on design set
         net_retrained = nn.NeuralNetwork(hidden_sizes=best_hyperparams
-                                        .pop('hidden_sizes'))
+                                         .pop('hidden_sizes'))
         net_retrained.train(self.X_design, self.y_design, **best_hyperparams)
 
         df_pars = pd.DataFrame(list(grid))
@@ -495,54 +495,69 @@ class Holdout():
 
         self.best_hyperparams = best_hyperparams
         self.df_pars = df_pars
-        self.model = nn_retrained
+        self.model = net_retrained
 
         return self.model
 
 
-class HyperRandomGrid():
-    """ HyperRandomGrid """
+class HyperGrid():
+    """ HyperGrid Class"""
 
-    def __init__(self, param_ranges, N, seed=None):
+    def __init__(self, param_ranges, size, random=True, seed=None):
         """
-        HyperRandomGrid instanciates an iterator
-        which produce random parameters, in the given ranges.
+        HyperGrid instanciates a random or uniform grid using
+        the given parameters ranges.
 
-        The grid iterator is reset after each use,
+        The random grid iterator is reset after each use,
         allowing immediate reuse of the same grid.
 
         Parameters
         ----------
         param_ranges : dict
-        dictionary containing ranges interval for each parameter.
+            dictionary containing ranges interval for each parameter.
 
-        N: int
-        size of the grid.
+        size: int
+            size of the grid. For a random grid represent the grid size.
+            For a uniform grid is the step size of each dimension.
+
+        random: bool
+            choose random grid or random grid
+            (Default value = True)
 
         seed: int
-        random seed initialization.
+            random seed initialization.
 
         Returns
         -------
 
         """
-
-        self.N = N
-        self.n = 0
+        self.size = size
+        self.n = 0  # iterator counter
         if type(param_ranges) is not dict:
             raise TypeError("Insert a dictionary of parameters ranges")
         self.param_ranges = param_ranges
         self.types = self.get_types()
+        self.random = random
 
-        if seed is not None:
-            # seed inizialization
-            self.seed = seed
-            random.seed(self.seed)
+        if self.random:
+            self.next = self.next_random
+            if seed is not None:
+                # seed inizialization
+                self.seed = seed
+                rnd.seed(self.seed)
+            else:
+                # random initialization
+                rnd.seed()
+                self.seed = rnd.randint(0, 2**32)
+                rnd.seed(self.seed)
+
         else:
-            # random initialization
-            random.seed()
-            self.seed = random.randint(0, 2**32)
-            random.seed(self.seed)
+            self.next = self.next_uniform
+            self.vec_size = size
+            self.set_uniform_grid()
+
+        print('GENERATING AN HYPERPARAMETER GRID OF LENGTH {}'
+              .format(self.__len__()))
 
     def get_types(self):
         """
@@ -576,7 +591,7 @@ class HyperRandomGrid():
     def __iter__(self):
         return self
 
-    def next(self):
+    def next_random(self):
         """
         Iterator next method,
         returns the next grid record
@@ -589,174 +604,133 @@ class HyperRandomGrid():
         Randomized parameter dictionary
         """
         if self.n == 0:
-            random.seed(self.seed)
+            rnd.seed(self.seed)
 
         x_grid = dict()
         for par, interval in self.param_ranges.items():
             if self.types[par] is int:
-                x_grid[par] = random.randint(interval[0], interval[1])
+                x_grid[par] = rnd.randint(interval[0], interval[1])
             elif self.types[par] is float:
-                x_grid[par] = random.uniform(interval[0], interval[1])
+                x_grid[par] = rnd.uniform(interval[0], interval[1])
             elif self.types[par] is list:
                 x_grid[par] = []
                 for el in interval:
                     if (type(el) is int):
                         x_grid[par].append(el)
                     elif type(el) is tuple:
-                        x_grid[par].append(random.randint(el[0], el[1]))
+                        x_grid[par].append(rnd.randint(el[0], el[1]))
             elif self.types[par] == 'constant':
                 x_grid[par] = interval
 
         self.n += 1
-        if self.n == self.N+1:
+        if self.n == self.size+1:
             self.n = 0
             # set random seed at exit
-            random.seed()
+            rnd.seed()
             raise StopIteration
         else:
             return x_grid
 
-    def reset_grid(self):
+    def set_uniform_grid(self):
+
+        # generate grid vectors
+        par_vectors = dict()
+        for par, interval in self.param_ranges.items():
+            if self.types[par] is int:
+                par_vectors[par] = np.linspace(interval[0],
+                                               interval[1],
+                                               self.vec_size, dtype=int)
+            elif self.types[par] is float:
+                par_vectors[par] = np.linspace(interval[0],
+                                               interval[1],
+                                               self.vec_size, dtype=float)
+            elif self.types[par] is list:
+                # list parameters must be flatten
+                for i, el in enumerate(interval):
+                    if type(el) is int:
+                        par_vectors[par+str(i)] = [el]
+                    elif type(el) is tuple:
+                        if type(el[0]) is int:
+                            par_vectors[par+str(i)] = (
+                                np.linspace(el[0],
+                                            el[1],
+                                            self.vec_size, dtype=int))
+                        elif type(el[0]) is float:
+                            par_vectors[par+str(i)] = (
+                                np.linspace(el[0],
+                                            el[1],
+                                            self.vec_size, dtype=float))
+            elif self.types[par] == 'constant':
+                par_vectors[par] = [interval]
+
+        # cartesian product
+        self.grid_iter = (product(*par_vectors.values()))
+
+        # store dictionary for indexing the grid
+        self.flat_params_indexes = dict()
+        for i, el in enumerate(par_vectors):
+            self.flat_params_indexes[el] = i
+
+    def next_uniform(self):
+        """
+        Iterator next method,
+        returns the next grid record
+
+        Parameters
+        ----------
+        Returns
+        -------
+        d : dict
+        Next grid record
+        """
+        record = self.grid_iter.next()
+
+        d = dict()
+        for i, par in enumerate(self.param_ranges):
+            if self.types[par] is list:
+                # merging list type params
+                d[par] = []
+                for i in range(len(self.param_ranges[par])):
+                    d[par].append(record[self.flat_params_indexes[par+str(i)]])
+            else:
+                d[par] = record[self.flat_params_indexes[par]]
+
+        return d
+
+    def reset(self):
         """Reset the grid, to use again the iterator """
-        random.seed(self.seed)
-        self.n = 0
+        if self.random:
+            rnd.seed(self.seed)
+            self.n = 0
+        else:
+            self.set_uniform_grid()
 
     def get_par_index(self, index):
-        self.reset_grid()
+        self.reset()
         for i in range(index+1):
             params = self.next()
         return params
 
     def __len__(self):
-        """ Returns grid length """
-        return self.N
+        """ Returns the grid length """
+        if self.random:
+            return self.size
+        else:
+            grid_dims = len(self.flat_params_indexes.keys())
+            n_const = 0
+            for k, v in self.types.items():
+                if v == 'constant':
+                    n_const += 1
+            return self.size**(grid_dims-n_const)
 
-
-class HyperGrid():
-    """
-    HyperGrid class  instanciates a grid iterator object
-
-    Attributes
-    ----------
-    grid_f: dict
-        A dictionary containing function to generate parameters arrays
-        using the input ranges
-
-    """
-    grid_f = {
-        'linspace':
-        {
-            int: lambda start, end, num:
-            np.linspace(start, end, num, dtype=int),
-            float: lambda start, end, num:
-            np.linspace(start, end, num, dtype=float)
-        },
-        'random':
-        {
-            int: lambda start, end, num:
-            np.random.randint(start, end, num, dtype=int),
-            float: lambda start, end, num:
-            np.random.uniform(start, end, num)
-        }
-    }
-
-    def __init__(self, param_ranges, size, method, ):
-        """
-        Initialize
-
-        Parameters
-        ----------
-        param_ranges : dict
-            dictionary containing hyperparameters ranges
-
-        size : int
-            size of each hyperparameter array
-
-        method : str
-            'linspace' to generate a uniform grid space
-            'random' to generate a random grid
-
-        Returns
-        -------
-
-        """
-
-        self.param_ranges = param_ranges
-        self.size = size
-        self.method = method
-        self.params = param_ranges.keys()
-        self.params_index = {par: self.params.index(par)
-                             for par in self.params}
-        # set seed for the hyperGrid object
-        self.seed = random.randint(0, 2**32)
-        self.grid = self.get_grid()
-
-        print('GENERATING AN HYPERPARAMETER GRID OF LENGTH {}'
-              .format(self.get_grid_size()))
-
-    def get_grid(self):
-        """
-        Produces the grid iterator
-
-        Returns
-        -------
-        grid_iter: itertools.product
-            a grid iterator
-        """
-        np.random.seed(seed=self.seed)
-        par_vectors = dict()
-        for par, interval in self.param_ranges.items():
-            par_vectors[par] = self.grid_f[self.method][type(interval[0])](
-                interval[0],
-                interval[1],
-                self.size
-            )
-            # return par_vectors
-        grid_iter = product(*list(par_vectors.values()))
-        return grid_iter
-
-    def get_grid_list(self):
-        """ get the grid as a list """
-        grid_list = list(self.get_grid())
-
-        return grid_list
-
-    def get_grid_dict(self):
+    def get_as_dict(self):
         """ get the grid as a dict """
-        grid_iter = self.get_grid()
-        grid_dict = {par: [] for par in self.params}
-        for par_values in grid_iter:
-            for par in self.params:
+        self.reset()
+        grid_dict = {par: [] for par in self.param_ranges.keys()}
+
+        for record in self:
+            for par, values in record.items():
                 grid_dict[par].append(
-                    par_values[self.params_index[par]]
-                )
+                    values)
+
         return grid_dict
-
-    def get_grid_size(self):
-        """ get the grid size """
-        return self.size**len(self.params)
-
-    def __iter__(self):
-        """
-        iterator method
-        """
-        return self
-
-    def next(self):
-        """
-        Return next grid parameters as a dictionary
-        """
-        out = self.grid.next()
-
-        d = dict()
-        for i, par in enumerate(self.params):
-            d[par] = out[i]
-
-        return d
-
-    def reset_grid(self):
-        """
-        Re-create the grid iterator, maintaining the same
-        parameters
-        """
-        self.grid = self.get_grid()
