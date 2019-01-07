@@ -46,9 +46,7 @@ if raw_input('TESTING GRID SEARCH?[Y/N] ') == 'Y':
     grid_size = 10
     grid = val.HyperGrid(param_ranges, size=grid_size)
 
-    grid = [v for v in grid]
-
-    selection = val.ModelSelectionCV(grid)
+    selection = val.ModelSelectionCV(grid, repetitions=2)
     selection.search(X, y)
     results = selection.load_results()
 
