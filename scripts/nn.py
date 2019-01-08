@@ -20,7 +20,7 @@ class NeuralNetwork(object):
     def __init__(self, X, y, hidden_sizes=[10],
                  eta=0.5, alpha=0, epochs=1000,
                  batch_size=1, reg_lambda=0.0, reg_method='l2',
-                 w_par=6, task='classifier'):
+                 w_par=6, activation='sigmoid', task='classifier'):
         """
         The class' constructor.
 
@@ -68,6 +68,11 @@ class NeuralNetwork(object):
             following the rule in Deep Learning, pag. 295
             (Default value = 6)
 
+        activation: str
+            the activation function to use for each layer, either
+            'sigmoid', 'relu', 'tanh', 'identity'
+            (Default value = 'sigmoid')
+
         task: str
             the task that the neural network has to perform, either
             'classifier' or 'regression'
@@ -89,6 +94,7 @@ class NeuralNetwork(object):
         self.reg_method = reg_method
         self.reg_lambda = reg_lambda
         self.epochs = epochs
+        self.activation = activation
 
         self.W = self.set_weights(w_par)
         self.W_copy = [w.copy() for w in self.W]
@@ -186,6 +192,7 @@ class NeuralNetwork(object):
         self.params['reg_method'] = self.reg_method
         self.params['reg_lambda'] = self.reg_lambda
         self.params['epochs'] = self.epochs
+        self.params['activation'] = self.activation
 
         return self.params
 
@@ -207,7 +214,7 @@ class NeuralNetwork(object):
         for i in range(self.n_layers):
             self.a[i] = self.b[i] + (self.W[i].dot(x.T if i == 0
                                                    else self.h[i - 1]))
-            self.h[i] = act.A_F['sigmoid']['f'](self.a[i])
+            self.h[i] = act.A_F[self.activation]['f'](self.a[i])
 
         return lss.mean_squared_error(self.h[-1].T, y)
 
@@ -229,7 +236,7 @@ class NeuralNetwork(object):
         g = lss.mean_squared_error(self.h[-1], y.T, gradient=True)
 
         for layer in reversed(range(self.n_layers)):
-            g = np.multiply(g, act.A_F['sigmoid']['fdev'](self.a[layer]))
+            g = np.multiply(g, act.A_F[self.activation]['fdev'](self.a[layer]))
             # update bias, sum over patterns
             self.delta_b[layer] = g.sum(axis=1).reshape(-1, 1)
 
@@ -314,7 +321,7 @@ class NeuralNetwork(object):
         for layer in range(self.n_layers):
             self.a[layer] = self.W[layer].dot(x.T if layer == 0 else
                                               self.h[layer - 1])+self.b[layer]
-            self.h[layer] = act.A_F['sigmoid']['f'](self.a[layer])
+            self.h[layer] = act.A_F[self.activation]['f'](self.a[layer])
 
         return lss.mean_squared_error(self.h[-1].T, y)
         # return self.h[-1]
