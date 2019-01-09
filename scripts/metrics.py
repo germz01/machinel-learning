@@ -55,10 +55,10 @@ class BinaryClassifierAssessment():
         self.tn = tn
         self.fp = fp
         self.fn = fn
-        print 'tp ' + str(tp)
-        print 'tn ' + str(tn)
-        print 'fp ' + str(fp)
-        print 'fn ' + str(fn)
+        # print 'tp ' + str(tp)
+        # print 'tn ' + str(tn)
+        # print 'fp ' + str(fp)
+        # print 'fn ' + str(fn)
 
         self.confusion_matrix = np.array((tp, fp, fn, tn)).reshape((2, 2))
         self.precision = float(tp) / (tp+fp)

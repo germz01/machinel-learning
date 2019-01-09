@@ -1,3 +1,5 @@
+import json
+import matplotlib.pyplot as plt
 import metrics
 import numpy as np
 import pandas as pd
@@ -26,7 +28,7 @@ class MonksTest(object):
     train_set: pandas.DataFrame
         the train set to test
 
-    test_set . pandas.DataFrame
+    test_set: pandas.DataFrame
         the test set to test
     """
 
@@ -60,6 +62,12 @@ class MonksTest(object):
              to_fix=[], size=0):
         """
         This function implements the testing procedure for the monks' datasets.
+        It permits two kind of search for the best hyperparameters. The first
+        kind of search simply performs a search using one HyperGrid, and
+        selecting the set of hyperparameters which returns the best result.
+        The second kind of search performs a deeper search, by searching first
+        the best value for some hyperparameters, fixing them, and searching
+        again the values for the remaing ones.
 
         Parameters
         ----------
@@ -79,7 +87,7 @@ class MonksTest(object):
 
         to_fix: list
             a list of hyperparameters that must be fixed
-            (Default value = None)
+            (Default value = [])
 
         size: int
             the new hypergrid's size for the new search for the best
@@ -130,8 +138,11 @@ class MonksTest(object):
             y_pred = np.apply_along_axis(lambda x: 0 if x < .5 else 1, 1,
                                          best_model.h[-1].T).reshape(-1, 1)
             print '\n\n\n'
-            metrics.BinaryClassifierAssessment(self.test_set[:, 0].
-                                               reshape(-1, 1), y_pred)
+            bca = metrics.BinaryClassifierAssessment(self.test_set[:, 0].
+                                                     reshape(-1, 1), y_pred)
+
+            self.save_best_result(ds, best_model, bca)
+            self.plot_best_result(ds, best_model)
 
     def preliminary_search(self, selection, dataset, to_fix, size,
                            repetitions):
@@ -151,14 +162,17 @@ class MonksTest(object):
         to_fix: list
             a list of hyperparameters' names to fix
 
+        size: int
+            the new hypergrid's size for the new search for the best
+            hyperparameters in the preliminary_search function
+
         repetitions: int
             cross validation's repetitions
-            (Default value = 1)
 
         Returns
         -------
         """
-        print '\n\n\nNEW SEARCH FIXING HYPERPARAMETERS {}'.format(to_fix)
+        print '\n\n\nNEW SEARCH FIXING HYPERPARAMETERS {}\n'.format(to_fix)
 
         best_hyps = selection.\
             select_best_hyperparams(
@@ -177,14 +191,66 @@ class MonksTest(object):
                          fname='../data/model_selection_results_monk_{}.json'.
                          format(dataset + 1))
 
+    def save_best_result(self, dataset, best_model, bca):
+        """
+        This function saves the results obtained on the test set by the
+        model trained with the best set of hyperparameters as a JSON file.
+
+        Parameters
+        ----------
+        dataset: int
+            the dataset's index in self.monk
+
+        best_model: nn.NeuralNetwork
+            the neural network trained with the best set of hyperparameters
+
+        bca: metrics.BinaryClassifierAssessment
+            pass
+
+        Returns
+        -------
+        """
+        f = open('../data/best_results_monk_{}.json'.format(dataset + 1), 'w')
+        results = {'hyperparameters': best_model.get_params(),
+                   'accuracy': bca.accuracy, 'precision': bca.precision,
+                   'recall': bca.recall, 'f1_score': bca.f1_score}
+        json.dump(results, f, indent=4)
+
+    def plot_best_result(self, dataset, best_model):
+        """
+        This function plots the learning curve for the best model obtained
+        through the searching for the best set of hyperparameters.
+
+        Parameters
+        ----------
+        dataset: int
+            the dataset's index in self.monk
+
+        best_model: nn.NeuralNetwork
+            the neural network trained with the best set of hyperparameters
+
+        Returns
+        -------
+        """
+        plt.plot(range(len(best_model.error_per_epochs)),
+                 best_model.error_per_epochs)
+        plt.title("BEST RESULT'S LEARING CURVE FOR MONK {}".
+                  format(dataset + 1))
+        plt.ylabel('ERROR PER EPOCH')
+        plt.xlabel('EPOCHS')
+        plt.grid()
+        plt.savefig('../images/learning_curve_monk_{}.pdf'.format(dataset + 1),
+                    bbox_inches='tight')
+        plt.close()
+
 
 if __name__ == '__main__':
-    param_ranges = {'eta': (0.02, 2.0), 'alpha': 0.001,
+    param_ranges = {'eta': (0.02, 2.0), 'alpha': 0.1,
                     'batch_size': (1, 100),
                     'hidden_sizes': [(1, 100), (10, 20)],
-                    'reg_lambda': (0.0, 0.1), 'reg_method': 'l2',
+                    'reg_lambda': (0.01, 0.4), 'reg_method': 'l2',
                     'epochs': (200, 1000)}
 
-    monk_test = MonksTest(**param_ranges)
+    monk_test = MonksTest(size=20, **param_ranges)
     monk_test.test(0, preliminary_search=True,
                    to_fix=['batch_size', 'epochs'], size=40)

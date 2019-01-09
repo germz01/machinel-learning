@@ -1,0 +1,18 @@
+{
+    "recall": 0.7731481481481481, 
+    "hyperparameters": {
+        "batch_size": 42, 
+        "hidden_sizes": [
+            5, 
+            16
+        ], 
+        "epochs": 876, 
+        "reg_lambda": 0.04002287120203977, 
+        "eta": 1.9585574559521493, 
+        "reg_method": "l2", 
+        "alpha": 0.1
+    }, 
+    "f1_score": 0.7695852534562212, 
+    "precision": 0.7660550458715596, 
+    "accuracy": 0.7685185185185185
+}
