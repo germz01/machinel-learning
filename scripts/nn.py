@@ -21,7 +21,8 @@ class NeuralNetwork(object):
     def __init__(self, X, y, hidden_sizes=[10],
                  eta=0.5, alpha=0, epochs=1000,
                  batch_size=1, reg_lambda=0.0, reg_method='l2',
-                 w_par=6, activation='sigmoid', task='classifier'):
+                 w_par=6, activation=['sigmoid', 'sigmoid'],
+                 task='classifier'):
         """
         The class' constructor.
 
@@ -69,10 +70,12 @@ class NeuralNetwork(object):
             following the rule in Deep Learning, pag. 295
             (Default value = 6)
 
-        activation: str
+        activation: list
             the activation function to use for each layer, either
-            'sigmoid', 'relu', 'tanh', 'identity'
-            (Default value = 'sigmoid')
+            'sigmoid', 'relu', 'tanh', 'identity'. len(hidden_sizes) + 1
+            functions must be provided because also the output layer's
+            activation function is requested
+            (Default value = ['sigmoid', 'sigmoid'])
 
         task: str
             the task that the neural network has to perform, either
@@ -92,10 +95,21 @@ class NeuralNetwork(object):
         self.eta = eta
         self.alpha = alpha
         self.batch_size = batch_size
+
+        assert reg_method == 'l1' or reg_method == 'l2'
         self.reg_method = reg_method
         self.reg_lambda = reg_lambda
+
         self.epochs = epochs
-        self.activation = activation
+
+        if type(activation) is list:
+            # specify manually all activations, output layer included
+            assert len(activation) == self.n_layers
+            self.activation = activation
+        elif type(activation) is str:
+            self.activation = [activation for l in range(self.n_layers)]
+            if task == 'regression':
+                self.activation[-1] = 'identity'
 
         self.W = self.set_weights(w_par)
         self.W_copy = [w.copy() for w in self.W]
@@ -108,6 +122,9 @@ class NeuralNetwork(object):
         self.delta_b = [0 for i in range(self.n_layers)]
         self.a = [0 for i in range(self.n_layers)]
         self.h = [0 for i in range(self.n_layers)]
+
+        assert task == 'classifier' or task == 'regression'
+        self.task = task
 
     def set_weights(self, w_par=6):
         """
@@ -155,7 +172,7 @@ class NeuralNetwork(object):
         b = []
 
         for i in range(1, len(self.topology)):
-            b.append(np.random.uniform(-.7, .7, (self.topology[i], 1)))
+            b.append(np.random.uniform(-.2, .2, (self.topology[i], 1)))
 
         return b
 
@@ -215,7 +232,11 @@ class NeuralNetwork(object):
         for i in range(self.n_layers):
             self.a[i] = self.b[i] + (self.W[i].dot(x.T if i == 0
                                                    else self.h[i - 1]))
-            self.h[i] = act.A_F[self.activation]['f'](self.a[i])
+
+            if self.task == 'classifier' or i != self.n_layers - 1:
+                self.h[i] = act.A_F[self.activation[i]]['f'](self.a[i])
+            else:
+                self.h[i] = self.a[i]
 
         return lss.mean_squared_error(self.h[-1].T, y)
 
@@ -237,7 +258,9 @@ class NeuralNetwork(object):
         g = lss.mean_squared_error(self.h[-1], y.T, gradient=True)
 
         for layer in reversed(range(self.n_layers)):
-            g = np.multiply(g, act.A_F[self.activation]['fdev'](self.a[layer]))
+            g = np.multiply(
+                g,
+                act.A_F[self.activation[layer]]['fdev'](self.a[layer]))
             # update bias, sum over patterns
             self.delta_b[layer] = g.sum(axis=1).reshape(-1, 1)
 
@@ -336,9 +359,10 @@ class NeuralNetwork(object):
         h_pred = [0 for i in range(self.n_layers)]
 
         for layer in range(self.n_layers):
+
             a_pred[layer] = self.W[layer].dot(x.T if layer == 0 else
                                               h_pred[layer - 1])+self.b[layer]
-            h_pred[layer] = act.A_F[self.activation]['f'](a_pred[layer])
+            h_pred[layer] = act.A_F[self.activation[layer]]['f'](a_pred[layer])
 
         y_pred = h_pred[-1].T
 

@@ -29,7 +29,7 @@ imp.reload(u)
 dataset = np.hstack((X, y))
 np.random.shuffle(dataset)
 
-split = int(X.shape[0]*0.7)
+split = int(X.shape[0]*0.9)
 
 train = dataset[:split, :]
 validation = dataset[split:, :]
@@ -37,13 +37,15 @@ validation = dataset[split:, :]
 X_train, y_train = np.hsplit(train, [X.shape[1]])
 X_va, y_va = np.hsplit(validation, [X.shape[1]])
 
-nn = NN.NeuralNetwork(X_train, y_train, eta=0.4, alpha=0.0,
+nn = NN.NeuralNetwork(X_train, y_train, eta=0.4,
+                      alpha=0.1,
                       hidden_sizes=[3],
                       reg_method='l2', reg_lambda=0.0,
-                      epochs=500, batch_size=100,
+                      epochs=1000,
+                      batch_size=100,
                       activation='sigmoid',
+                      task='classifier',
                       w_par=6)
-
 nn.train(X_train, y_train, X_va, y_va)
 u.plot_learning_curve(nn)
 
@@ -51,7 +53,7 @@ y_pred = nn.predict(X)
 
 np.abs((np.round(y_pred, 0)-y)).sum()
 
-nn.error_per_epochs_val
+nn.error_per_epochs_va
 plt.close()
 
 ###########################################################
