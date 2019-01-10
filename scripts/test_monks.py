@@ -55,8 +55,8 @@ class MonksTest(object):
                       ['../data/monks/monks-3_train_bin.csv',
                        '../data/monks/monks-3_test_bin.csv']]
         self.param_ranges = kwargs
-        self.grid = val.HyperGrid(self.param_ranges, size=size,
-                                  seed=datetime.now())
+        self.param_ranges_backup = self.param_ranges.copy()
+        self.grid_size = size
 
     def test(self, dataset, repetitions=1, preliminary_search=False,
              to_fix=[], size=0):
@@ -113,6 +113,8 @@ class MonksTest(object):
                 read_csv(self.monks[ds][1], names=['class'] +
                          ['x{}'.format(j) for j in range(17)]).values
 
+            self.grid = val.HyperGrid(self.param_ranges, size=self.grid_size,
+                                      seed=datetime.now())
             selection = val.ModelSelectionCV(self.grid,
                                              repetitions=repetitions)
             selection.search(
@@ -143,6 +145,8 @@ class MonksTest(object):
 
             self.save_best_result(ds, best_model, bca)
             self.plot_best_result(ds, best_model)
+
+            self.param_ranges = self.param_ranges_backup.copy()
 
     def preliminary_search(self, selection, dataset, to_fix, size,
                            repetitions):
@@ -245,12 +249,12 @@ class MonksTest(object):
 
 
 if __name__ == '__main__':
-    param_ranges = {'eta': (0.02, 2.0), 'alpha': 0.1,
+    param_ranges = {'eta': (0.1, 0.9), 'alpha': (0.1, 0.9),
                     'batch_size': (1, 100),
-                    'hidden_sizes': [(1, 100), (10, 20)],
+                    'hidden_sizes': [(1, 3), (1, 3)],
                     'reg_lambda': (0.01, 0.4), 'reg_method': 'l2',
                     'epochs': (200, 1000)}
 
     monk_test = MonksTest(size=20, **param_ranges)
-    monk_test.test(0, preliminary_search=True,
+    monk_test.test([0, 2], preliminary_search=True,
                    to_fix=['batch_size', 'epochs'], size=40)
