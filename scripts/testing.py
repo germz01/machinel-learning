@@ -26,34 +26,34 @@ y = np.vstack((np.hstack((np.ones(p_class1), np.zeros(p_class2))),
 imp.reload(NN)
 imp.reload(u)
 
-nn = NN.NeuralNetwork(X, y, eta=0.2, alpha=0.1,
-                      reg_method='l2', reg_lambda=0.01,
-                      epochs=500, batch_size=10,
+dataset = np.hstack((X, y))
+np.random.shuffle(dataset)
+
+split = int(X.shape[0]*0.9)
+
+train = dataset[:split, :]
+validation = dataset[split:, :]
+
+X_train, y_train = np.hsplit(train, [X.shape[1]])
+X_va, y_va = np.hsplit(validation, [X.shape[1]])
+
+nn = NN.NeuralNetwork(X_train, y_train, eta=0.4,
+                      alpha=0.1,
+                      hidden_sizes=[3],
+                      reg_method='l2', reg_lambda=0.0,
+                      epochs=1000,
+                      batch_size=100,
+                      activation='sigmoid',
+                      task='classifier',
                       w_par=6)
+nn.train(X_train, y_train, X_va, y_va)
+u.plot_learning_curve(nn)
 
-nn.train(X, y)
+y_pred = nn.predict(X)
 
-nn.predict(X, y)
-y_pred = nn.h[-1]
-np.round(y_pred, 1)
-y.T
-np.abs((np.round(y_pred, 0)-y.T)).sum()
+np.abs((np.round(y_pred, 0)-y)).sum()
 
-nn.error_per_epochs[-1]
-# (np.einsum('kp->', (y_pred-y.T)**2) / X.shape[0])
-
-plt.plot(range(len(nn.error_per_epochs)), nn.error_per_epochs)
-plt.ylabel('MSE error by epoch')
-plt.xlabel('Epochs')
-plt.grid()
-plt.savefig('../images/learning_curve.pdf')
-plt.close()
-
-plt.plot(range(len(nn.error_per_batch)), nn.error_per_batch)
-plt.ylabel('SE error by batch')
-plt.xlabel('Epochs*Batches')
-plt.grid()
-plt.savefig('../images/learning_curve_batch.pdf')
+nn.error_per_epochs_va
 plt.close()
 
 ###########################################################
@@ -112,7 +112,6 @@ for hyperparam in grid:
 grid_size = 10
 grid = val.HyperGrid(param_ranges, size=grid_size, random=True)
 len(grid)
-
 
 
 selection = val.ModelSelectionCV(grid=grid, repetitions=2)

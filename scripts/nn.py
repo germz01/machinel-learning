@@ -5,6 +5,7 @@ import losses as lss
 import numpy as np
 import regularizers as reg
 import utils as u
+import metrics
 
 from tqdm import tqdm
 
@@ -101,8 +102,14 @@ class NeuralNetwork(object):
 
         self.epochs = epochs
 
-        assert len(activation) == self.n_layers
-        self.activation = activation
+        if type(activation) is list:
+            # specify manually all activations, output layer included
+            assert len(activation) == self.n_layers
+            self.activation = activation
+        elif type(activation) is str:
+            self.activation = [activation for l in range(self.n_layers)]
+            if task == 'regression':
+                self.activation[-1] = 'identity'
 
         self.W = self.set_weights(w_par)
         self.W_copy = [w.copy() for w in self.W]
@@ -165,7 +172,7 @@ class NeuralNetwork(object):
         b = []
 
         for i in range(1, len(self.topology)):
-            b.append(np.random.uniform(-.7, .7, (self.topology[i], 1)))
+            b.append(np.random.uniform(-.2, .2, (self.topology[i], 1)))
 
         return b
 
@@ -263,7 +270,7 @@ class NeuralNetwork(object):
             # summing over previous layer units
             g = self.W[layer].T.dot(g)
 
-    def train(self, X, y):
+    def train(self, X, y, X_va=None, y_va=None):
         """
         This function trains the neural network whit the hyperparameters given
         in input
@@ -284,7 +291,12 @@ class NeuralNetwork(object):
         velocity_b = [0 for i in range(self.n_layers)]
 
         self.error_per_epochs = []
+        self.error_per_epochs_old = []
         self.error_per_batch = []
+        if X_va is not None:
+            self.error_per_epochs_va = []
+        else:
+            self.error_per_epochs_va = None  # used in utils plot
 
         for e in tqdm(range(self.epochs), desc='TRAINING'):
             error_per_batch = []
@@ -318,30 +330,44 @@ class NeuralNetwork(object):
                     self.W[layer] += velocity_W[layer]
 
             # summing up errors to compute overall MSE
-            self.error_per_epochs.append(np.sum(error_per_batch)/X.shape[0])
+            self.error_per_epochs_old.append(
+                np.sum(error_per_batch)/X.shape[0])
 
-        # print 'STARTED WITH LOSS {}, ENDED WITH {}'.\
+            y_pred = self.predict(X)
+            self.error_per_epochs.append(metrics.mse(y, y_pred))
+            if X_va is not None:
+                y_pred_va = self.predict(X_va)
+                self.error_per_epochs_va.append(
+                    metrics.mse(y_va, y_pred_va))
+
+                # print 'STARTED WITH LOSS {}, ENDED WITH {}'.\
         #     format(self.error_per_epochs[0], self.error_per_epochs[-1])
 
-    def predict(self, x, y):
+    def predict(self, x):
         """
 
         Parameters
         ----------
         x :
-        y :
 
         Returns
         -------
-
+        y_pred: numpy.ndarray
+            Predicted values
         """
-        for layer in range(self.n_layers):
-            self.a[layer] = self.W[layer].dot(x.T if layer == 0 else
-                                              self.h[layer - 1])+self.b[layer]
-            self.h[layer] = act.A_F[self.activation[layer]]['f'](self.a[layer])
+        a_pred = [0 for i in range(self.n_layers)]
+        h_pred = [0 for i in range(self.n_layers)]
 
-        return lss.mean_squared_error(self.h[-1].T, y)
-        # return self.h[-1]
+        for layer in range(self.n_layers):
+
+            a_pred[layer] = self.W[layer].dot(x.T if layer == 0 else
+                                              h_pred[layer - 1])+self.b[layer]
+            h_pred[layer] = act.A_F[self.activation[layer]]['f'](a_pred[layer])
+
+        y_pred = h_pred[-1].T
+
+        return y_pred
+        # return lss.mean_squared_error(self.h[-1].T, y)
 
     def reset(self):
         """

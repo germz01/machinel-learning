@@ -89,7 +89,7 @@ def from_dict_to_list(grid):
 # PLOTTING RELATED FUNCTIONS
 
 
-def plot_learning_curve(stats, num_epochs, momentum,
+def plot_learning_curve_old(stats, num_epochs, momentum,
                         fname='../images/learning_curve.pdf'):
     """
     This function is used to plot the learning curve for all the errors
@@ -129,7 +129,7 @@ def plot_learning_curve(stats, num_epochs, momentum,
         plt.close()
 
 
-def plot_error(nn, fname='../images/learning_curve.pdf'):
+def plot_learning_curve(nn, fname='../images/learning_curve.pdf'):
     """ plotting learning curve """
 
     par_str = r"""$\eta= {}, \alpha= {}, \lambda= {}$,'batch= {}, h-sizes={}""".format(
@@ -140,11 +140,19 @@ def plot_error(nn, fname='../images/learning_curve.pdf'):
         nn.params['hidden_sizes']
     )
 
-    plt.plot(range(len(nn.error_per_epochs)), nn.error_per_epochs)
+    plt.plot(range(len(nn.error_per_epochs)),
+             nn.error_per_epochs,
+             label='train')
+    if nn.error_per_epochs_va is not None:
+        plt.plot(range(len(nn.error_per_epochs_va)),
+                 nn.error_per_epochs_va,
+                 label='va')
+
     plt.ylabel('MSE error by epoch')
     plt.xlabel('Epochs')
     plt.grid()
     plt.suptitle('Learning curve')
+    plt.legend()
     plt.title(par_str, fontsize=10)
     plt.savefig(fname)
     plt.tight_layout()
