@@ -7,6 +7,7 @@ import pandas as pd
 import random as rnd
 import utils as u
 import json
+import metrics
 
 from itertools import product
 from tqdm import tqdm
@@ -198,7 +199,8 @@ class KFoldCrossValidation(object):
         """
 
         assessment = dict()
-        assessment['mse'] = model.predict(X_va, y_va)
+        y_pred = model.predict(X_va)
+        assessment['mse'] = metrics.mse(y_va, y_pred)
         # possibile aggiungere altre metriche al dizionario
         return assessment
 

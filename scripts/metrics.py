@@ -1,3 +1,4 @@
+
 import numpy as np
 
 
@@ -93,6 +94,32 @@ FN: {:4} | TN: {:4}\n""".format(self.tp, self.fp, self.fn, self.tn)
         out['recall'] = self.recall
 
         return out
+
+
+def mse(y_true, y_pred):
+    """
+    Mean Square Error
+
+    Parameters
+    ----------
+    y_true :
+
+    y_pred :
+
+
+    Returns
+    -------
+
+    """
+    if type(y_true) is list:
+        y_true = np.array(y_true)
+    if type(y_pred) is list:
+        y_pred = np.array(y_pred)
+
+    assert y_true.shape == y_pred.shape
+    p = y_true.shape[0]
+
+    return np.sum((y_true-y_pred)**2)/p
 
 
 if __name__ == "__main__":
