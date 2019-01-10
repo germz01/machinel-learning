@@ -328,12 +328,13 @@ class ModelSelectionCV(object):
                 out['hyperparams'] = neural_net.get_params()
                 out['errors'] = cross_val.aggregated_results
 
-                with open(fname, 'a') as f:
-                    json.dump(out, f)
-                    if i != self.n_iter:
-                        f.write(',\n')
-                    else:
-                        f.write('\n]}')
+                if save_results:
+                    with open(fname, 'a') as f:
+                        json.dump(out, f)
+                        if i != self.n_iter:
+                            f.write(',\n')
+                        else:
+                            f.write('\n]}')
 
     def load_results(self, fname='../data/model_selection_results.json'):
         """
@@ -354,7 +355,8 @@ class ModelSelectionCV(object):
             data = json.load(f)
         return data
 
-    def select_best_hyperparams(self, error='mse', metric='mean', top=1):
+    def select_best_hyperparams(self, error='mse', metric='mean', top=1,
+                                fname='../data/model_selection_results.json'):
         """
         Selection of the best hyperparameters
 
@@ -377,13 +379,14 @@ class ModelSelectionCV(object):
         A list containing the values for the best hyperparameters'
         configuration
         """
-        data = self.load_results()
+        data = self.load_results(fname=fname)
         errors = [res['errors'][error][metric] for res in data['out']]
         best_indexes = (np.argsort(errors))[:top]
 
         return list(np.array(data['out'])[best_indexes])
 
-    def select_best_model(self, X_design, y_design):
+    def select_best_model(self, X_design, y_design,
+                          fname='../data/model_selection_results.json'):
         """
         This function retrains the model with the best hyperparams'
         configuration
@@ -396,11 +399,15 @@ class ModelSelectionCV(object):
         y_design: numpy.ndarray
             the target column vector
 
+        fname: str
+            the path to the file which contains the results for the best
+            hyperparameters' search phase
+
         Returns
         -------
         The model trained with the best hyperparameters' configuration.
         """
-        best = self.select_best_hyperparams(top=1)
+        best = self.select_best_hyperparams(top=1, fname=fname)
         best_hyperparams = best[0]['hyperparams']
 
         neural_net = nn.NeuralNetwork(X_design, y_design,
@@ -558,8 +565,8 @@ class HyperGrid():
             self.vec_size = size
             self.set_uniform_grid()
 
-        print('GENERATING AN HYPERPARAMETER GRID OF LENGTH {}'
-              .format(self.__len__()))
+        # print('GENERATING AN HYPERPARAMETER GRID OF LENGTH {}'
+        #       .format(self.__len__()))
 
     def get_types(self):
         """

@@ -21,7 +21,7 @@ class NeuralNetwork(object):
     def __init__(self, X, y, hidden_sizes=[10],
                  eta=0.5, alpha=0, epochs=1000,
                  batch_size=1, reg_lambda=0.0, reg_method='l2',
-                 w_par=6, activation=['sigmoid', 'sigmoid'],
+                 w_par=6, activation='sigmoid',
                  task='classifier'):
         """
         The class' constructor.
@@ -102,14 +102,7 @@ class NeuralNetwork(object):
 
         self.epochs = epochs
 
-        if type(activation) is list:
-            # specify manually all activations, output layer included
-            assert len(activation) == self.n_layers
-            self.activation = activation
-        elif type(activation) is str:
-            self.activation = [activation for l in range(self.n_layers)]
-            if task == 'regression':
-                self.activation[-1] = 'identity'
+        self.activation = self.set_activation(activation, task)
 
         self.W = self.set_weights(w_par)
         self.W_copy = [w.copy() for w in self.W]
@@ -125,6 +118,19 @@ class NeuralNetwork(object):
 
         assert task == 'classifier' or task == 'regression'
         self.task = task
+
+    def set_activation(self, activation, task):
+        if type(activation) is list:
+            assert len(activation) == self.n_layers
+
+            return activation
+        elif type(activation) is str:
+            acts = [activation for l in range(self.n_layers)]
+
+            if task == 'regression':
+                acts[-1] = 'identity'
+
+            return acts
 
     def set_weights(self, w_par=6):
         """

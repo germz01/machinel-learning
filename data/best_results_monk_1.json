@@ -1,0 +1,23 @@
+{
+    "recall": 0.6990740740740741, 
+    "hyperparameters": {
+        "activation": [
+            "sigmoid", 
+            "sigmoid", 
+            "sigmoid"
+        ], 
+        "batch_size": 90, 
+        "hidden_sizes": [
+            1, 
+            1
+        ], 
+        "epochs": 652, 
+        "reg_lambda": 0.09188058602977678, 
+        "eta": 0.8272210953246278, 
+        "reg_method": "l2", 
+        "alpha": 0.8466801689646469
+    }, 
+    "f1_score": 0.7173396674584324, 
+    "precision": 0.7365853658536585, 
+    "accuracy": 0.7245370370370371
+}
