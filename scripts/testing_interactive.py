@@ -10,26 +10,16 @@ X = np.concatenate((np.random.normal(2., 1., (50, 2)),
                    axis=0)
 y = np.hstack((np.ones(50), np.zeros(50))).reshape(100, 1)
 
-eta = .1
-alpha = .9
+neural_net = nn.NeuralNetwork(X, y)
 
-if raw_input('PLAIN EXECUTION WITHOUT TESTING?[Y/N] ') == 'Y':
-    neural_net = nn.NeuralNetwork(X, y)
-    neural_net.train(X, y, eta, alpha=alpha, epochs=500, batch_size=10,
-                     reg_lambda=0.001, reg_method='l2')
+if raw_input('TESTING NEURAL NETWORK?[Y/N] ') == 'Y':
+    neural_net.train(X, y)
 
-    if raw_input('PLOT LEARNING CURVE?[Y/N] ') == 'Y':
-        pass
+    print 'STARTED WITH LOSS {}, ENDED WITH {}'.\
+        format(neural_net.error_per_epochs[0], neural_net.error_per_epochs[-1])
 
 if raw_input('TESTING K-FOLD CROSS VALIDATION?[Y/N] ') == 'Y':
-    neural_net = nn.NeuralNetwork(X, y, eta=eta, alpha=alpha, epochs=500,
-                                  batch_size=10, reg_lambda=0.01,
-                                  reg_method='l2')
-
-    cross_val = val.KFoldCrossValidation(X, y, neural_net, nfolds=5,
-                                         eta=eta, alpha=alpha, epochs=500,
-                                         batch_size=10, reg_lambda=0.01,
-                                         reg_method='l2')
+    cross_val = val.KFoldCrossValidation(X, y, neural_net)
     tqdm.write('AGGREGATED RESULTS: \n')
     pprint(cross_val.aggregated_results)
 
@@ -51,11 +41,3 @@ if raw_input('TESTING GRID SEARCH?[Y/N] ') == 'Y':
     results = selection.load_results()
 
     best_model = selection.select_best_model(X, y)
-
-    # print best_model
-
-    # grid_search = val.GridSearch(X, y, random_search=True,
-    #                              par_ranges=par_ranges)
-    # print '\n\nBEST RESULT {} FROM RECORD: {}'.\
-    #     format(grid_search.best_result['error'],
-    #            grid_search.best_result['parameters'])
