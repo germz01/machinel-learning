@@ -5,3 +5,11 @@ images/*
 *.directory
 *~
 \#*
+/report/report.out
+/report/report.aux
+/report/report.fls
+/report/report.fdb_latexmk
+/report/report.synctex.gz
+/report/report.xdv
+/report/report.log
+/report/report.pdf
