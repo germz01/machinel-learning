@@ -1,0 +1,85 @@
+\documentclass[twoside]{article}
+
+\usepackage{blindtext}
+\usepackage[T1]{fontenc}
+\usepackage{microtype}
+\usepackage[english]{babel}
+\usepackage[hmarginratio=1:1,top=32mm,columnsep=20pt]{geometry}
+\usepackage[hang, small,labelfont=bf,up,textfont=it,up]{caption}
+\usepackage{booktabs}
+\usepackage{lettrine}
+\usepackage{enumitem}
+\setlist[itemize]{noitemsep}
+
+\usepackage{abstract}
+\renewcommand{\abstractnamefont}{\normalfont\bfseries}
+\renewcommand{\abstracttextfont}{\normalfont\small\itshape}
+\usepackage{titlesec}
+\titleformat{\section}[block]{\large\scshape\centering}{\thesection.}{1em}{}
+\titleformat{\subsection}[block]{\large}{\thesubsection.}{1em}{} % Change the look of the section titles
+\usepackage{titling}
+\usepackage{hyperref}
+
+%----------------------------------------------------------------------------------------
+%   TITLE SECTION
+%----------------------------------------------------------------------------------------
+
+\setlength{\droptitle}{-4\baselineskip} % Move the title up
+
+\pretitle{\begin{center}\Huge\bfseries} % Article title formatting
+\posttitle{\end{center}} % Article title closing formatting
+\title{Machine Learning} % Article title
+\author{%
+\textsc{Gianmarco Ricciarelli} \\[1ex] % Your name
+\normalsize \href{mailto:john@smith.com}{gianmarcoricciarelli@gmail.com} % Your email address
+\and % Uncomment if 2 authors are required, duplicate these 4 lines if more
+\textsc{Stefano Carpita} \\[1ex] % Second author's name
+\normalsize \href{mailto:jane@smith.com}{carpitastefano@gmail.com} % Second author's email address
+}
+\date{
+    \today \\
+    \vspace{0.5cm}
+    Type of project: \textbf{A}
+}
+\renewcommand{\maketitlehookd}{%
+\begin{abstract}
+\noindent \blindtext % Dummy abstract text - replace \blindtext with your abstract text
+\end{abstract}
+}
+
+%----------------------------------------------------------------------------------------
+
+\begin{document}
+
+% Print the title
+\maketitle
+
+%----------------------------------------------------------------------------------------
+%   ARTICLE CONTENTS
+%----------------------------------------------------------------------------------------
+
+\section{Introduction}
+
+%------------------------------------------------
+
+\section{Methods}
+
+%------------------------------------------------
+
+\section{Experiments}
+
+%------------------------------------------------
+
+\section{Conclusions}
+
+%----------------------------------------------------------------------------------------
+%   REFERENCE LIST
+%----------------------------------------------------------------------------------------
+
+\begin{thebibliography}{99} % Bibliography - this is intentionally simple in this template
+
+\end{thebibliography}
+
+%----------------------------------------------------------------------------------------
+
+\end{document}
