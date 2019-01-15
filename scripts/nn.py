@@ -19,7 +19,7 @@ class NeuralNetwork(object):
     TODO
     """
     def __init__(self, X, y, hidden_sizes=[10],
-                 eta=0.5, alpha=0, epochs=1000,
+                 eta=0.5, alpha=0, epsilon=0.1, epochs=1000,
                  batch_size=1, reg_lambda=0.0, reg_method='l2',
                  w_par=6, activation='sigmoid',
                  task='classifier'):
@@ -39,20 +39,24 @@ class NeuralNetwork(object):
             neural network's hidden layers and each integer represents the
             number of neurons in a hidden layer
 
-        eta : float
+        eta: float
             the learning rate
             (Default value = 0.5)
 
-        alpha : float
+        alpha: float
             the momentum constant
             (Default value = 0)
 
-        epochs : int
+        epsilon: float
+            the early stopping constant
+            (Default value = 0.1)
+
+        epochs: int
             the (maximum) number of epochs for which the neural network
             has to be trained
             (Default value = 1000)
 
-        batch_size : int
+        batch_size: int
             the batch size
             (Default value = 1)
 
@@ -94,6 +98,7 @@ class NeuralNetwork(object):
 
         self.eta = eta
         self.alpha = alpha
+        self.epsilon = epsilon
         self.batch_size = batch_size
 
         assert reg_method == 'l1' or reg_method == 'l2'
@@ -289,6 +294,13 @@ class NeuralNetwork(object):
         y : numpy.ndarray
             the target column vector
 
+        X_va: numpy.ndarray
+            the design matrix used for the validation
+            (Default value = None)
+
+        y_va: numpy.ndarray
+            the target column vector used for the validation
+            (Default value = None)
 
         Returns
         -------
@@ -312,6 +324,8 @@ class NeuralNetwork(object):
             X, y = np.hsplit(dataset, [X.shape[1]])
 
             for b_start in np.arange(0, X.shape[0], self.batch_size):
+                # BACK-PROPAGATION ALGORITHM ##################################
+
                 x_batch = X[b_start:b_start + self.batch_size, :]
                 y_batch = y[b_start:b_start + self.batch_size, :]
 
@@ -320,6 +334,8 @@ class NeuralNetwork(object):
                 error_per_batch.append(error)
 
                 self.back_propagation(x_batch, y_batch)
+
+                # WEIGHTS' UPDATE #############################################
 
                 for layer in range(self.n_layers):
                     weight_decay = reg.regularization(self.W[layer],
@@ -335,7 +351,10 @@ class NeuralNetwork(object):
                            * (weight_decay + self.delta_W[layer]))
                     self.W[layer] += velocity_W[layer]
 
-            # summing up errors to compute overall MSE
+                ###############################################################
+
+            # COMPUTING OVERALL MSE ###########################################
+
             self.error_per_epochs_old.append(
                 np.sum(error_per_batch)/X.shape[0])
 
@@ -346,8 +365,23 @@ class NeuralNetwork(object):
                 self.error_per_epochs_va.append(
                     metrics.mse(y_va, y_pred_va))
 
-                # print 'STARTED WITH LOSS {}, ENDED WITH {}'.\
-        #     format(self.error_per_epochs[0], self.error_per_epochs[-1])
+            # CHECKING FOR EARLY STOPPING #####################################
+
+            if X_va is not None and (e + 1) % 5 == 0:
+                generalization_loss = 100 \
+                    * ((self.error_per_epochs_va[e] /
+                        min(self.error_per_epochs_va))
+                       - 1)
+                min_e_per_strip = min(
+                    self.error_per_epochs_va[e - 4:e + 1])
+                sum_per_strip = sum(self.error_per_epochs_va[e - 4:e + 1])
+                progress = 1000 * \
+                    ((sum_per_strip / (5 * min_e_per_strip)) - 1)
+
+                progress_quotient = generalization_loss / progress
+
+                if progress_quotient > self.epsilon:
+                    break
 
     def predict(self, x):
         """
