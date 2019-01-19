@@ -19,7 +19,8 @@ class NeuralNetwork(object):
     TODO
     """
     def __init__(self, X, y, hidden_sizes=[10],
-                 eta=0.5, alpha=0, epsilon=0.1, epochs=1000,
+                 eta=0.5, alpha=0, epsilon=1, epochs=1000,
+                 early_stop=None, early_stop_min_epochs=50,
                  batch_size=1, reg_lambda=0.0, reg_method='l2',
                  w_par=6, activation='sigmoid',
                  task='classifier'):
@@ -48,8 +49,8 @@ class NeuralNetwork(object):
             (Default value = 0)
 
         epsilon: float
-            the early stopping constant
-            (Default value = 0.1)
+            the early stopping constant, given as a percentage %
+            (Default value = 1)
 
         epochs: int
             the (maximum) number of epochs for which the neural network
@@ -63,6 +64,12 @@ class NeuralNetwork(object):
         reg_lambda: float
             the regularization factor
             (Default value = 0.0)
+
+        early_stop: str
+            the early stop method,
+            to be chosen in (None, 'GL', 'PQ', 'testing').
+            The 'testing' method computes the exit points without stopping
+            (Default value = None)
 
         reg_method: str
             the regularization method, either l1 or l2 regularization are
@@ -100,6 +107,10 @@ class NeuralNetwork(object):
         self.alpha = alpha
         self.epsilon = epsilon
         self.batch_size = batch_size
+
+        assert early_stop in (None, 'GL', 'PQ', 'testing')
+        self.early_stop = early_stop
+        self.early_stop_min_epochs = early_stop_min_epochs
 
         assert reg_method == 'l1' or reg_method == 'l2'
         self.reg_method = reg_method
@@ -222,6 +233,7 @@ class NeuralNetwork(object):
         self.params['reg_lambda'] = self.reg_lambda
         self.params['epochs'] = self.epochs
         self.params['activation'] = self.activation
+        self.params['epsilon'] = self.epsilon
 
         return self.params
 
@@ -314,7 +326,12 @@ class NeuralNetwork(object):
         if X_va is not None:
             self.error_per_epochs_va = []
         else:
-            self.error_per_epochs_va = None  # used in utils plot
+            self.error_per_epochs_va = None
+
+        self.stop_GL = None
+        self.stop_PQ = None
+        stop_GL = False
+        stop_PQ = False
 
         for e in tqdm(range(self.epochs), desc='TRAINING'):
             error_per_batch = []
@@ -367,21 +384,42 @@ class NeuralNetwork(object):
 
             # CHECKING FOR EARLY STOPPING #####################################
 
-            if X_va is not None and (e + 1) % 5 == 0:
+            if self.early_stop is not None \
+               and e > self.early_stop_min_epochs \
+               and (e + 1) % 5 == 0:
+
                 generalization_loss = 100 \
                     * ((self.error_per_epochs_va[e] /
                         min(self.error_per_epochs_va))
                        - 1)
-                min_e_per_strip = min(
-                    self.error_per_epochs_va[e - 4:e + 1])
-                sum_per_strip = sum(self.error_per_epochs_va[e - 4:e + 1])
-                progress = 1000 * \
-                    ((sum_per_strip / (5 * min_e_per_strip)) - 1)
 
-                progress_quotient = generalization_loss / progress
+                # GL method
+                if generalization_loss > self.epsilon:
+                    stop_GL = True
 
-                if progress_quotient > self.epsilon:
-                    break
+                # PQ method
+                if self.early_stop != 'GL':  # PQ or 'testing'
+
+                    min_e_per_strip = min(
+                        self.error_per_epochs_va[e - 4:e + 1])
+                    sum_per_strip = sum(self.error_per_epochs_va[e - 4:e + 1])
+                    progress = 1000 * \
+                               ((sum_per_strip / (5 * min_e_per_strip)) - 1)
+
+                    progress_quotient = generalization_loss / progress
+
+                    if progress_quotient > self.epsilon:
+                        stop_PQ = True
+
+                # stopping
+                if self.early_stop == 'testing':
+                    if stop_GL and self.stop_GL is None:
+                        self.stop_GL = e
+                    if stop_PQ and self.stop_PQ is None:
+                        self.stop_PQ = e
+                else:
+                    if stop_GL or stop_PQ:
+                        break
 
     def predict(self, x):
         """
