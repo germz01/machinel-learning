@@ -46,7 +46,7 @@
 \begin{abstract}
 \noindent With this report we describe our type \textbf{A} project for the Machine Learning course. We experiment
 two datasets, namely MONK's and CUP, by building from scratch a neural network's implementation, which we've
-validated by searching for the best hyperparameters' combination via well-known validation techniques. Finally,
+validated by searching for the best hyper-parameters' combination via well-known validation techniques. Finally,
 for each one of the datasets, we collected the data describing the results.
 \end{abstract}
 }
@@ -65,24 +65,62 @@ for each one of the datasets, we collected the data describing the results.
 \section{Introduction} % (fold)
 \label{sec:introduction}
     By chosing the type \textbf{A} project, we followed the goal of optimizing a built from scratch neural
-    network model by searching the best hyperparameters' combination in order to obtain the best
+    network model by searching the best hyper-parameters' combination in order to obtain the best
     performances on the MONK's and CUP datasets. The model we've built implements the
     standard backpropagation algorithm with gradient descent, as described in \cite{deep_learning}. As
-    optimization tool, we've searched the so-called hyperparameters space by using well-known validation
-    algorithms like k-fold cross validation and grid search, also described in \cite{deep_learning}. More
-    technical details can be founded in section \ref{sec:methods}.
+    optimization tool, we've searched the so-called hyper-parameters space by using well-known validation
+    algorithms like k-fold cross validation and grid search, described in \cite{deep_learning} and
+    \cite{random_search}. More technical details can be founded in section \ref{sec:methods}.
 % section introduction (end)
 
 %------------------------------------------------
 
 \section{Methods} % (fold)
 \label{sec:methods}
+    Our code base is written using the \textit{Python} programming language, which was enhanced with
+    numerical libraries like \textit{NumPy} and \textit{Pandas} to ease the computational cost involved in
+    implementating popular machine learning algorithms. Also the standard library function provided by the
+    language were utilized. Following the philosophy of type \textbf{A} projects, we haven't used
+    out-of-the-box implementations for the algorithms composing our framework.
 
+    \subsection{Code overview} % (fold)
+    \label{sub:code_overview}
+        We can view our code base divided in two essential branches: the \textit{neural network} branch and
+        the \textit{model selection and assessment} branch. The first one consist in the code implementing the
+        neural network model, which is contained in a \texttt{NeuralNetwork} class, and all the code related
+        to the building and training of such a model, e.g. the activation functions, the losses, the
+        regularization metrics and so on, that is divided in several scripts in order to ease the implementation.
+        The code base's second branch consist in the model selection and assessment related code, which is
+        composed by several classes, each one implementing one algorithm, like \texttt{GridSearch},
+        \texttt{KFold\_Cross\_validation} and so on, utilized for the model's validation, selection and
+        assessment. The second branch also is splitted in several scripts.
+    % subsection code_overview (end)
+
+    \subsection{Implementation choices} % (fold)
+    \label{sub:implementation_choices}
+        Since we wanted to be able to take different paths during the building phase of our model, we expanded
+        the first code base's branch by writing diffent activation functions, losses and regularization metrics.
+        In the \texttt{activation} script we writed the code for the \texttt{sigmoid}, \texttt{relu},
+        \texttt{tanh} and \texttt{identity} activation functions. The \texttt{regularizers} script contains the
+        code for implementing both the L1 and L2 regularization metrics, as described in \cite{deep_learning},
+        and the \texttt{losses} script contains the code for implementing popular loss function like, for
+        example, the \texttt{mean\_squared\_error} and the \texttt{mean\_euclidean\_error}. Al the metrics
+        described so far are used in the \texttt{nn} script, which contains the code for implementing the neural
+        network model, and hence the backpropagation and training algorithm. The \texttt{NeuralNetwork} class
+        represents a neural network using the standard backpropagation algorithm with gradient descent,
+        standard momentum and regularization. The \texttt{NeuralNetwork} class contains also the code for
+        implementing the early stopping metrics, which we implemented following \cite{early_stopping}.
+        More details about what particular combination of metrics was used during the experimental phase can be
+        found in section \ref{sec:experiments}.
+    % subsection implementation_choices (end)
 % section methods (end)
 
 %------------------------------------------------
 
-\section{Experiments}
+\section{Experiments} % (fold)
+\label{sec:experiments}
+
+% section experiments (end)
 
 %------------------------------------------------
 
@@ -96,6 +134,14 @@ for each one of the datasets, we collected the data describing the results.
     \bibitem{deep_learning}
     Ian Goodfellow, Yoshua Bengio and Aaron Courville.
     \textit{Deep Learning}, MIT Press, 2016.
+
+    \bibitem{random_search}
+    James Bergstra and Yoshua Bengio.
+    \textit{Random Search for Hyper-parameter Optimization}, J. Mach. Learn. Res. 13, pp. 281-305, 2012.
+
+    \bibitem{early_stopping}
+    Prechelt L..
+    \textit{Early Stopping - But When?}, Montavon G., Orr G.B., Müller KR. (eds) Neural Networks: Tricks of the Trade. Lecture Notes in Computer Science, vol 7700. Springer, Berlin, Heidelberg, 2012.
 \end{thebibliography}
 
 %----------------------------------------------------------------------------------------
