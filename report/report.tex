@@ -1,4 +1,4 @@
-\documentclass[twoside]{article}
+\documentclass[11pt,twoside]{article}
 
 \usepackage{blindtext}
 \usepackage[T1]{fontenc}
@@ -13,10 +13,13 @@
 
 \usepackage{abstract}
 \renewcommand{\abstractnamefont}{\normalfont\bfseries}
-\renewcommand{\abstracttextfont}{\normalfont\small\itshape}
-\usepackage{titlesec}
-\titleformat{\section}[block]{\large\scshape\centering}{\thesection.}{1em}{}
-\titleformat{\subsection}[block]{\large}{\thesubsection.}{1em}{} % Change the look of the section titles
+\renewcommand{\abstracttextfont}{\normalfont\small}
+
+\usepackage{titlesec} % Allows customization of titles
+\renewcommand\thesection{\Roman{section}} % Roman numerals for the sections
+\renewcommand\thesubsection{\roman{subsection}} % roman numerals for subsections
+\titleformat{\section}[block]{\large\scshape\centering}{\thesection.}{1em}{} % Change the look of the section titles
+\titleformat{\subsection}[block]{\large}{\thesubsection.}{1em}{}
 \usepackage{titling}
 \usepackage{hyperref}
 
@@ -37,13 +40,16 @@
 \normalsize \href{mailto:jane@smith.com}{carpitastefano@gmail.com} % Second author's email address
 }
 \date{
+    ML - Academic Year: 2018/2019 \\
     \today \\
-    \vspace{0.5cm}
     Type of project: \textbf{A}
 }
 \renewcommand{\maketitlehookd}{%
 \begin{abstract}
-\noindent \blindtext % Dummy abstract text - replace \blindtext with your abstract text
+\noindent With this report we describe our type \textbf{A} project for the Machine Learning course. We experiment
+two datasets, namely MONK's and CUP, by building from scratch a neural network's implementation, which we've
+validated by searching for the best hyperparameters' combination via well-known validation techniques. Finally,
+for each one of the datasets, we collected the data describing the results.
 \end{abstract}
 }
 
@@ -58,7 +64,10 @@
 %   ARTICLE CONTENTS
 %----------------------------------------------------------------------------------------
 
-\section{Introduction}
+\section{Introduction} % (fold)
+\label{sec:introduction}
+
+% section introduction (end)
 
 %------------------------------------------------
 
