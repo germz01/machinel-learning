@@ -15,10 +15,8 @@
 \renewcommand{\abstractnamefont}{\normalfont\bfseries}
 \renewcommand{\abstracttextfont}{\normalfont\small}
 
-\usepackage{titlesec} % Allows customization of titles
-\renewcommand\thesection{\Roman{section}} % Roman numerals for the sections
-\renewcommand\thesubsection{\roman{subsection}} % roman numerals for subsections
-\titleformat{\section}[block]{\large\scshape\centering}{\thesection.}{1em}{} % Change the look of the section titles
+\usepackage{titlesec}
+\titleformat{\section}[block]{\large\scshape\centering}{\thesection.}{1em}{}
 \titleformat{\subsection}[block]{\large}{\thesubsection.}{1em}{}
 \usepackage{titling}
 \usepackage{hyperref}
@@ -66,12 +64,21 @@ for each one of the datasets, we collected the data describing the results.
 
 \section{Introduction} % (fold)
 \label{sec:introduction}
-
+    By chosing the type \textbf{A} project, we followed the goal of optimizing a built from scratch neural
+    network model by searching the best hyperparameters' combination in order to obtain the best
+    performances on the MONK's and CUP datasets. The model we've built implements the
+    standard backpropagation algorithm with gradient descent, as described in \cite{deep_learning}. As
+    optimization tool, we've searched the so-called hyperparameters space by using well-known validation
+    algorithms like k-fold cross validation and grid search, also described in \cite{deep_learning}. More
+    technical details can be founded in section \ref{sec:methods}.
 % section introduction (end)
 
 %------------------------------------------------
 
-\section{Methods}
+\section{Methods} % (fold)
+\label{sec:methods}
+
+% section methods (end)
 
 %------------------------------------------------
 
@@ -86,7 +93,9 @@ for each one of the datasets, we collected the data describing the results.
 %----------------------------------------------------------------------------------------
 
 \begin{thebibliography}{99} % Bibliography - this is intentionally simple in this template
-
+    \bibitem{deep_learning}
+    Ian Goodfellow, Yoshua Bengio and Aaron Courville.
+    \textit{Deep Learning}, MIT Press, 2016.
 \end{thebibliography}
 
 %----------------------------------------------------------------------------------------
