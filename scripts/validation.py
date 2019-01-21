@@ -145,9 +145,10 @@ class KFoldCrossValidation(object):
             X_train, y_train = np.hsplit(train_set, [X.shape[1]])
             X_va, y_va = np.hsplit(self.folds[i], [X.shape[1]])
 
-            neural_net.train(X_train, y_train)
+            neural_net.train(X_train, y_train, X_va, y_va)
 
-            assessment = self.model_assessment(X_va, y_va, model=neural_net)
+            # assessment = self.model_assessment(X_va, y_va, model=neural_net)
+            assessment = {'mse': neural_net.error_per_epochs_va[-1]}
             self.results.append(assessment)
             # self.results.append(loss)
             neural_net.reset()
@@ -271,7 +272,7 @@ class ModelSelectionCV(object):
         self.n_iter = repetitions * len(grid)
 
     def search(self, X_design, y_design, nfolds=3, save_results=True,
-               fname='../data/model_selection_results.json'):
+               fname='../data/model_selection_results.json', **kwargs):
         """
         This function searches for the best hyperparamenters' configugation
         through a search space of hyperparameters.
@@ -313,9 +314,13 @@ class ModelSelectionCV(object):
             X_design, y_design = np.hsplit(dataset,
                                            [X_design.shape[1]])
 
-            for hyperparams in tqdm(self.grid, desc='GRID SEARCH PROGRESS'):
+            for hyperparams in tqdm(self.grid,
+                                    desc='GRID SEARCH {}'
+                                    .format(kwargs['par_name']
+                                            if 'par_name' in kwargs else '')):
                 # instanciate neural network
                 # TODO(?): generalize instanciation to any model
+
                 neural_net = nn.NeuralNetwork(X_design, y_design,
                                               **hyperparams)
 
@@ -330,7 +335,7 @@ class ModelSelectionCV(object):
 
                 if save_results:
                     with open(fname, 'a') as f:
-                        json.dump(out, f)
+                        json.dump(out, f, indent=4)
                         if i != self.n_iter:
                             f.write(',\n')
                         else:
@@ -385,7 +390,7 @@ class ModelSelectionCV(object):
 
         return list(np.array(data['out'])[best_indexes])
 
-    def select_best_model(self, X_design, y_design,
+    def select_best_model(self, X_design, y_design, X_va=None, y_va=None,
                           fname='../data/model_selection_results.json'):
         """
         This function retrains the model with the best hyperparams'
@@ -412,7 +417,7 @@ class ModelSelectionCV(object):
 
         neural_net = nn.NeuralNetwork(X_design, y_design,
                                       **best_hyperparams)
-        neural_net.train(X_design, y_design)
+        neural_net.train(X_design, y_design, X_va, y_va)
 
         return neural_net
 

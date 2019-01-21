@@ -19,7 +19,8 @@ class NeuralNetwork(object):
     TODO
     """
     def __init__(self, X, y, hidden_sizes=[10],
-                 eta=0.5, alpha=0, epochs=1000,
+                 eta=0.5, alpha=0, epsilon=1, epochs=1000,
+                 early_stop=None, early_stop_min_epochs=50,
                  batch_size=1, reg_lambda=0.0, reg_method='l2',
                  w_par=6, activation='sigmoid',
                  task='classifier'):
@@ -39,26 +40,36 @@ class NeuralNetwork(object):
             neural network's hidden layers and each integer represents the
             number of neurons in a hidden layer
 
-        eta : float
+        eta: float
             the learning rate
             (Default value = 0.5)
 
-        alpha : float
+        alpha: float
             the momentum constant
             (Default value = 0)
 
-        epochs : int
+        epsilon: float
+            the early stopping constant, given as a percentage %
+            (Default value = 1)
+
+        epochs: int
             the (maximum) number of epochs for which the neural network
             has to be trained
             (Default value = 1000)
 
-        batch_size : int
+        batch_size: int
             the batch size
             (Default value = 1)
 
         reg_lambda: float
             the regularization factor
             (Default value = 0.0)
+
+        early_stop: str
+            the early stop method,
+            to be chosen in (None, 'GL', 'PQ', 'testing').
+            The 'testing' method computes the exit points without stopping
+            (Default value = None)
 
         reg_method: str
             the regularization method, either l1 or l2 regularization are
@@ -94,7 +105,12 @@ class NeuralNetwork(object):
 
         self.eta = eta
         self.alpha = alpha
+        self.epsilon = epsilon
         self.batch_size = batch_size
+
+        assert early_stop in (None, 'GL', 'PQ', 'testing')
+        self.early_stop = early_stop
+        self.early_stop_min_epochs = early_stop_min_epochs
 
         assert reg_method == 'l1' or reg_method == 'l2'
         self.reg_method = reg_method
@@ -217,6 +233,7 @@ class NeuralNetwork(object):
         self.params['reg_lambda'] = self.reg_lambda
         self.params['epochs'] = self.epochs
         self.params['activation'] = self.activation
+        self.params['epsilon'] = self.epsilon
 
         return self.params
 
@@ -289,6 +306,13 @@ class NeuralNetwork(object):
         y : numpy.ndarray
             the target column vector
 
+        X_va: numpy.ndarray
+            the design matrix used for the validation
+            (Default value = None)
+
+        y_va: numpy.ndarray
+            the target column vector used for the validation
+            (Default value = None)
 
         Returns
         -------
@@ -302,7 +326,12 @@ class NeuralNetwork(object):
         if X_va is not None:
             self.error_per_epochs_va = []
         else:
-            self.error_per_epochs_va = None  # used in utils plot
+            self.error_per_epochs_va = None
+
+        self.stop_GL = None
+        self.stop_PQ = None
+        stop_GL = False
+        stop_PQ = False
 
         for e in tqdm(range(self.epochs), desc='TRAINING'):
             error_per_batch = []
@@ -312,6 +341,8 @@ class NeuralNetwork(object):
             X, y = np.hsplit(dataset, [X.shape[1]])
 
             for b_start in np.arange(0, X.shape[0], self.batch_size):
+                # BACK-PROPAGATION ALGORITHM ##################################
+
                 x_batch = X[b_start:b_start + self.batch_size, :]
                 y_batch = y[b_start:b_start + self.batch_size, :]
 
@@ -320,6 +351,8 @@ class NeuralNetwork(object):
                 error_per_batch.append(error)
 
                 self.back_propagation(x_batch, y_batch)
+
+                # WEIGHTS' UPDATE #############################################
 
                 for layer in range(self.n_layers):
                     weight_decay = reg.regularization(self.W[layer],
@@ -335,7 +368,10 @@ class NeuralNetwork(object):
                            * (weight_decay + self.delta_W[layer]))
                     self.W[layer] += velocity_W[layer]
 
-            # summing up errors to compute overall MSE
+                ###############################################################
+
+            # COMPUTING OVERALL MSE ###########################################
+
             self.error_per_epochs_old.append(
                 np.sum(error_per_batch)/X.shape[0])
 
@@ -346,8 +382,44 @@ class NeuralNetwork(object):
                 self.error_per_epochs_va.append(
                     metrics.mse(y_va, y_pred_va))
 
-                # print 'STARTED WITH LOSS {}, ENDED WITH {}'.\
-        #     format(self.error_per_epochs[0], self.error_per_epochs[-1])
+            # CHECKING FOR EARLY STOPPING #####################################
+
+            if self.early_stop is not None \
+               and e > self.early_stop_min_epochs \
+               and (e + 1) % 5 == 0:
+
+                generalization_loss = 100 \
+                    * ((self.error_per_epochs_va[e] /
+                        min(self.error_per_epochs_va))
+                       - 1)
+
+                # GL method
+                if generalization_loss > self.epsilon:
+                    stop_GL = True
+
+                # PQ method
+                if self.early_stop != 'GL':  # PQ or 'testing'
+
+                    min_e_per_strip = min(
+                        self.error_per_epochs_va[e - 4:e + 1])
+                    sum_per_strip = sum(self.error_per_epochs_va[e - 4:e + 1])
+                    progress = 1000 * \
+                               ((sum_per_strip / (5 * min_e_per_strip)) - 1)
+
+                    progress_quotient = generalization_loss / progress
+
+                    if progress_quotient > self.epsilon:
+                        stop_PQ = True
+
+                # stopping
+                if self.early_stop == 'testing':
+                    if stop_GL and self.stop_GL is None:
+                        self.stop_GL = e
+                    if stop_PQ and self.stop_PQ is None:
+                        self.stop_PQ = e
+                else:
+                    if stop_GL or stop_PQ:
+                        break
 
     def predict(self, x):
         """
