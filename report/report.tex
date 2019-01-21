@@ -106,13 +106,13 @@ for each one of the datasets, we collected the data describing the results.
         the first code base's branch by writing diffent activation functions, losses and regularization metrics.
         In the \texttt{activation} script we writed the code for the \texttt{sigmoid}, \texttt{relu},
         \texttt{tanh} and \texttt{identity} activation functions. The \texttt{regularizers} script contains the
-        code for implementing both the L1 and L2 regularization metrics, as described in \cite{deep_learning},
-        and the \texttt{losses} script contains the code for implementing popular loss function like, for
-        example, the \texttt{mean\_squared\_error} and the \texttt{mean\_euclidean\_error}. All this metrics
-        are applied in the \texttt{nn} script, which contains the code for implementing the neural
-        network model, and hence the backpropagation algorithm and the training algorithm, described in section
-        \ref{sub:the_training_algorithm}. The \texttt{NeuralNetwork} class, which is contained in this script,
-        represents a neural network using the standard \textit{backpropagation algorithm} with
+        code for implementing both the $L^1$ and $L^2$ regularization metrics, as described in
+        \cite{deep_learning}, and the \texttt{losses} script contains the code for implementing popular loss
+        function like, for example, the \texttt{mean\_squared\_error} and the \texttt{mean\_euclidean\_error}.
+        All this metrics are applied in the \texttt{nn} script, which contains the code for implementing the
+        neural network model, and hence the backpropagation algorithm and the training algorithm, described in
+        section \ref{sub:the_training_algorithm}. The \texttt{NeuralNetwork} class, which is contained in this
+        script, represents a neural network using the standard \textit{backpropagation algorithm} with
         \textit{gradient descent}, \textit{standard momentum} and \textit{regularization}, and follows the
         \textit{minibatch} approach, as described in \cite{deep_learning}. The \texttt{NeuralNetwork} class
         contains also various early stopping metrics, like the $GL_{\alpha}$ and the $PQ_{\alpha}$ which we
