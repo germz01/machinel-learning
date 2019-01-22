@@ -142,11 +142,11 @@ def plot_learning_curve(nn, fname='../images/learning_curve.pdf'):
 
     plt.plot(range(len(nn.error_per_epochs)),
              nn.error_per_epochs, linestyle='--',
-             label='train')
+             label='training')
     if nn.error_per_epochs_va is not None:
         plt.plot(range(len(nn.error_per_epochs_va)),
                  nn.error_per_epochs_va, linestyle='-',
-                 label='va')
+                 label='validation')
 
     if nn.stop_GL is not None:
         plt.axvline(nn.stop_GL, linestyle=':', label='GL early stop')

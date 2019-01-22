@@ -19,10 +19,12 @@ class NeuralNetwork(object):
     TODO
     """
     def __init__(self, X, y, hidden_sizes=[10],
-                 eta=0.5, alpha=0, epsilon=1, epochs=1000,
+                 eta=0.5, alpha=0, epsilon=1, 
                  early_stop=None, early_stop_min_epochs=50,
-                 batch_size=1, reg_lambda=0.0, reg_method='l2',
-                 w_par=6, activation='sigmoid',
+                 batch_size=1, epochs=1000,
+                 reg_lambda=0.0, reg_method='l2',
+                 w_par=6, w_method='DL',
+                 activation='sigmoid',
                  task='classifier'):
         """
         The class' constructor.
@@ -58,7 +60,7 @@ class NeuralNetwork(object):
             (Default value = 1000)
 
         batch_size: int
-            the batch size
+            the batch size, 'batch' for batch mode
             (Default value = 1)
 
         reg_lambda: float
@@ -106,7 +108,11 @@ class NeuralNetwork(object):
         self.eta = eta
         self.alpha = alpha
         self.epsilon = epsilon
-        self.batch_size = batch_size
+
+        if batch_size == 'batch':
+            self.batch_size = X.shape[0]
+        else:
+            self.batch_size = batch_size
 
         assert early_stop in (None, 'GL', 'PQ', 'testing')
         self.early_stop = early_stop
@@ -118,9 +124,14 @@ class NeuralNetwork(object):
 
         self.epochs = epochs
 
+        
+
         self.activation = self.set_activation(activation, task)
 
-        self.W = self.set_weights(w_par)
+        self.w_par = w_par
+        self.w_method = w_method
+        
+        self.W = self.set_weights(w_par, w_method=self.w_method)
         self.W_copy = [w.copy() for w in self.W]
         self.b = self.set_bias()
         self.b_copy = [b.copy() for b in self.b]
@@ -132,7 +143,7 @@ class NeuralNetwork(object):
         self.a = [0 for i in range(self.n_layers)]
         self.h = [0 for i in range(self.n_layers)]
 
-        assert task == 'classifier' or task == 'regression'
+        assert task in ('classifier', 'regression')
         self.task = task
 
     def set_activation(self, activation, task):
@@ -148,7 +159,7 @@ class NeuralNetwork(object):
 
             return acts
 
-    def set_weights(self, w_par=6):
+    def set_weights(self, w_par=6, w_method='DL'):
         """
         This function initializes the network's weights matrices following
         the rule in Deep Learning, pag. 295
@@ -165,11 +176,23 @@ class NeuralNetwork(object):
         W = []
 
         for i in range(1, len(self.topology)):
-            low = - np.sqrt(w_par / (self.topology[i - 1] + self.topology[i]))
-            high = np.sqrt(w_par / (self.topology[i - 1] + self.topology[i]))
 
-            W.append(np.random.uniform(low, high, (self.topology[i],
-                                                   self.topology[i - 1])))
+            if w_method == 'DL':
+                low = - np.sqrt(w_par /
+                                (self.topology[i - 1] + self.topology[i]))
+                high = np.sqrt(w_par /
+                               (self.topology[i - 1] + self.topology[i]))
+
+                W.append(np.random.uniform(low, high,
+                                           (self.topology[i],
+                                            self.topology[i - 1])))
+            elif w_method == 'uniform':
+                low = -(w_par)
+                high = w_par
+
+                W.append(np.random.uniform(low, high,
+                                           (self.topology[i],
+                                            self.topology[i - 1])))
 
         return W
 
@@ -194,7 +217,8 @@ class NeuralNetwork(object):
         b = []
 
         for i in range(1, len(self.topology)):
-            b.append(np.random.uniform(-.2, .2, (self.topology[i], 1)))
+            # b.append(np.random.uniform(-w_bias, +w_bias, (self.topology[i], 1)))
+            b.append(np.random.uniform(-.0001, .0002, (self.topology[i], 1)))
 
         return b
 
@@ -234,6 +258,8 @@ class NeuralNetwork(object):
         self.params['epochs'] = self.epochs
         self.params['activation'] = self.activation
         self.params['epsilon'] = self.epsilon
+        self.params['w_par'] = self.w_par
+        self.params['w_method'] = self.w_method
 
         return self.params
 
@@ -333,7 +359,8 @@ class NeuralNetwork(object):
         stop_GL = False
         stop_PQ = False
 
-        for e in tqdm(range(self.epochs), desc='TRAINING'):
+        #for e in tqdm(range(self.epochs), desc='TRAINING'):
+        for e in range(self.epochs):
             error_per_batch = []
 
             dataset = np.hstack((X, y))

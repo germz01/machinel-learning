@@ -74,6 +74,8 @@ class KFoldCrossValidation(object):
         self.folds = list()
         self.results = list()
 
+        self.fold_results = []
+
         if shuffle:
             np.random.shuffle(self.dataset)
 
@@ -151,6 +153,27 @@ class KFoldCrossValidation(object):
             assessment = {'mse': neural_net.error_per_epochs_va[-1]}
             self.results.append(assessment)
             # self.results.append(loss)
+
+            fold_results = {
+                'id_fold': i+1,
+                'mse': neural_net.error_per_epochs_va[-1],
+                # 'epochs_x': list(np.arange(len(neural_net.error_per_epochs))),
+                'error_per_epochs': neural_net.error_per_epochs,
+                'error_per_epochs_va': neural_net.error_per_epochs_va,
+                'hyperparams': neural_net.get_params()
+            }
+            if neural_net.task == 'classifier':
+                y_pred = neural_net.predict(X_va)
+                y_pred = np.round(y_pred)
+                bca = metrics.BinaryClassifierAssessment(y_pred, y_va, printing=False)
+                fold_results['accuracy'] = bca.accuracy
+                fold_results['f1_score'] = bca.f1_score
+
+            if neural_net.task == 'regression':
+                # add mean euclidean error
+                pass
+
+            self.fold_results.append(fold_results)
             neural_net.reset()
 
             if plot_curves:
@@ -250,7 +273,8 @@ class ModelSelectionCV(object):
     n_iter: int
         a placeholder for the current iteration
     """
-    def __init__(self, grid, repetitions=1):
+    def __init__(self, grid, repetitions=1,
+                 fname='../data/model_selection_results.json'):
         """
         The class' constructor.
 
@@ -266,13 +290,14 @@ class ModelSelectionCV(object):
         Returns
         -------
         """
+        if grid is not None:
+            self.grid = grid
+            self.repetitions = repetitions
 
-        self.grid = grid
-        self.repetitions = repetitions
-        self.n_iter = repetitions * len(grid)
+        self.fname = fname
 
-    def search(self, X_design, y_design, nfolds=3, save_results=True,
-               fname='../data/model_selection_results.json', **kwargs):
+    def search(self, X_design, y_design, nfolds=3, ntrials=7,
+               save_results=True, fname=None, **kwargs):
         """
         This function searches for the best hyperparamenters' configugation
         through a search space of hyperparameters.
@@ -301,9 +326,14 @@ class ModelSelectionCV(object):
         Returns
         -------
         """
+        self.n_iter = self.repetitions * len(self.grid)*ntrials
+
+        if fname is None:
+            fname = self.fname
+
         if save_results:
             with open(fname, 'w') as f:
-                f.write('{"out":[ ')
+                f.write('{"out": [')
 
         i = 0
 
@@ -319,19 +349,28 @@ class ModelSelectionCV(object):
                                     .format(kwargs['par_name']
                                             if 'par_name' in kwargs else '')):
                 # instanciate neural network
-                # TODO(?): generalize instanciation to any model
 
-                neural_net = nn.NeuralNetwork(X_design, y_design,
-                                              **hyperparams)
+                for trial in tqdm(range(ntrials), desc="TRIALS"):
+                    # repeated inizialization of the net
+                    neural_net = nn.NeuralNetwork(X_design, y_design,
+                                                  **hyperparams)
 
-                cross_val = KFoldCrossValidation(X_design, y_design,
-                                                 neural_net, nfolds=nfolds,
-                                                 shuffle=False)
+                    cross_val = KFoldCrossValidation(
+                        X_design, y_design,
+                        neural_net, nfolds=nfolds,
+                        shuffle=False)
 
-                i += 1
-                out = dict()
-                out['hyperparams'] = neural_net.get_params()
-                out['errors'] = cross_val.aggregated_results
+                    i += 1
+                    out = dict()
+                    out['hyperparams'] = neural_net.get_params()
+                    out['errors'] = cross_val.aggregated_results
+                    out['fold_results'] = cross_val.fold_results
+                    out['id_grid'] = i
+                    out['id_trial'] = trial
+                    # fold results
+                    for res in out['fold_results']:
+                        res['id_grid'] = i
+                        res['id_trial'] = trial
 
                 if save_results:
                     with open(fname, 'a') as f:
@@ -339,9 +378,9 @@ class ModelSelectionCV(object):
                         if i != self.n_iter:
                             f.write(',\n')
                         else:
-                            f.write('\n]}')
+                            f.write('\n ]}')
 
-    def load_results(self, fname='../data/model_selection_results.json'):
+    def load_results(self, fname=None):
         """
         This function loads the JSON file which contains the results for
         every hyperparaments' configuration.
@@ -356,12 +395,14 @@ class ModelSelectionCV(object):
         -------
         The file which contains the results.
         """
+        if fname is None:
+            fname = self.fname
         with open(fname, 'r') as f:
             data = json.load(f)
         return data
 
     def select_best_hyperparams(self, error='mse', metric='mean', top=1,
-                                fname='../data/model_selection_results.json'):
+                                fname=None):
         """
         Selection of the best hyperparameters
 
@@ -384,6 +425,8 @@ class ModelSelectionCV(object):
         A list containing the values for the best hyperparameters'
         configuration
         """
+        if fname is None:
+            fname = self.fname
         data = self.load_results(fname=fname)
         errors = [res['errors'][error][metric] for res in data['out']]
         best_indexes = (np.argsort(errors))[:top]
@@ -391,7 +434,7 @@ class ModelSelectionCV(object):
         return list(np.array(data['out'])[best_indexes])
 
     def select_best_model(self, X_design, y_design, X_va=None, y_va=None,
-                          fname='../data/model_selection_results.json'):
+                          fname=None):
         """
         This function retrains the model with the best hyperparams'
         configuration
@@ -412,6 +455,9 @@ class ModelSelectionCV(object):
         -------
         The model trained with the best hyperparameters' configuration.
         """
+        if fname is None:
+            fname = self.fname
+
         best = self.select_best_hyperparams(top=1, fname=fname)
         best_hyperparams = best[0]['hyperparams']
 
@@ -420,6 +466,85 @@ class ModelSelectionCV(object):
         neural_net.train(X_design, y_design, X_va, y_va)
 
         return neural_net
+
+    def load_results_pandas(self, fname=None, flat=True):
+        """ Load grid results in pandas DataFrame format """
+
+        if fname is None:
+            fname = self.fname
+
+        grid_results = self.load_results()
+        grid_results = grid_results['out']
+        result = grid_results[0]
+
+        grid_results_flat = []
+        for result in grid_results:
+
+            fold_results = (result['fold_results'])
+            fold_results_flat = []
+            for res in fold_results:
+                fold_results_flat.append(flat_fold_results(res))
+
+            grid_results_flat.extend(fold_results_flat)
+
+        df = pd.DataFrame(grid_results_flat)
+        # re-ordering
+        df = df[['id_grid', 'id_fold'] +
+                [c for c in df if c not in ['id_grid', 'id_fold']]]
+
+        if flat:
+            return df2df_flat(df=df)
+        else:
+            return df
+
+
+def flat_fold_results(fold_res):
+    """ Convert KCrossValidation results to flat format """
+
+    fold_res_flat = dict()
+    for info, info_val in fold_res.items():
+        if info != 'hyperparams':
+            fold_res_flat[info] = info_val
+
+    for par, par_value in fold_res['hyperparams'].items():
+        if type(par_value) is not list:
+            fold_res_flat[par] = par_value
+        else:
+            # handle list type parameters
+            for i, el in enumerate(par_value):
+                if i == 0:
+                    # maintain name for first list element
+                    fold_res_flat[par] = el
+                else:
+                    fold_res_flat[par+'_'+str(i)] = el
+
+    fold_res_flat['hyperparams'] = fold_res['hyperparams']
+    return fold_res_flat
+
+
+def df2df_flat(df):
+    """ Flat the learning curves in a pandas DataFrame """
+
+    new_rows = []
+
+    for irow in range(df.shape[0]):
+
+        row = df.iloc[irow]
+
+        row_others = row.copy()
+        row_others.drop(['error_per_epochs', 'error_per_epochs_va'])
+
+        errors = row['error_per_epochs']
+
+        for i, error in enumerate(errors):
+            new_row = row_others.copy()
+            new_row['error_per_epochs'] = error
+            new_row['error_per_epochs_va'] = row['error_per_epochs_va'][i]
+            # new_row['epochs_x'] = row['epochs_x'][i]
+            new_rows.append(new_row)
+
+    new_df = pd.DataFrame(new_rows)
+    return new_df
 
 
 class Holdout():
