@@ -8,6 +8,7 @@ import random as rnd
 import utils as u
 import json
 import metrics
+import gzip
 
 from itertools import product
 from tqdm import tqdm
@@ -274,7 +275,7 @@ class ModelSelectionCV(object):
         a placeholder for the current iteration
     """
     def __init__(self, grid, repetitions=1,
-                 fname='../data/model_selection_results.json'):
+                 fname='../data/model_selection_results.json.gz'):
         """
         The class' constructor.
 
@@ -321,7 +322,7 @@ class ModelSelectionCV(object):
         fname: str
             where to save the results obtained at the end of the searching
             phase
-            (Default value = '../data/model_selection_results.json')
+            (Default value = '../data/model_selection_results.json.gz')
 
         Returns
         -------
@@ -332,7 +333,7 @@ class ModelSelectionCV(object):
             fname = self.fname
 
         if save_results:
-            with open(fname, 'w') as f:
+            with gzip.open(fname, 'w') as f:
                 f.write('{"out": [')
 
         i = 0
@@ -359,7 +360,7 @@ class ModelSelectionCV(object):
                         X_design, y_design,
                         neural_net, nfolds=nfolds,
                         shuffle=False)
-
+                    print trial
                     i += 1
                     out = dict()
                     out['hyperparams'] = neural_net.get_params()
@@ -372,13 +373,13 @@ class ModelSelectionCV(object):
                         res['id_grid'] = i
                         res['id_trial'] = trial
 
-                if save_results:
-                    with open(fname, 'a') as f:
-                        json.dump(out, f, indent=4)
-                        if i != self.n_iter:
-                            f.write(',\n')
-                        else:
-                            f.write('\n ]}')
+                    if save_results:
+                        with gzip.open(fname, 'a') as f:
+                            json.dump(out, f, indent=4)
+                            if i != self.n_iter:
+                                f.write(',\n')
+                            else:
+                                f.write('\n ]}')
 
     def load_results(self, fname=None):
         """
@@ -397,7 +398,7 @@ class ModelSelectionCV(object):
         """
         if fname is None:
             fname = self.fname
-        with open(fname, 'r') as f:
+        with gzip.open(fname, 'r') as f:
             data = json.load(f)
         return data
 
@@ -472,7 +473,7 @@ class ModelSelectionCV(object):
 
         if fname is None:
             fname = self.fname
-
+        
         grid_results = self.load_results()
         grid_results = grid_results['out']
         result = grid_results[0]

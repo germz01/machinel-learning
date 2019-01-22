@@ -144,7 +144,7 @@ check_files = True
 experiment = 1
 
 while(check_files):
-    fname_results = 'monks_{}_experiment_{}_results.json'.format(
+    fname_results = 'monks_{}_experiment_{}_results.json.gz'.format(
         dataset, experiment)
     fname_params = 'monks_{}_experiment_{}_parameters.json'.format(
         dataset, experiment)
