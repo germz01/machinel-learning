@@ -1,8 +1,5 @@
 from __future__ import division
 
-import matplotlib as mpl
-mpl.use('Agg')
-
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np

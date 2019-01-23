@@ -25,26 +25,27 @@ nfolds = 3
 ntrials = 3
 
 param_ranges = {
-    'eta': (0.0001, 2.0),
-    'hidden_sizes': [(2, 100)],
+    'eta': (0.0001, 0.5),
+    'hidden_sizes': [(2, 20)],
     'alpha': (0.0, 0.9),
     'reg_method': 'l2', 'reg_lambda': 0.0,
     'epochs': 1000,
-    'batch_size': 'batch',
+    'batch_size': (1, 20),
     'activation': 'sigmoid',
     'task': 'classifier',
     # 'early_stop': None,  # 'testing',
     'epsilon': 5,
-    'w_method': 'uniform',
-    'w_par': 1.0}
+    'w_method': 'DL',
+    'w_par': 6.0}
 
 info = "Informazioni/appunti/scopo riguardo l'esperimento in corso"
 
-info = "Initial search, without regularization, using sigmoid"
+info = "Using mini batch, without regularization, using sigmoid"
 
 experiment_params = {
     'dataset': dataset,
     'nfolds': nfolds,
+    'ntrials': ntrials,
     'grid_size': grid_size,
     'info': info,
     'param_ranges': param_ranges
@@ -69,6 +70,7 @@ design_set = datasets['monks-{}_train'.format(dataset)]
 test_set = datasets['monks-{}_test'.format(dataset)]
 
 y_design, X_design = np.hsplit(design_set, [1])
+y_test, X_test = np.hsplit(test_set, [1])
 
 # simmetrized X_design:
 X_design = X_design*2-1
@@ -78,11 +80,10 @@ X_design = X_design*2-1
 # babysitting for choosing initial param ranges
 # and plot_learning_curve
 
-
 np.random.shuffle(design_set)
 
 # splitting training/validation
-split_percentage = 0.75
+split_percentage = 0.8
 split = int(design_set.shape[0]*split_percentage)
 
 training_set = design_set[:split, :]
@@ -91,47 +92,32 @@ validation_set = design_set[split:, :]
 y_training, X_training = np.hsplit(training_set, [1])
 y_validation, X_validation = np.hsplit(validation_set, [1])
 
-
 imp.reload(u)
 imp.reload(NN)
 
 nn = NN.NeuralNetwork(X_training, y_training,
-                      eta=1.1,
-                      hidden_sizes=[100],
-                      alpha=0.7,
+                      eta=0.2,
+                      hidden_sizes=[10],
+                      alpha=0.01,
                       reg_method='l2', reg_lambda=0.0,
                       epochs=1000,
-                      batch_size=X_training.shape[0],
+                      batch_size=7,
                       activation='sigmoid',
                       task='classifier',
                       early_stop='testing',
                       epsilon=5,
-                      w_method='uniform',
-                      w_par=0.7)
+                      w_method='DL',
+                      w_par=6)
 nn.train(X_training, y_training, X_validation, y_validation)
 u.plot_learning_curve(nn, fname='../images/monks_learning_curve.pdf')
 
-nn.W
-
-
 y_pred = nn.predict(X_validation)
-y_pred = np.apply_along_axis(lambda x: 0 if x < .5 else 1, 1,
-                             y_pred).reshape(-1, 1)
-
-
-imp.reload(valid)
-
+y_pred = np.round(y_pred)
 bca = metrics.BinaryClassifierAssessment(y_pred, y_validation,
                                          printing=True)
 
-
-bca.accuracy
-bca.precision
-
-w_par = 160
-W = nn.set_weights(w_par)
-W
-pd.DataFrame(W[0]).describe()
+# y_pred_test = np.round(nn.predict(X_test))
+# metrics.BinaryClassifierAssessment(y_test, y_pred_test)
 
 
 ###########################################################
@@ -141,7 +127,7 @@ pd.DataFrame(W[0]).describe()
 fpath = '../data/monks/results/'
 
 check_files = True
-experiment = 1
+experiment = 3
 
 while(check_files):
     fname_results = 'monks_{}_experiment_{}_results.json.gz'.format(
@@ -163,6 +149,10 @@ print 'saving results in:'
 print fres
 print fpar
 print '--------------------'
+if raw_input('Starting search ?[Y/N] ') == 'Y':
+    pass
+
+
 # save experiment setup
 with open(fpar, 'w') as f:
     json.dump(experiment_params, f, indent=4)
