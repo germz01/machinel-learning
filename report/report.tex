@@ -39,8 +39,12 @@
 }
 \date{
     ML - Academic Year: 2018/2019 \\
+    {\vspace{0.25cm}}
     \today \\
-    Type of project: \textbf{A}
+    {\vspace{0.25cm}}
+    Type of project: \textbf{A} \\
+    {\vspace{0.25cm}}
+    \href{https://github.com/germz01/machinel-learning}{Github Page}
 }
 \renewcommand{\maketitlehookd}{%
 \begin{abstract}
@@ -65,13 +69,13 @@ for each one of the datasets, we collected the data describing the results.
 \section{Introduction} % (fold)
 \label{sec:introduction}
     By chosing the type \textbf{A} project, we followed the goal of optimizing a built from scratch neural
-    network model by searching the best hyper-parameters' combination in order to obtain the best
+    network model by searching for the best hyper-parameters' combination in order to obtain the best
     performances on the MONK's and CUP datasets. The model we've built implements the
-    standard backpropagation algorithm with gradient descent, as described in \cite{deep_learning}. As
-    optimization tool, we've searched the so-called hyper-parameters space by using well-known validation
-    algorithms like k-fold cross validation and grid search, described in \cite{deep_learning} and
-    \cite{random_search}. More technical details regarding the implementation can be found in section
-    \ref{sec:methods}.
+    standard \textit{backpropagation algorithm} with \textit{gradient descent}, as described in
+    \cite{deep_learning}. As optimization tool, we've searched the so-called hyper-parameters space by using
+    well-known validation algorithms like \textit{k-fold cross validation} and \textit{grid search},
+    described in \cite{deep_learning} and \cite{random_search}. More technical details about the
+    implementation can be found in section \ref{sec:methods}.
 % section introduction (end)
 
 %------------------------------------------------
@@ -83,19 +87,21 @@ for each one of the datasets, we collected the data describing the results.
     implementating popular machine learning algorithms. Also the standard library function provided by the
     language were utilized. Following the philosophy of type \textbf{A} projects, we haven't used
     out-of-the-box implementations for the algorithms composing our framework. We now give a brief overview of
-    the code's structure, discuss some implementation choices and present our neural network's initialization and
-    training algorithm.
+    the code's structure, discuss some implementation choices and present our neural network's initialization
+    and training algorithms. Visit the project's
+    \href{https://github.com/germz01/machinel-learning}{\underline{\textit{Github Page}}} if you want to check
+    our project's code base.
 
     \subsection{Code overview} % (fold)
     \label{sub:code_overview}
         We can view our code base essentialy divided in two branches: the \textit{neural network} branch and
-        the \textit{model selection and assessment} branch. The first one is composed by the code implementing the
-        neural network model, which is contained in a \texttt{NeuralNetwork} class, and all the code related
+        the \textit{model selection and assessment} branch. The first one is composed by the code for
+        implementing the neural network model, and all the code related
         to the building and training of such a model, e.g. the activation functions, the losses, the
-        regularization metrics and so on, that is divided in several scripts in order to ease the implementation.
-        The code base's second branch consist in the model selection and assessment related code, which is
-        composed by several classes, each one implementing an algorithm like \texttt{GridSearch} and
-        \texttt{KFold\_Cross\_validation} which are utilized for the model's validation, selection and
+        regularization metrics and so on, that is divided in several scripts in order to ease the
+        implementation. The code base's second branch consist in the model selection and assessment related
+        code, which is composed by several classes, each one implementing an algorithm like \texttt{GridSearch}
+        and \texttt{KFold\_Cross\_validation} which are utilized for the model's validation, selection and
         assessment, and the scripts that build up the testing routines for the MONK's and CUP datasets.
         The second branch also is splitted in several scripts.
     % subsection code_overview (end)
@@ -126,16 +132,16 @@ for each one of the datasets, we collected the data describing the results.
         During the initialization phase, we pass to the network the design matrix \texttt{X} and target column
         vector \texttt{y}. Other than that we pass the number of neurons per hidden layer
         \texttt{hidden\_sizes}, the maximum number of epochs \texttt{epochs}, the minibatch's size
-        \texttt{batch\_size}, the activation function for each layer \texttt{activation} and the hyper-parameters
-        for the learning rate, \texttt{$\eta$}, the momentum, \texttt{$\alpha$} and the regularization,
-        \texttt{$\lambda$}. In order to initialize the network's weights matrices we followed the
-        \textit{normalized initialization} technique, described in \cite{deep_learning} and \cite{initialization}.
-        During the training phase we essentialy apply the \textit{forward propagation} and the
-        \textit{backpropagation} phases of the standard \textit{backpropagation} algorithm over a minibatch of
-        examples taken from the training set. During each epoch of training we also keep track of the errors
-        between the predicted values and target ones, in order to be able to plot the \textit{learning curves}
-        for the training session. At the end of each epoch the neural network's weights are updated following
-        the standard backpropagation/momentum/regularization convention.
+        \texttt{batch\_size}, the activation function for each layer \texttt{activation} and the
+        hyper-parameters for the learning rate, \texttt{$\eta$}, the momentum, \texttt{$\alpha$} and the
+        regularization, \texttt{$\lambda$}. In order to initialize the network's weights matrices we've
+        followed the \textit{normalized initialization} technique, as described in \cite{deep_learning} and
+        \cite{initialization}. During the training phase we essentialy apply the \textit{forward propagation}
+        and the \textit{backpropagation} phases of the standard \textit{backpropagation} algorithm over a
+        minibatch of examples taken from the training set. During each epoch of training we also keep track of
+        the errors between the predicted values and target ones, in order to be able to plot the
+        \textit{learning curves} for the training session. At the end of each epoch the neural network's
+        weights are updated following the standard backpropagation/momentum/regularization convention.
         % subsection the_training_algorithm (end)
     % subsection implementation_choices (end)
 % section methods (end)
@@ -149,7 +155,10 @@ for each one of the datasets, we collected the data describing the results.
 
 %------------------------------------------------
 
-\section{Conclusions}
+\section{Conclusions} % (fold)
+\label{sec:conclusions}
+
+% section conclusions (end)
 
 %----------------------------------------------------------------------------------------
 %   REFERENCE LIST
