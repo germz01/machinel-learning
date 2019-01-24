@@ -63,7 +63,7 @@ class BinaryClassifierAssessment():
 
         self.confusion_matrix = np.array((tp, fp, fn, tn)).reshape((2, 2))
 
-        if P == 0 or N == 0:
+        if tp == 0 or tn == 0:
             self.precision = None
             self.accuracy = None
             self.recall = None

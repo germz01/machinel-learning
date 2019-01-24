@@ -144,7 +144,7 @@ class KFoldCrossValidation(object):
 
             train_set = np.vstack([self.folds[j] for j in np.arange(
                 len(self.folds)) if j != i])
-
+            
             X_train, y_train = np.hsplit(train_set, [X.shape[1]])
             X_va, y_va = np.hsplit(self.folds[i], [X.shape[1]])
 
@@ -157,7 +157,8 @@ class KFoldCrossValidation(object):
 
             fold_results = {
                 'id_fold': i+1,
-                'mse': neural_net.error_per_epochs_va[-1],
+                'mse_tr': neural_net.error_per_epochs[-1],
+                'mse_va': neural_net.error_per_epochs_va[-1],
                 # 'epochs_x': list(np.arange(len(neural_net.error_per_epochs))),
                 'error_per_epochs': neural_net.error_per_epochs,
                 'error_per_epochs_va': neural_net.error_per_epochs_va,
@@ -165,7 +166,10 @@ class KFoldCrossValidation(object):
             }
             if neural_net.task == 'classifier':
                 y_pred = neural_net.predict(X_va)
-                y_pred = np.round(y_pred)
+                y_pred = np.apply_along_axis(lambda x: 0 if x < .5 else 1, 1,
+                                         y_pred).reshape(-1, 1)
+
+                # y_pred = np.round(y_pred)
                 bca = metrics.BinaryClassifierAssessment(y_pred, y_va, printing=False)
                 fold_results['accuracy'] = bca.accuracy
                 fold_results['f1_score'] = bca.f1_score
@@ -360,7 +364,6 @@ class ModelSelectionCV(object):
                         X_design, y_design,
                         neural_net, nfolds=nfolds,
                         shuffle=False)
-                    print trial
                     i += 1
                     out = dict()
                     out['hyperparams'] = neural_net.get_params()

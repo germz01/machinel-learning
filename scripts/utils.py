@@ -165,6 +165,86 @@ def plot_learning_curve(nn, fname='../images/learning_curve.pdf'):
     plt.close()
 
 
+def plot_learning_curve_info(
+        error_per_epochs, error_per_epochs_va,
+        hyperparams,
+        fname,
+        title='Learning Curve',
+        other_errors=None,
+        figsize=(10, 6),
+        fontsize_title=13,
+        fontsize_labels=12,
+        fontsize_info=12,
+        fontsize_legend=12):
+    """ Plots the learning curve with infos """
+
+    x_epochs = np.arange(len(error_per_epochs))
+    y_tr = error_per_epochs
+    y_va = error_per_epochs_va
+
+    # ###########################################################
+    # legend info
+    info = ''
+
+    final_errors = [
+        'MSE Tr =' + str(np.round(y_tr[-1], 5)),
+        'MSE Va =' + str(np.round(y_va[-1], 5))
+    ]
+    # appending other errors, ex: accuracy
+    final_errors_str = '\n'.join(final_errors)
+    if other_errors is not None:
+        final_errors_str += other_errors
+
+    info += '\nFinal Errors:' + '\n'
+    info += final_errors_str + '\n'
+
+    # hyperparameters string
+    info += '\nHyperparameters:' + '\n'
+    info += r'$\eta= {}$'.format(np.round(hyperparams['eta'], 2))+'\n'
+    info += r'$\alpha= {}$'.format(np.round(hyperparams['alpha'], 2))+'\n'
+
+    info += r'${}$ regularization'.format(
+        'L_2' if hyperparams['reg_method'] == 'l2' else 'L_1') + '\n'
+    info += r'$\lambda= {}$'.format(
+        np.round(hyperparams['reg_lambda'], 3))
+
+    info += '\nGD: {}'.format(hyperparams['batch_method'])+'\n'
+    if hyperparams['batch_method'] != 'batch':
+        info += 'mb={}\n'.format(hyperparams['batch_size'])
+
+    info += '\nTopology:\n'
+    info += '->'.join([str(el) for el in hyperparams['topology']])+'\n'
+    info += '\nActivation: {}'.format(hyperparams['activation'][0])+'\n'
+
+    ###########################################################
+    plt.close()
+
+    plt.figure(figsize=figsize)
+    grid = plt.GridSpec(1, 4, wspace=0.1, hspace=0.3, left=0.1)
+
+    plt.subplot(grid[0, :3])
+    plt.plot(x_epochs, y_va, label='Validation', linestyle='-')
+    plt.plot(x_epochs, y_tr, label='Training', linestyle='--')
+
+    plt.xlabel('Epochs', fontsize=fontsize_labels)
+    plt.ylabel('MSE', fontsize=fontsize_labels)
+    plt.title(title, fontsize=fontsize_title)
+    plt.legend(fontsize=fontsize_legend)
+    plt.grid()
+
+    plt.subplot(grid[0, 3:])
+
+    plt.title('Info')
+    plt.text(x=0., y=0.97, s=info,
+             ha='left', va='top', fontsize=11)
+
+    plt.axis('off')
+
+    plt.savefig(fname)
+
+    plt.close()
+
+
 def binarize_attribute(attribute, n_categories):
     """
     Binarize a vector of categorical values

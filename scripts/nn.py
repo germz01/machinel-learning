@@ -111,8 +111,13 @@ class NeuralNetwork(object):
 
         if batch_size == 'batch':
             self.batch_size = X.shape[0]
+            self.batch_method = 'batch'
         else:
             self.batch_size = batch_size
+            if batch_size == 1:
+                self.batch_method = 'on-line'
+            else:
+                self.batch_method = 'minibatch'
 
         assert early_stop in (None, 'GL', 'PQ', 'testing')
         self.early_stop = early_stop
@@ -124,7 +129,6 @@ class NeuralNetwork(object):
 
         self.epochs = epochs
 
-        
 
         self.activation = self.set_activation(activation, task)
 
@@ -251,6 +255,7 @@ class NeuralNetwork(object):
         self.params = dict()
         self.params['eta'] = self.eta
         self.params['alpha'] = self.alpha
+        self.params['batch_method'] = self.batch_method
         self.params['batch_size'] = self.batch_size
         self.params['hidden_sizes'] = self.hidden_sizes
         self.params['reg_method'] = self.reg_method
@@ -260,6 +265,7 @@ class NeuralNetwork(object):
         self.params['epsilon'] = self.epsilon
         self.params['w_par'] = self.w_par
         self.params['w_method'] = self.w_method
+        self.params['topology'] = self.topology
 
         return self.params
 

@@ -19,18 +19,18 @@ from pprint import pprint
 
 dataset = 1
 
-grid_size = 100
+grid_size = 10
 
 nfolds = 3
-ntrials = 3
+ntrials = 10
 
 param_ranges = {
-    'eta': (0.0001, 0.5),
-    'hidden_sizes': [(2, 20)],
-    'alpha': (0.0, 0.9),
+    'eta': (1., 20.),
+    'hidden_sizes': [3],
+    'alpha': (0.5, 0.9),
     'reg_method': 'l2', 'reg_lambda': 0.0,
     'epochs': 1000,
-    'batch_size': (1, 20),
+    'batch_size': 'batch',
     'activation': 'sigmoid',
     'task': 'classifier',
     # 'early_stop': None,  # 'testing',
@@ -40,7 +40,7 @@ param_ranges = {
 
 info = "Informazioni/appunti/scopo riguardo l'esperimento in corso"
 
-info = "Using mini batch, without regularization, using sigmoid"
+info = "batch - no early - relu"
 
 experiment_params = {
     'dataset': dataset,
@@ -74,16 +74,20 @@ y_test, X_test = np.hsplit(test_set, [1])
 
 # simmetrized X_design:
 X_design = X_design*2-1
-
+X_test = X_test*2-1
+design_set = np.hstack((y_design, X_design))
+test_set = np.hstack((y_test, X_test))
 
 ###########################################################
 # babysitting for choosing initial param ranges
 # and plot_learning_curve
 
-np.random.shuffle(design_set)
+imp.reload(u)
+imp.reload(NN)
 
+np.random.shuffle(design_set)
 # splitting training/validation
-split_percentage = 0.8
+split_percentage = 0.6
 split = int(design_set.shape[0]*split_percentage)
 
 training_set = design_set[:split, :]
@@ -92,39 +96,43 @@ validation_set = design_set[split:, :]
 y_training, X_training = np.hsplit(training_set, [1])
 y_validation, X_validation = np.hsplit(validation_set, [1])
 
-imp.reload(u)
-imp.reload(NN)
+training_set.shape
+validation_set.shape
 
 nn = NN.NeuralNetwork(X_training, y_training,
-                      eta=0.2,
-                      hidden_sizes=[10],
-                      alpha=0.01,
+                      eta=2.0,
+                      hidden_sizes=[3],
+                      alpha=0.3,
                       reg_method='l2', reg_lambda=0.0,
                       epochs=1000,
-                      batch_size=7,
+                      batch_size=X_training.shape[0]/10,
                       activation='sigmoid',
                       task='classifier',
-                      early_stop='testing',
+                      early_stop='testing',  # 'testing',
                       epsilon=5,
                       w_method='DL',
                       w_par=6)
 nn.train(X_training, y_training, X_validation, y_validation)
 u.plot_learning_curve(nn, fname='../images/monks_learning_curve.pdf')
 
+# u.plot_learning_curve(nn, fname='../images/monks_{}_{}_{}.pdf'.format(dataset, 'stochastic', 'notearly', 'relu'))
+
 y_pred = nn.predict(X_validation)
-y_pred = np.round(y_pred)
+y_pred = np.apply_along_axis(lambda x: 0 if x < .5 else 1, 1,
+                                         y_pred).reshape(-1, 1)
+# y_pred = np.round(y_pred)
 bca = metrics.BinaryClassifierAssessment(y_pred, y_validation,
                                          printing=True)
 
-# y_pred_test = np.round(nn.predict(X_test))
-# metrics.BinaryClassifierAssessment(y_test, y_pred_test)
+y_pred_test = np.round(nn.predict(X_test))
+metrics.BinaryClassifierAssessment(y_test, y_pred_test)
 
 
 ###########################################################
 # EXPERIMENT GRID SEARCH
 
 # controllo nomi files
-fpath = '../data/monks/results/'
+fpath = '../data/monks/results/monk_{}/'.format(dataset)
 
 check_files = True
 experiment = 3
@@ -154,6 +162,7 @@ if raw_input('Starting search ?[Y/N] ') == 'Y':
 
 
 # save experiment setup
+experiment_params['experiment'] = experiment
 with open(fpar, 'w') as f:
     json.dump(experiment_params, f, indent=4)
 
@@ -170,6 +179,6 @@ start = time.time()
 selection.search(X_design, y_design, nfolds=nfolds, ntrials=ntrials)
 end = time.time()
 
-print end-start
+
 
 ###########################################################
