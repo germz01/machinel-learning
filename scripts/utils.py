@@ -209,9 +209,9 @@ def plot_learning_curve_info(
         final_errors_str += other_errors
     if accuracy_plot:
         acc_errors = [
-            'Acc TR = {} %'.format(accuracy_per_epochs[-1]*100),
+            'Acc TR = {} %'.format(np.round(accuracy_per_epochs[-1]*100),1),
             'Acc {} = {} %'.format(task_str_abbr,
-                                   accuracy_per_epochs_va[-1]*100)
+                                   np.round(accuracy_per_epochs_va[-1]*100,1))
         ]
         acc_errors_str = '\n'.join(acc_errors)+'\n'
         final_errors_str += '\n'+acc_errors_str
