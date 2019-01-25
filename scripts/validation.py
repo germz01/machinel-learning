@@ -162,15 +162,18 @@ class KFoldCrossValidation(object):
                 # 'epochs_x': list(np.arange(len(neural_net.error_per_epochs))),
                 'error_per_epochs': neural_net.error_per_epochs,
                 'error_per_epochs_va': neural_net.error_per_epochs_va,
+                'accuracy_per_epochs': neural_net.accuracy_per_epochs,
+                'accuracy_per_epochs_va': neural_net.accuracy_per_epochs_va,
                 'hyperparams': neural_net.get_params()
             }
             if neural_net.task == 'classifier':
                 y_pred = neural_net.predict(X_va)
                 y_pred = np.apply_along_axis(lambda x: 0 if x < .5 else 1, 1,
-                                         y_pred).reshape(-1, 1)
+                                             y_pred).reshape(-1, 1)
 
                 # y_pred = np.round(y_pred)
-                bca = metrics.BinaryClassifierAssessment(y_pred, y_va, printing=False)
+                bca = metrics.BinaryClassifierAssessment(y_pred, y_va,
+                                                         printing=False)
                 fold_results['accuracy'] = bca.accuracy
                 fold_results['f1_score'] = bca.f1_score
 

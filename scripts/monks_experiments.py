@@ -9,7 +9,6 @@ import metrics
 import time
 import json
 import os.path
-import csv
 import imp
 
 from pprint import pprint
@@ -19,17 +18,17 @@ from pprint import pprint
 
 dataset = 1
 
-grid_size = 10
+grid_size = 100
 
-nfolds = 3
-ntrials = 10
+nfolds = 5
+ntrials = 5
 
 param_ranges = {
-    'eta': (1., 20.),
-    'hidden_sizes': [3],
+    'eta': (0.2, 10.0),
+    'hidden_sizes': [(1, 4)],
     'alpha': (0.5, 0.9),
     'reg_method': 'l2', 'reg_lambda': 0.0,
-    'epochs': 1000,
+    'epochs': 500,
     'batch_size': 'batch',
     'activation': 'sigmoid',
     'task': 'classifier',
@@ -40,7 +39,7 @@ param_ranges = {
 
 info = "Informazioni/appunti/scopo riguardo l'esperimento in corso"
 
-info = "batch - no early - relu"
+info = "batch - no early - sigmoid"
 
 experiment_params = {
     'dataset': dataset,
@@ -73,8 +72,8 @@ y_design, X_design = np.hsplit(design_set, [1])
 y_test, X_test = np.hsplit(test_set, [1])
 
 # simmetrized X_design:
-X_design = X_design*2-1
-X_test = X_test*2-1
+X_design = (X_design*2-1)
+X_test = (X_test*2-1)
 design_set = np.hstack((y_design, X_design))
 test_set = np.hstack((y_test, X_test))
 
@@ -87,7 +86,7 @@ imp.reload(NN)
 
 np.random.shuffle(design_set)
 # splitting training/validation
-split_percentage = 0.6
+split_percentage = 0.8
 split = int(design_set.shape[0]*split_percentage)
 
 training_set = design_set[:split, :]
@@ -100,28 +99,34 @@ training_set.shape
 validation_set.shape
 
 nn = NN.NeuralNetwork(X_training, y_training,
-                      eta=2.0,
+                      eta=0.5,
                       hidden_sizes=[3],
-                      alpha=0.3,
+                      alpha=0.9,
                       reg_method='l2', reg_lambda=0.0,
                       epochs=1000,
-                      batch_size=X_training.shape[0]/10,
+                      batch_size='batch',
                       activation='sigmoid',
                       task='classifier',
-                      early_stop='testing',  # 'testing',
+                      # early_stop='testing',  # 'testing',
                       epsilon=5,
                       w_method='DL',
                       w_par=6)
-nn.train(X_training, y_training, X_validation, y_validation)
-u.plot_learning_curve(nn, fname='../images/monks_learning_curve.pdf')
+nn.train(X_design, y_design, X_test, y_test)
 
+epochs_plot = 1000
+u.plot_learning_curve_info(nn.error_per_epochs[:epochs_plot],
+                           nn.error_per_epochs_va[:epochs_plot],
+                           nn.get_params(),
+                           fname='../images/monks_learning_curve.pdf')
+
+# u.plot_learning_curve(nn, fname='../images/monks_learning_curve.pdf')
 # u.plot_learning_curve(nn, fname='../images/monks_{}_{}_{}.pdf'.format(dataset, 'stochastic', 'notearly', 'relu'))
 
-y_pred = nn.predict(X_validation)
+y_pred = nn.predict(X_test)
 y_pred = np.apply_along_axis(lambda x: 0 if x < .5 else 1, 1,
                                          y_pred).reshape(-1, 1)
 # y_pred = np.round(y_pred)
-bca = metrics.BinaryClassifierAssessment(y_pred, y_validation,
+bca = metrics.BinaryClassifierAssessment(y_pred, y_test,
                                          printing=True)
 
 y_pred_test = np.round(nn.predict(X_test))
@@ -135,7 +140,7 @@ metrics.BinaryClassifierAssessment(y_test, y_pred_test)
 fpath = '../data/monks/results/monk_{}/'.format(dataset)
 
 check_files = True
-experiment = 3
+experiment = 1
 
 while(check_files):
     fname_results = 'monks_{}_experiment_{}_results.json.gz'.format(
@@ -157,9 +162,7 @@ print 'saving results in:'
 print fres
 print fpar
 print '--------------------'
-if raw_input('Starting search ?[Y/N] ') == 'Y':
-    pass
-
+# if raw_input('Starting search ?[Y/N] ') == 'Y':
 
 # save experiment setup
 experiment_params['experiment'] = experiment
@@ -178,7 +181,5 @@ selection = valid.ModelSelectionCV(grid, fname=fres)
 start = time.time()
 selection.search(X_design, y_design, nfolds=nfolds, ntrials=ntrials)
 end = time.time()
-
-
 
 ###########################################################

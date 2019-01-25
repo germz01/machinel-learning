@@ -169,8 +169,13 @@ def plot_learning_curve_info(
         error_per_epochs, error_per_epochs_va,
         hyperparams,
         fname,
+        task,
         title='Learning Curve',
+        labels=None,
         other_errors=None,
+        accuracy_plot=None,
+        accuracy_per_epochs=None,
+        accuracy_per_epochs_va=None,
         figsize=(10, 6),
         fontsize_title=13,
         fontsize_labels=12,
@@ -186,14 +191,30 @@ def plot_learning_curve_info(
     # legend info
     info = ''
 
+    assert task in ('validation', 'testing')
+    if task == 'validation':
+        task_str = 'Validation'
+        task_str_abbr = 'VA'
+    elif task == 'testing':
+        task_str = 'Testing'
+        task_str_abbr = 'TS'
+
     final_errors = [
-        'MSE Tr =' + str(np.round(y_tr[-1], 5)),
-        'MSE Va =' + str(np.round(y_va[-1], 5))
+        'MSE TR =' + str(np.round(y_tr[-1], 5)),
+        'MSE {} ='.format(task_str_abbr) + str(np.round(y_va[-1], 5))
     ]
     # appending other errors, ex: accuracy
     final_errors_str = '\n'.join(final_errors)
     if other_errors is not None:
         final_errors_str += other_errors
+    if accuracy_plot:
+        acc_errors = [
+            'Acc TR = {} %'.format(accuracy_per_epochs[-1]*100),
+            'Acc {} = {} %'.format(task_str_abbr,
+                                   accuracy_per_epochs_va[-1]*100)
+        ]
+        acc_errors_str = '\n'.join(acc_errors)+'\n'
+        final_errors_str += '\n'+acc_errors_str
 
     info += '\nFinal Errors:' + '\n'
     info += final_errors_str + '\n'
@@ -219,30 +240,87 @@ def plot_learning_curve_info(
     ###########################################################
     plt.close()
 
-    plt.figure(figsize=figsize)
-    grid = plt.GridSpec(1, 4, wspace=0.1, hspace=0.3, left=0.1)
+    if accuracy_plot is None:
+        plt.figure(figsize=figsize)
+        grid = plt.GridSpec(1, 4, wspace=0.1, hspace=0.3, left=0.1)
 
-    plt.subplot(grid[0, :3])
-    plt.plot(x_epochs, y_va, label='Validation', linestyle='-')
-    plt.plot(x_epochs, y_tr, label='Training', linestyle='--')
+        plt.subplot(grid[0, :3])
+        plt.plot(x_epochs, y_tr, label='Training', linestyle='-')
+        plt.plot(x_epochs, y_va, label=task_str, linestyle='--')
 
-    plt.xlabel('Epochs', fontsize=fontsize_labels)
-    plt.ylabel('MSE', fontsize=fontsize_labels)
-    plt.title(title, fontsize=fontsize_title)
-    plt.legend(fontsize=fontsize_legend)
-    plt.grid()
+        plt.xlabel('Epochs', fontsize=fontsize_labels)
+        plt.ylabel('MSE', fontsize=fontsize_labels)
+        plt.title(title, fontsize=fontsize_title)
+        plt.legend(fontsize=fontsize_legend)
+        plt.grid()
 
-    plt.subplot(grid[0, 3:])
+        plt.subplot(grid[0, 3:])
 
-    plt.title('Info')
-    plt.text(x=0., y=0.97, s=info,
-             ha='left', va='top', fontsize=11)
+        plt.title('Info')
+        plt.text(x=0., y=0.97, s=info,
+                 ha='left', va='top', fontsize=11)
 
-    plt.axis('off')
+        plt.axis('off')
 
-    plt.savefig(fname)
+        plt.savefig(fname)
 
-    plt.close()
+        plt.close()
+    elif accuracy_plot:
+        SMALL_SIZE = 11
+        MEDIUM_SIZE = 12
+        BIGGER_SIZE = 14
+
+        plt.rc('font', size=SMALL_SIZE)
+        plt.rc('axes', titlesize=SMALL_SIZE)
+        plt.rc('axes', labelsize=MEDIUM_SIZE)
+        plt.rc('xtick', labelsize=SMALL_SIZE)
+        plt.rc('ytick', labelsize=SMALL_SIZE)
+        plt.rc('legend', fontsize=SMALL_SIZE)
+        plt.rc('figure', titlesize=BIGGER_SIZE)
+        plt.rc('axes', titlesize=BIGGER_SIZE)
+        # plt.rc('title', titlesize=BIGGER_SIZE)
+
+        figsize = (10, 4)
+        plt.figure(figsize=figsize)
+        grid = plt.GridSpec(1, 5, wspace=0.7, left=0.1, bottom=0.2)
+
+        # MSE plot
+        plt.subplot(grid[0, :2])
+        plt.plot(x_epochs, y_tr, label='Training', linestyle='-')
+        plt.plot(x_epochs, y_va, label='Validation', linestyle='--')
+
+        plt.xlabel('Epochs')
+        plt.ylabel('MSE')
+        plt.title(title)
+        plt.legend()
+        plt.grid()
+        # Accuracy plot
+        plt.subplot(grid[0, 2:4])
+        plt.plot(x_epochs,
+                 np.array(accuracy_per_epochs, dtype=np.float)*100,
+                 label='Training', linestyle='-')
+        plt.plot(x_epochs,
+                 np.array(accuracy_per_epochs_va, dtype=np.float)*100,
+                 label=task_str, linestyle='--')
+
+        plt.xlabel('Epochs')
+        plt.ylabel('Accuracy (%)')
+        plt.title(title)
+        plt.legend()
+        plt.grid()
+
+        plt.subplot(grid[0, 4:])
+
+        plt.title('Info')
+        plt.text(x=0., y=1, s=info,
+                 ha='left', va='top')
+                 # bbox={'capstyle': 'round', 'fill': False})
+
+        plt.axis('off')
+
+        plt.savefig(fname)
+
+        plt.close()
 
 
 def binarize_attribute(attribute, n_categories):

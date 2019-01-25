@@ -19,7 +19,7 @@ class NeuralNetwork(object):
     TODO
     """
     def __init__(self, X, y, hidden_sizes=[10],
-                 eta=0.5, alpha=0, epsilon=1, 
+                 eta=0.5, alpha=0, epsilon=1,
                  early_stop=None, early_stop_min_epochs=50,
                  batch_size=1, epochs=1000,
                  reg_lambda=0.0, reg_method='l2',
@@ -103,13 +103,13 @@ class NeuralNetwork(object):
         self.n_layers = len(hidden_sizes) + 1
         self.topology = u.compose_topology(X, self.hidden_sizes, y)
 
-        self.X = X
+        # self.X = X
 
-        self.eta = eta
+        self.eta = float(eta)
         self.alpha = alpha
         self.epsilon = epsilon
 
-        if batch_size == 'batch':
+        if batch_size == 'batch' or batch_size >= X.shape[0]:
             self.batch_size = X.shape[0]
             self.batch_method = 'batch'
         else:
@@ -129,12 +129,11 @@ class NeuralNetwork(object):
 
         self.epochs = epochs
 
-
         self.activation = self.set_activation(activation, task)
 
         self.w_par = w_par
         self.w_method = w_method
-        
+
         self.W = self.set_weights(w_par, w_method=self.w_method)
         self.W_copy = [w.copy() for w in self.W]
         self.b = self.set_bias()
@@ -222,7 +221,8 @@ class NeuralNetwork(object):
 
         for i in range(1, len(self.topology)):
             # b.append(np.random.uniform(-w_bias, +w_bias, (self.topology[i], 1)))
-            b.append(np.random.uniform(-.0001, .0002, (self.topology[i], 1)))
+            # b.append(np.random.uniform(-.0001, .0002, (self.topology[i], 1)))
+            b.append(np.zeros((self.topology[i], 1)))
 
         return b
 
@@ -288,10 +288,7 @@ class NeuralNetwork(object):
             self.a[i] = self.b[i] + (self.W[i].dot(x.T if i == 0
                                                    else self.h[i - 1]))
 
-            if self.task == 'classifier' or i != self.n_layers - 1:
-                self.h[i] = act.A_F[self.activation[i]]['f'](self.a[i])
-            else:
-                self.h[i] = self.a[i]
+            self.h[i] = act.A_F[self.activation[i]]['f'](self.a[i])
 
         return lss.mean_squared_error(self.h[-1].T, y)
 
@@ -360,12 +357,16 @@ class NeuralNetwork(object):
         else:
             self.error_per_epochs_va = None
 
+        if self.task == 'classifier':
+            self.accuracy_per_epochs = []
+            self.accuracy_per_epochs_va = []
+
         self.stop_GL = None
         self.stop_PQ = None
         stop_GL = False
         stop_PQ = False
 
-        #for e in tqdm(range(self.epochs), desc='TRAINING'):
+        # for e in tqdm(range(self.epochs), desc='TRAINING'):
         for e in range(self.epochs):
             error_per_batch = []
 
@@ -397,9 +398,9 @@ class NeuralNetwork(object):
                     self.b[layer] += velocity_b[layer]
 
                     velocity_W[layer] = (self.alpha * velocity_W[layer]) \
-                        - ((self.eta / x_batch.shape[0])
-                           * (weight_decay + self.delta_W[layer]))
-                    self.W[layer] += velocity_W[layer]
+                        - (self.eta / x_batch.shape[0]) * self.delta_W[layer]
+
+                    self.W[layer] += velocity_W[layer] - weight_decay
 
                 ###############################################################
 
@@ -414,6 +415,21 @@ class NeuralNetwork(object):
                 y_pred_va = self.predict(X_va)
                 self.error_per_epochs_va.append(
                     metrics.mse(y_va, y_pred_va))
+
+            if self.task == 'classifier':
+                y_pred_bin = np.apply_along_axis(
+                    lambda x: 0 if x < .5 else 1, 1, y_pred).reshape(-1, 1)
+
+                y_pred_bin_va = np.apply_along_axis(
+                    lambda x: 0 if x < .5 else 1, 1, y_pred_va).reshape(-1, 1)
+
+                bin_assess = metrics.BinaryClassifierAssessment(
+                    y, y_pred_bin, printing=False)
+                bin_assess_va = metrics.BinaryClassifierAssessment(
+                    y_va, y_pred_bin_va, printing=False)
+
+                self.accuracy_per_epochs.append(bin_assess.accuracy)
+                self.accuracy_per_epochs_va.append(bin_assess_va.accuracy)
 
             # CHECKING FOR EARLY STOPPING #####################################
 
