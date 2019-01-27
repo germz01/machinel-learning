@@ -4,11 +4,12 @@
 \usepackage[T1]{fontenc}
 \usepackage{microtype}
 \usepackage[english]{babel}
-\usepackage[hmarginratio=1:1,top=32mm,columnsep=20pt]{geometry}
+\usepackage[hmarginratio=1:1,top=20mm,bottom=20mm,columnsep=20pt,left=30mm]{geometry}
 \usepackage[hang, small,labelfont=bf,up,textfont=it,up]{caption}
 \usepackage[page]{appendix}
 \usepackage{float,graphicx,wrapfig,subcaption,booktabs,lettrine,enumitem,amsmath}
 \setlist[itemize]{noitemsep}
+\usepackage{graphicx}
 
 \usepackage{abstract}
 \renewcommand{\abstractnamefont}{\normalfont\bfseries}
@@ -38,8 +39,12 @@
 }
 \date{
     ML - Academic Year: 2018/2019 \\
+    {\vspace{0.25cm}}
     \today \\
-    Type of project: \textbf{A}
+    {\vspace{0.25cm}}
+    Type of project: \textbf{A} \\
+    {\vspace{0.25cm}}
+    \href{https://github.com/germz01/machinel-learning}{Github Page}
 }
 \renewcommand{\maketitlehookd}{%
 \begin{abstract}
@@ -82,19 +87,21 @@ for each one of the datasets, we collected the data describing the results.
     implementating popular machine learning algorithms. Also the standard library function provided by the
     language were utilized. Following the philosophy of type \textbf{A} projects, we haven't used
     out-of-the-box implementations for the algorithms composing our framework. We now give a brief overview of
-    the code's structure, discuss some implementation choices and present our neural network's initialization and
-    training algorithm.
+    the code's structure, discuss some implementation choices and present our neural network's initialization
+    and training algorithms. Visit the project's
+    \href{https://github.com/germz01/machinel-learning}{\underline{\textit{Github Page}}} if you want to check
+    our project's code base.
 
     \subsection{Code overview} % (fold)
     \label{sub:code_overview}
         We can view our code base essentialy divided in two branches: the \textit{neural network} branch and
-        the \textit{model selection and assessment} branch. The first one is composed by the code implementing the
-        neural network model, which is contained in a \texttt{NeuralNetwork} class, and all the code related
+        the \textit{model selection and assessment} branch. The first one is composed by the code for
+        implementing the neural network model, and all the code related
         to the building and training of such a model, e.g. the activation functions, the losses, the
-        regularization metrics and so on, that is divided in several scripts in order to ease the implementation.
-        The code base's second branch consist in the model selection and assessment related code, which is
-        composed by several classes, each one implementing an algorithm like \texttt{GridSearch} and
-        \texttt{KFold\_Cross\_validation} which are utilized for the model's validation, selection and
+        regularization metrics and so on, that is divided in several scripts in order to ease the
+        implementation. The code base's second branch consist in the model selection and assessment related
+        code, which is composed by several classes, each one implementing an algorithm like \texttt{GridSearch}
+        and \texttt{KFold\_Cross\_validation} which are utilized for the model's validation, selection and
         assessment, and the scripts that build up the testing routines for the MONK's and CUP datasets.
         The second branch also is splitted in several scripts.
     % subsection code_overview (end)
@@ -105,13 +112,13 @@ for each one of the datasets, we collected the data describing the results.
         the first code base's branch by writing diffent activation functions, losses and regularization metrics.
         In the \texttt{activation} script we writed the code for the \texttt{sigmoid}, \texttt{relu},
         \texttt{tanh} and \texttt{identity} activation functions. The \texttt{regularizers} script contains the
-        code for implementing both the L1 and L2 regularization metrics, as described in \cite{deep_learning},
-        and the \texttt{losses} script contains the code for implementing popular loss function like, for
-        example, the \texttt{mean\_squared\_error} and the \texttt{mean\_euclidean\_error}. All this metrics
-        are applied in the \texttt{nn} script, which contains the code for implementing the neural
-        network model, and hence the backpropagation algorithm and the training algorithm, described in section
-        \ref{sub:the_training_algorithm}. The \texttt{NeuralNetwork} class, which is contained in this script,
-        represents a neural network using the standard \textit{backpropagation algorithm} with
+        code for implementing both the $L^1$ and $L^2$ regularization metrics, as described in
+        \cite{deep_learning}, and the \texttt{losses} script contains the code for implementing popular loss
+        function like, for example, the \texttt{mean\_squared\_error} and the \texttt{mean\_euclidean\_error}.
+        All this metrics are applied in the \texttt{nn} script, which contains the code for implementing the
+        neural network model, and hence the backpropagation algorithm and the training algorithm, described in
+        section \ref{sub:the_training_algorithm}. The \texttt{NeuralNetwork} class, which is contained in this
+        script, represents a neural network using the standard \textit{backpropagation algorithm} with
         \textit{gradient descent}, \textit{standard momentum} and \textit{regularization}, and follows the
         \textit{minibatch} approach, as described in \cite{deep_learning}. The \texttt{NeuralNetwork} class
         contains also various early stopping metrics, like the $GL_{\alpha}$ and the $PQ_{\alpha}$ which we
@@ -205,11 +212,48 @@ for each one of the datasets, we collected the data describing the results.
 
     % subsection cup_results (end)
 
+\begin{figure}[htbp]
+  \centering
+    \includegraphics[width=\textwidth]{img/monks_1_MSE_final_04.pdf}
+  \includegraphics[width=\textwidth]{img/monks_1_ACC_final_04.pdf}
+  \caption{prova}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+    \includegraphics[width=\textwidth]{img/monks_2_MSE_final_03.pdf}
+  \includegraphics[width=\textwidth]{img/monks_2_ACC_final_03.pdf}
+  \caption{prova}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+    \includegraphics[width=\textwidth]{img/monks_3_noreg_MSE_final_01.pdf}
+  \includegraphics[width=\textwidth]{img/monks_3_noreg_ACC_final_01.pdf}
+  \caption{prova}
+\end{figure}
+
+
+\begin{figure}[htbp]
+  \centering
+    \includegraphics[width=\textwidth]{img/monks_3_withreg_MSE_final_00.pdf}
+  \includegraphics[width=\textwidth]{img/monks_3_withreg_ACC_final_00.pdf}
+  \caption{prova}
+\end{figure}
+
+
+
+
+
 % section experiments (end)
 
 %------------------------------------------------
+\clearpage
 
-\section{Conclusions}
+\section{Conclusions} % (fold)
+\label{sec:conclusions}
+
+% section conclusions (end)
 
 %----------------------------------------------------------------------------------------
 %   REFERENCE LIST

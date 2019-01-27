@@ -6,7 +6,7 @@ class BinaryClassifierAssessment():
     """
     Binary Classifier Assessment
     """
-    def __init__(self, y_true, y_pred):
+    def __init__(self, y_true, y_pred, printing=True):
         """
         Computes metrics for binary classification task.
 
@@ -62,13 +62,23 @@ class BinaryClassifierAssessment():
         # print 'fn ' + str(fn)
 
         self.confusion_matrix = np.array((tp, fp, fn, tn)).reshape((2, 2))
-        self.precision = float(tp) / (tp+fp)
-        self.accuracy = float((tp+tn)) / (P+N)
-        self.recall = float(tp) / P
-        # self.fp_rate = float(fp) / P
-        self.f1_score = 2. / (1/self.precision + 1/self.recall)
 
-        print self
+        self.accuracy = float((tp+tn)) / len(y_true)  # P+N
+        if tp < 1:
+            self.precision = 0
+            self.recall = 0
+        else:
+            self.precision = float(tp) / (tp+fp)
+            self.recall = float(tp) / P
+        # self.fp_rate = float(fp) / P
+
+        if self.precision == 0 or self.recall == 0:
+            self.f1_score = None
+        else:
+            self.f1_score = 2. / (1/self.precision + 1/self.recall)
+
+        if printing:
+            print self
 
     def __str__(self):
 

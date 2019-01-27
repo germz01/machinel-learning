@@ -59,7 +59,7 @@ class MonksTest(object):
         self.grid_size = size
 
     def test(self, dataset, repetitions=1, preliminary_search=False,
-             to_fix=[], size=0):
+             to_fix=[]):
         """
         This function implements the testing procedure for the monks' datasets.
         It permits two kind of search for the best hyperparameters. The first
@@ -115,20 +115,23 @@ class MonksTest(object):
 
             self.grid = val.HyperGrid(self.param_ranges, size=self.grid_size,
                                       seed=datetime.now())
-            selection = val.ModelSelectionCV(self.grid,
-                                             repetitions=repetitions)
-            selection.search(
+            self.selection = val.ModelSelectionCV(self.grid,
+                                                  repetitions=repetitions)
+
+            # PRELIMINARY SEARCH FOR SOME OF THE PARAMETERS ###################
+
+            assert len(to_fix) != 0
+            self.preliminary_search(ds, to_fix, repetitions)
+
+            # SEARCHING FOR THE OTHER PARAMETERS ##############################
+
+            self.selection.search(
                 self.train_set[:, 1:], self.train_set[:, 0].reshape(-1, 1),
                 save_results=True,
                 fname='../data/model_selection_results_monk_{}.json'.
-                format(ds + 1))
+                format(ds + 1), par_name='REMAINING PARAMETERS')
 
-            if preliminary_search:
-                assert len(to_fix) != 0 and size != 0
-                self.preliminary_search(selection, ds, to_fix, size,
-                                        repetitions)
-
-            best_model = selection.\
+            best_model = self.selection.\
                 select_best_model(
                     self.train_set[:, 1:],
                     self.train_set[:, 0].reshape(-1, 1),
@@ -147,8 +150,7 @@ class MonksTest(object):
 
             self.param_ranges = self.param_ranges_backup.copy()
 
-    def preliminary_search(self, selection, dataset, to_fix, size,
-                           repetitions):
+    def preliminary_search(self, dataset, to_fix, repetitions):
         """
         This function implements a preliminary search in order to fix some
         of the best hyperparameters to the current best values and then
@@ -156,18 +158,11 @@ class MonksTest(object):
 
         Parameters
         ----------
-        selection: validation.ModelSelectionCV
-            the object of type ModelSelectionCV used during the search
-
         dataset: int
             the dataset's index in self.monk
 
         to_fix: list
             a list of hyperparameters' names to fix
-
-        size: int
-            the new hypergrid's size for the new search for the best
-            hyperparameters in the preliminary_search function
 
         repetitions: int
             cross validation's repetitions
@@ -175,24 +170,22 @@ class MonksTest(object):
         Returns
         -------
         """
-        print '\n\n\nNEW SEARCH FIXING HYPERPARAMETERS {}\n'.format(to_fix)
-
-        best_hyps = selection.\
-            select_best_hyperparams(
-                fname='../data/model_selection_results_monk_{}.json'.
-                format(dataset + 1))
-
         for prm in to_fix:
+            self.selection.\
+                search(self.train_set[:, 1:],
+                       self.train_set[:, 0].reshape(-1, 1), save_results=True,
+                       fname='../data/model_selection_results_monk_{}.json'.
+                       format(dataset + 1), par_name=prm.upper())
+
+            best_hyps = self.selection.\
+                select_best_hyperparams(
+                    fname='../data/model_selection_results_monk_{}.json'.
+                    format(dataset + 1))
             self.param_ranges[prm] = best_hyps[0]['hyperparams'][prm]
 
-        self.grid = val.HyperGrid(self.param_ranges, size=size,
-                                  seed=datetime.now())
-        selection = val.ModelSelectionCV(self.grid, repetitions=1)
-        selection.search(self.train_set[:, 1:],
-                         self.train_set[:, 0].reshape(-1, 1),
-                         save_results=True,
-                         fname='../data/model_selection_results_monk_{}.json'.
-                         format(dataset + 1))
+            self.grid = val.HyperGrid(self.param_ranges, size=self.grid_size,
+                                      seed=datetime.now())
+            self.selection = val.ModelSelectionCV(self.grid, repetitions=1)
 
     def save_best_result(self, dataset, best_model, bca):
         """
@@ -249,11 +242,11 @@ class MonksTest(object):
 
 if __name__ == '__main__':
     param_ranges = {'eta': (0.1, 0.9), 'alpha': (0.1, 0.9),
-                    'batch_size': (1, 100),
+                    'epsilon': (0.1, 0.5), 'batch_size': (1, 100),
                     'hidden_sizes': [(1, 3), (1, 3)],
                     'reg_lambda': (0.01, 0.4), 'reg_method': 'l2',
                     'epochs': (200, 1000)}
 
-    monk_test = MonksTest(size=20, **param_ranges)
-    monk_test.test(0, preliminary_search=True,
-                   to_fix=['batch_size', 'epochs'], size=40)
+    monk_test = MonksTest(size=40, **param_ranges)
+    monk_test.test(0, repetitions=1, preliminary_search=True,
+                   to_fix=['epochs', 'batch_size'])
