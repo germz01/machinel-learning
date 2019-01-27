@@ -55,6 +55,8 @@ for each one of the datasets, we collected the data describing the results.
 \end{abstract}
 }
 
+\graphicspath{{img/}}
+
 %----------------------------------------------------------------------------------------
 
 \begin{document}
@@ -185,18 +187,22 @@ for each one of the datasets, we collected the data describing the results.
         \centering
         \begin{subtable}{\textwidth}
             \resizebox{\textwidth}{!}{
-                \begin{tabular}{| c | c | c | c | c | c | c | c | c | c |}
+                \begin{tabular}{| c | c | c | c | c | c | c | c | c |}
                     \hline
-                    Task & Topology & Batch size & $\eta$ & $\alpha$ & $\lambda$ & $\epsilon$ & Epochs &
-                    MSE (TR/TS) & Accuracy (TR/TS) (\%) \\
+                    Task & Topology & Batch size & Activation & $\eta$ & $\alpha$ & $\lambda$ & MSE (TR - TS) &
+                    Accuracy (TR - TS) (\%) \\
                     \hline
-                    MONK 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0\\
+                    MONK 1 & 17 -> 3 -> 1 & batch & sigmoid & 0.8 & 0.9 & 0.0 & 0.00223 - 0.00343 &
+                    100 \% - 100 \% \\
                     \hline
-                    MONK 2 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+                    MONK 2 & 17 -> 3 -> 1 & batch & sigmoid & 0.5 & 0.9 & 0.0 & 0.00125 - 0.00135 &
+                    100 \% - 100 \% \\
                     \hline
-                    MONK 3 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+                    MONK 3 & 17 -> 3 -> 1 & batch & sigmoid & 0.6 & 0.9 & 0.0 & 0.01668 - 0.03858 &
+                    96.7 \% - 95.1 \% \\
                     \hline
-                    MONK 3 (reg.) & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+                    MONK 3 (reg.) & 17 -> 3 -> 1 & batch & sigmoid & 0.6 & 0.9 & 0.01 & 0.05904 - 0.04669 &
+                    93.4 \% - 97.2 \% \\
                     \hline
                 \end{tabular}
             }
@@ -205,45 +211,92 @@ for each one of the datasets, we collected the data describing the results.
         \label{monks}
     \end{table}
 
+    \begin{figure}[htbp]
+        \centering
+        \begin{subfigure}{0.75\textwidth}
+            \resizebox{\textwidth}{!}{
+                \includegraphics{img/monks_1_MSE_final_04.pdf}
+            }
+            \caption{}
+            \label{fig:monks_1_MSE}
+        \end{subfigure}
+        \begin{subfigure}{0.75\textwidth}
+            \resizebox{\textwidth}{!}{
+                \includegraphics{img/monks_1_ACC_final_04.pdf}
+            }
+            \caption{}
+            \label{fig:monks_1_ACC}
+        \end{subfigure}
+        \caption{MONKS 1 final results.}
+        \label{fig:monks_1_final_results}
+    \end{figure}
+
+    \begin{figure}[htbp]
+        \centering
+        \begin{subfigure}{0.75\textwidth}
+            \resizebox{\textwidth}{!}{
+                \includegraphics{img/monks_2_MSE_final_03.pdf}
+            }
+            \caption{}
+            \label{fig:monks_2_MSE}
+        \end{subfigure}
+        \begin{subfigure}{0.75\textwidth}
+            \resizebox{\textwidth}{!}{
+                \includegraphics{img/monks_2_ACC_final_03.pdf}
+            }
+            \caption{}
+            \label{fig:monks_2_ACC}
+        \end{subfigure}
+        \caption{MONKS 2 final results.}
+        \label{fig:monks_2_final_results}
+    \end{figure}
+
+    \begin{figure}[htbp]
+        \centering
+        \begin{subfigure}{0.75\textwidth}
+            \resizebox{\textwidth}{!}{
+                \includegraphics{img/monks_2_MSE_final_03.pdf}
+            }
+            \caption{}
+            \label{fig:monks_3_MSE}
+        \end{subfigure}
+        \begin{subfigure}{0.75\textwidth}
+            \resizebox{\textwidth}{!}{
+                \includegraphics{img/monks_3_noreg_ACC_final_01.pdf}
+            }
+            \caption{}
+            \label{fig:monks_3_ACC}
+        \end{subfigure}
+        \caption{MONKS 3 (without regularization) final results.}
+        \label{fig:monks_3_final_results}
+    \end{figure}
+
+    \begin{figure}[htbp]
+        \centering
+        \begin{subfigure}{0.75\textwidth}
+            \resizebox{\textwidth}{!}{
+                \includegraphics{img/monks_3_withreg_MSE_final_00.pdf}
+            }
+            \caption{}
+            \label{fig:monks_3_MSE_reg}
+        \end{subfigure}
+        \begin{subfigure}{0.75\textwidth}
+            \resizebox{\textwidth}{!}{
+                \includegraphics{img/monks_3_withreg_ACC_final_00.pdf}
+            }
+            \caption{}
+            \label{fig:monks_3_ACC_reg}
+        \end{subfigure}
+        \caption{MONKS 3 (with regularization) final results.}
+        \label{fig:monks_3_final_results}
+    \end{figure}
+
     % subsection monk_s_results (end)
 
     \subsection{Cup results} % (fold)
     \label{sub:cup_results}
 
     % subsection cup_results (end)
-
-\begin{figure}[htbp]
-  \centering
-    \includegraphics[width=\textwidth]{img/monks_1_MSE_final_04.pdf}
-  \includegraphics[width=\textwidth]{img/monks_1_ACC_final_04.pdf}
-  \caption{prova}
-\end{figure}
-
-\begin{figure}[htbp]
-  \centering
-    \includegraphics[width=\textwidth]{img/monks_2_MSE_final_03.pdf}
-  \includegraphics[width=\textwidth]{img/monks_2_ACC_final_03.pdf}
-  \caption{prova}
-\end{figure}
-
-\begin{figure}[htbp]
-  \centering
-    \includegraphics[width=\textwidth]{img/monks_3_noreg_MSE_final_01.pdf}
-  \includegraphics[width=\textwidth]{img/monks_3_noreg_ACC_final_01.pdf}
-  \caption{prova}
-\end{figure}
-
-
-\begin{figure}[htbp]
-  \centering
-    \includegraphics[width=\textwidth]{img/monks_3_withreg_MSE_final_00.pdf}
-  \includegraphics[width=\textwidth]{img/monks_3_withreg_ACC_final_00.pdf}
-  \caption{prova}
-\end{figure}
-
-
-
-
 
 % section experiments (end)
 
