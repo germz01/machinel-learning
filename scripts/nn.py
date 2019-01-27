@@ -19,10 +19,12 @@ class NeuralNetwork(object):
     TODO
     """
     def __init__(self, X, y, hidden_sizes=[10],
-                 eta=0.5, alpha=0, epsilon=1, epochs=1000,
+                 eta=0.5, alpha=0, epsilon=1,
                  early_stop=None, early_stop_min_epochs=50,
-                 batch_size=1, reg_lambda=0.0, reg_method='l2',
-                 w_par=6, activation='sigmoid',
+                 batch_size=1, epochs=1000,
+                 reg_lambda=0.0, reg_method='l2',
+                 w_par=6, w_method='DL',
+                 activation='sigmoid',
                  task='classifier'):
         """
         The class' constructor.
@@ -58,7 +60,7 @@ class NeuralNetwork(object):
             (Default value = 1000)
 
         batch_size: int
-            the batch size
+            the batch size, 'batch' for batch mode
             (Default value = 1)
 
         reg_lambda: float
@@ -101,18 +103,27 @@ class NeuralNetwork(object):
         self.n_layers = len(hidden_sizes) + 1
         self.topology = u.compose_topology(X, self.hidden_sizes, y)
 
-        self.X = X
+        # self.X = X
 
-        self.eta = eta
+        self.eta = float(eta)
         self.alpha = alpha
         self.epsilon = epsilon
-        self.batch_size = batch_size
+
+        if batch_size == 'batch' or batch_size >= X.shape[0]:
+            self.batch_size = X.shape[0]
+            self.batch_method = 'batch'
+        else:
+            self.batch_size = batch_size
+            if batch_size == 1:
+                self.batch_method = 'on-line'
+            else:
+                self.batch_method = 'minibatch'
 
         assert early_stop in (None, 'GL', 'PQ', 'testing')
         self.early_stop = early_stop
         self.early_stop_min_epochs = early_stop_min_epochs
 
-        assert reg_method == 'l1' or reg_method == 'l2'
+        assert reg_method in('l1', 'l2')
         self.reg_method = reg_method
         self.reg_lambda = reg_lambda
 
@@ -120,7 +131,10 @@ class NeuralNetwork(object):
 
         self.activation = self.set_activation(activation, task)
 
-        self.W = self.set_weights(w_par)
+        self.w_par = float(w_par)
+        self.w_method = w_method
+
+        self.W = self.set_weights(w_par, w_method=self.w_method)
         self.W_copy = [w.copy() for w in self.W]
         self.b = self.set_bias()
         self.b_copy = [b.copy() for b in self.b]
@@ -132,7 +146,7 @@ class NeuralNetwork(object):
         self.a = [0 for i in range(self.n_layers)]
         self.h = [0 for i in range(self.n_layers)]
 
-        assert task == 'classifier' or task == 'regression'
+        assert task in ('classifier', 'regression')
         self.task = task
 
     def set_activation(self, activation, task):
@@ -148,7 +162,7 @@ class NeuralNetwork(object):
 
             return acts
 
-    def set_weights(self, w_par=6):
+    def set_weights(self, w_par=6, w_method='DL'):
         """
         This function initializes the network's weights matrices following
         the rule in Deep Learning, pag. 295
@@ -165,11 +179,23 @@ class NeuralNetwork(object):
         W = []
 
         for i in range(1, len(self.topology)):
-            low = - np.sqrt(w_par / (self.topology[i - 1] + self.topology[i]))
-            high = np.sqrt(w_par / (self.topology[i - 1] + self.topology[i]))
 
-            W.append(np.random.uniform(low, high, (self.topology[i],
-                                                   self.topology[i - 1])))
+            if w_method == 'DL':
+                low = - np.sqrt(w_par /
+                                (self.topology[i - 1] + self.topology[i]))
+                high = np.sqrt(w_par /
+                               (self.topology[i - 1] + self.topology[i]))
+
+                W.append(np.random.uniform(low, high,
+                                           (self.topology[i],
+                                            self.topology[i - 1])))
+            elif w_method == 'uniform':
+                low = -(w_par)
+                high = w_par
+
+                W.append(np.random.uniform(low, high,
+                                           (self.topology[i],
+                                            self.topology[i - 1])))
 
         return W
 
@@ -194,7 +220,9 @@ class NeuralNetwork(object):
         b = []
 
         for i in range(1, len(self.topology)):
-            b.append(np.random.uniform(-.2, .2, (self.topology[i], 1)))
+            # b.append(np.random.uniform(-w_bias, +w_bias, (self.topology[i], 1)))
+            # b.append(np.random.uniform(-.0001, .0002, (self.topology[i], 1)))
+            b.append(np.zeros((self.topology[i], 1)))
 
         return b
 
@@ -227,6 +255,7 @@ class NeuralNetwork(object):
         self.params = dict()
         self.params['eta'] = self.eta
         self.params['alpha'] = self.alpha
+        self.params['batch_method'] = self.batch_method
         self.params['batch_size'] = self.batch_size
         self.params['hidden_sizes'] = self.hidden_sizes
         self.params['reg_method'] = self.reg_method
@@ -234,6 +263,9 @@ class NeuralNetwork(object):
         self.params['epochs'] = self.epochs
         self.params['activation'] = self.activation
         self.params['epsilon'] = self.epsilon
+        self.params['w_par'] = self.w_par
+        self.params['w_method'] = self.w_method
+        self.params['topology'] = self.topology
 
         return self.params
 
@@ -256,10 +288,7 @@ class NeuralNetwork(object):
             self.a[i] = self.b[i] + (self.W[i].dot(x.T if i == 0
                                                    else self.h[i - 1]))
 
-            if self.task == 'classifier' or i != self.n_layers - 1:
-                self.h[i] = act.A_F[self.activation[i]]['f'](self.a[i])
-            else:
-                self.h[i] = self.a[i]
+            self.h[i] = act.A_F[self.activation[i]]['f'](self.a[i])
 
         return lss.mean_squared_error(self.h[-1].T, y)
 
@@ -328,12 +357,17 @@ class NeuralNetwork(object):
         else:
             self.error_per_epochs_va = None
 
+        if self.task == 'classifier':
+            self.accuracy_per_epochs = []
+            self.accuracy_per_epochs_va = []
+
         self.stop_GL = None
         self.stop_PQ = None
         stop_GL = False
         stop_PQ = False
 
-        for e in tqdm(range(self.epochs), desc='TRAINING'):
+        # for e in tqdm(range(self.epochs), desc='TRAINING'):
+        for e in range(self.epochs):
             error_per_batch = []
 
             dataset = np.hstack((X, y))
@@ -364,9 +398,9 @@ class NeuralNetwork(object):
                     self.b[layer] += velocity_b[layer]
 
                     velocity_W[layer] = (self.alpha * velocity_W[layer]) \
-                        - ((self.eta / x_batch.shape[0])
-                           * (weight_decay + self.delta_W[layer]))
-                    self.W[layer] += velocity_W[layer]
+                        - (self.eta / x_batch.shape[0]) * self.delta_W[layer]
+
+                    self.W[layer] += velocity_W[layer] - weight_decay
 
                 ###############################################################
 
@@ -381,6 +415,21 @@ class NeuralNetwork(object):
                 y_pred_va = self.predict(X_va)
                 self.error_per_epochs_va.append(
                     metrics.mse(y_va, y_pred_va))
+
+            if self.task == 'classifier':
+                y_pred_bin = np.apply_along_axis(
+                    lambda x: 0 if x < .5 else 1, 1, y_pred).reshape(-1, 1)
+
+                y_pred_bin_va = np.apply_along_axis(
+                    lambda x: 0 if x < .5 else 1, 1, y_pred_va).reshape(-1, 1)
+
+                bin_assess = metrics.BinaryClassifierAssessment(
+                    y, y_pred_bin, printing=False)
+                bin_assess_va = metrics.BinaryClassifierAssessment(
+                    y_va, y_pred_bin_va, printing=False)
+
+                self.accuracy_per_epochs.append(bin_assess.accuracy)
+                self.accuracy_per_epochs_va.append(bin_assess_va.accuracy)
 
             # CHECKING FOR EARLY STOPPING #####################################
 
