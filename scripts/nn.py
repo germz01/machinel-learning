@@ -123,7 +123,7 @@ class NeuralNetwork(object):
         self.early_stop = early_stop
         self.early_stop_min_epochs = early_stop_min_epochs
 
-        assert reg_method == 'l1' or reg_method == 'l2'
+        assert reg_method in('l1', 'l2')
         self.reg_method = reg_method
         self.reg_lambda = reg_lambda
 
@@ -131,7 +131,7 @@ class NeuralNetwork(object):
 
         self.activation = self.set_activation(activation, task)
 
-        self.w_par = w_par
+        self.w_par = float(w_par)
         self.w_method = w_method
 
         self.W = self.set_weights(w_par, w_method=self.w_method)

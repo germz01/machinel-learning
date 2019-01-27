@@ -172,20 +172,17 @@ def plot_learning_curve_info(
         task,
         title='Learning Curve',
         labels=None,
+        accuracy=False,
         other_errors=None,
-        accuracy_plot=None,
+        accuracy_h_plot=None,
         accuracy_per_epochs=None,
         accuracy_per_epochs_va=None,
-        figsize=(10, 6),
+        figsize=None,
         fontsize_title=13,
         fontsize_labels=12,
         fontsize_info=12,
         fontsize_legend=12):
     """ Plots the learning curve with infos """
-
-    x_epochs = np.arange(len(error_per_epochs))
-    y_tr = error_per_epochs
-    y_va = error_per_epochs_va
 
     # ###########################################################
     # legend info
@@ -194,20 +191,34 @@ def plot_learning_curve_info(
     assert task in ('validation', 'testing')
     if task == 'validation':
         task_str = 'Validation'
-        task_str_abbr = 'VA'
+        task_str_abbr = 'VL'
     elif task == 'testing':
-        task_str = 'Testing'
+        task_str = 'Test'
         task_str_abbr = 'TS'
 
-    final_errors = [
-        'MSE TR =' + str(np.round(y_tr[-1], 5)),
-        'MSE {} ='.format(task_str_abbr) + str(np.round(y_va[-1], 5))
-    ]
+    if accuracy:
+        y_tr = np.array(error_per_epochs, dtype=np.float)*100
+        y_va = np.array(error_per_epochs_va, dtype=np.float)*100
+
+        # print 'Acc TR = {} %'.format(str(np.round(y_tr[-1], 1)))
+        final_errors = [
+            'Acc TR = {} %'.format(str(np.round(y_tr[-1], 1))),
+            'Acc {} = {} %'.format(task_str_abbr,
+                                   str(np.round(y_va[-1], 1)))
+                                    ]
+    else:
+        y_tr = error_per_epochs
+        y_va = error_per_epochs_va
+
+        final_errors = [
+            'MSE TR =' + str(np.round(y_tr[-1], 5)),
+            'MSE {} ='.format(task_str_abbr) + str(np.round(y_va[-1], 5))
+        ]
     # appending other errors, ex: accuracy
     final_errors_str = '\n'.join(final_errors)
     if other_errors is not None:
         final_errors_str += other_errors
-    if accuracy_plot:
+    if accuracy_h_plot:
         acc_errors = [
             'Acc TR = {} %'.format(np.round(accuracy_per_epochs[-1]*100),1),
             'Acc {} = {} %'.format(task_str_abbr,
@@ -229,7 +240,7 @@ def plot_learning_curve_info(
     info += r'$\lambda= {}$'.format(
         np.round(hyperparams['reg_lambda'], 3))
 
-    info += '\nGD: {}'.format(hyperparams['batch_method'])+'\n'
+    info += '\n\nGD: {}'.format(hyperparams['batch_method'])+'\n'
     if hyperparams['batch_method'] != 'batch':
         info += 'mb={}\n'.format(hyperparams['batch_size'])
 
@@ -240,7 +251,23 @@ def plot_learning_curve_info(
     ###########################################################
     plt.close()
 
-    if accuracy_plot is None:
+    if accuracy_h_plot is None:
+        SMALL_SIZE = 11
+        MEDIUM_SIZE = 12
+        BIGGER_SIZE = 14
+
+        plt.rc('font', size=MEDIUM_SIZE)
+        plt.rc('axes', labelsize=BIGGER_SIZE)
+        plt.rc('xtick', labelsize=MEDIUM_SIZE)
+        plt.rc('ytick', labelsize=MEDIUM_SIZE)
+        plt.rc('legend', fontsize=BIGGER_SIZE)
+        plt.rc('figure', titlesize=BIGGER_SIZE)
+        plt.rc('axes', titlesize=BIGGER_SIZE)
+
+        x_epochs = np.arange(len(error_per_epochs))
+
+        if figsize is None:
+            figsize = (10, 5)
         plt.figure(figsize=figsize)
         grid = plt.GridSpec(1, 4, wspace=0.1, hspace=0.3, left=0.1)
 
@@ -248,24 +275,29 @@ def plot_learning_curve_info(
         plt.plot(x_epochs, y_tr, label='Training', linestyle='-')
         plt.plot(x_epochs, y_va, label=task_str, linestyle='--')
 
-        plt.xlabel('Epochs', fontsize=fontsize_labels)
-        plt.ylabel('MSE', fontsize=fontsize_labels)
-        plt.title(title, fontsize=fontsize_title)
-        plt.legend(fontsize=fontsize_legend)
+        plt.xlabel('Epochs')
+        if accuracy:
+            plt.ylabel('Accuracy (%)')
+        else:
+            plt.ylabel('MSE')
+
+        plt.title(title)
+        plt.legend()
         plt.grid()
 
         plt.subplot(grid[0, 3:])
 
         plt.title('Info')
         plt.text(x=0., y=0.97, s=info,
-                 ha='left', va='top', fontsize=11)
+                 ha='left', va='top', fontsize=MEDIUM_SIZE)
 
         plt.axis('off')
 
-        plt.savefig(fname)
+        plt.savefig(fname+'.png')
+        plt.savefig(fname+'.pdf')
 
         plt.close()
-    elif accuracy_plot:
+    elif accuracy_h_plot:
         SMALL_SIZE = 11
         MEDIUM_SIZE = 12
         BIGGER_SIZE = 14

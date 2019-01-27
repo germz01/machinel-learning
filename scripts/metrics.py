@@ -63,16 +63,18 @@ class BinaryClassifierAssessment():
 
         self.confusion_matrix = np.array((tp, fp, fn, tn)).reshape((2, 2))
 
-        if tp == 0 or tn == 0:
-            self.precision = None
-            self.accuracy = None
-            self.recall = None
-            self.f1_score = None
+        self.accuracy = float((tp+tn)) / len(y_true)  # P+N
+        if tp < 1:
+            self.precision = 0
+            self.recall = 0
         else:
             self.precision = float(tp) / (tp+fp)
-            self.accuracy = float((tp+tn)) / (P+N)
             self.recall = float(tp) / P
-            # self.fp_rate = float(fp) / P
+        # self.fp_rate = float(fp) / P
+
+        if self.precision == 0 or self.recall == 0:
+            self.f1_score = None
+        else:
             self.f1_score = 2. / (1/self.precision + 1/self.recall)
 
         if printing:

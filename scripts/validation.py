@@ -357,17 +357,16 @@ class ModelSelectionCV(object):
                                     .format(kwargs['par_name']
                                             if 'par_name' in kwargs else '')):
                 # instanciate neural network
-
+                i += 1
                 for trial in tqdm(range(ntrials), desc="TRIALS"):
                     # repeated inizialization of the net
                     neural_net = nn.NeuralNetwork(X_design, y_design,
                                                   **hyperparams)
-
                     cross_val = KFoldCrossValidation(
                         X_design, y_design,
                         neural_net, nfolds=nfolds,
                         shuffle=False)
-                    i += 1
+
                     out = dict()
                     out['hyperparams'] = neural_net.get_params()
                     out['errors'] = cross_val.aggregated_results
