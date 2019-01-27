@@ -6,9 +6,8 @@
 \usepackage[english]{babel}
 \usepackage[hmarginratio=1:1,top=20mm,bottom=20mm,columnsep=20pt,left=30mm]{geometry}
 \usepackage[hang, small,labelfont=bf,up,textfont=it,up]{caption}
-\usepackage{booktabs}
-\usepackage{lettrine}
-\usepackage{enumitem}
+\usepackage[page]{appendix}
+\usepackage{float,graphicx,wrapfig,subcaption,booktabs,lettrine,enumitem,amsmath}
 \setlist[itemize]{noitemsep}
 \usepackage{graphicx}
 
@@ -69,13 +68,13 @@ for each one of the datasets, we collected the data describing the results.
 
 \section{Introduction} % (fold)
 \label{sec:introduction}
-    By chosing the type \textbf{A} project, we followed the goal of optimizing a built from scratch neural
-    network model by searching for the best hyper-parameters' combination in order to obtain the best
-    performances on the MONK's and CUP datasets. The model we've built implements the
+    By chosing a type \textbf{A} project, we followed the goal of building and optimizing a
+    \textit{feedforward neural network model} by searching the best hyper-parameters' combination in order to
+    obtain the best performances on the MONK's and CUP datasets. The model we've built implements the
     standard \textit{backpropagation algorithm} with \textit{gradient descent}, as described in
     \cite{deep_learning}. As optimization tool, we've searched the so-called hyper-parameters space by using
-    well-known validation algorithms like \textit{k-fold cross validation} and \textit{grid search},
-    described in \cite{deep_learning} and \cite{random_search}. More technical details about the
+    well-known validation algorithms like \textit{k-fold cross validation} and \textit{(random) grid search},
+    described in \cite{deep_learning} and \cite{random_search}. More technical details regarding the
     implementation can be found in section \ref{sec:methods}.
 % section introduction (end)
 
@@ -133,16 +132,24 @@ for each one of the datasets, we collected the data describing the results.
         During the initialization phase, we pass to the network the design matrix \texttt{X} and target column
         vector \texttt{y}. Other than that we pass the number of neurons per hidden layer
         \texttt{hidden\_sizes}, the maximum number of epochs \texttt{epochs}, the minibatch's size
-        \texttt{batch\_size}, the activation function for each layer \texttt{activation} and the
-        hyper-parameters for the learning rate, \texttt{$\eta$}, the momentum, \texttt{$\alpha$} and the
-        regularization, \texttt{$\lambda$}. In order to initialize the network's weights matrices we've
-        followed the \textit{normalized initialization} technique, as described in \cite{deep_learning} and
-        \cite{initialization}. During the training phase we essentialy apply the \textit{forward propagation}
-        and the \textit{backpropagation} phases of the standard \textit{backpropagation} algorithm over a
-        minibatch of examples taken from the training set. During each epoch of training we also keep track of
-        the errors between the predicted values and target ones, in order to be able to plot the
-        \textit{learning curves} for the training session. At the end of each epoch the neural network's
-        weights are updated following the standard backpropagation/momentum/regularization convention.
+        \texttt{batch\_size}, the activation function for each layer \texttt{activation} and the hyper-parameters
+        for the learning rate, \texttt{$\eta$}, the momentum, \texttt{$\alpha$} and the regularization,
+        \texttt{$\lambda$}. In order to initialize the network's weights matrices we followed the
+        \textit{normalized initialization} technique, described in \cite{deep_learning} and
+        \cite{initialization}, e.g. the formula defining the network's weights in the uniform distribution
+        taken in the range
+
+        \begin{equation*}
+             W \sim U \left [ - \frac{\sqrt{6}}{\sqrt{m + n}}, \ \frac{\sqrt{6}}{\sqrt{m + n}}  \right ],
+        \end{equation*}
+
+        in which $m$ and $n$, respectively, represents the number of inputs and outputs for the layer.
+        During the training phase we essentialy apply the \textit{forward propagation} and the
+        \textit{backpropagation} phases of the standard \textit{backpropagation} algorithm over a minibatch of
+        examples taken from the training set. During each epoch of training we also keep track of the errors
+        between the predicted values and target ones, in order to be able to plot the \textit{learning curves}
+        for the training session. At the end of each epoch the neural network's weights are updated following
+        the standard backpropagation/momentum/regularization convention.
         % subsection the_training_algorithm (end)
     % subsection implementation_choices (end)
 % section methods (end)
@@ -151,6 +158,59 @@ for each one of the datasets, we collected the data describing the results.
 
 \section{Experiments} % (fold)
 \label{sec:experiments}
+    Before delving into the details of the results we obtained by applying our models to the MONKS and CUP
+    datasets, we provide some informations about the \textit{preprocessing routines} and
+    \textit{validation schema} we decided to apply. Since the MONKS datasets' feature are categorical, that is,
+    every feature's value represents a class, not a numerical value, we preprocessed the three datasets by
+    writing a \texttt{monks\_binarize} script for applying a \textit{1-of-k encoding}, as recommended during
+    the course, hence obtaining $17$ binary input features. Since we've
+    chosen to follow \cite{random_search} for the hyper-parameters' search during the validation phase, we first
+    performed some \textit{preliminary trials} in order to have a glimpse on the best intervals for searching
+    our model's hyper-parameters. During this trials we manually varied the model's hyper-parameters, e.g. the
+    learning rate, the momentum constant and so on, and observed the resulting \textit{learning curves}
+    (see appendix \ref{sec:preliminary_trials_learning_curves} for some examples).
+    We then deepen the search using the most interesting intervals discovered during the preliminary trials
+    in the validation phase by using our implementation of the \textit{(random) grid search} algorithm, in
+    which we also used our implementation of the \textit{k-fold cross validation} algorithm (which follows
+    the standard approach of using a value of $3$ for the \textit{k} parameter). That is, our validation schema
+    essentially consist in using the random grid search algorithm to investigate some random sampled "points"
+    in the hyper-parameters' space, evaluating the performances for each one of this points and finally
+    selecting the best combinations of parameters based on the diffent metrics like \textit{generalization
+    error}, \textit{accuracy}, \textit{precision} and \textit{f1-score}.
+
+    \subsection{Monk's results} % (fold)
+    \label{sub:monk_s_results}
+
+    \begin{table}[H]
+        \centering
+        \begin{subtable}{\textwidth}
+            \resizebox{\textwidth}{!}{
+                \begin{tabular}{| c | c | c | c | c | c | c | c | c | c |}
+                    \hline
+                    Task & Topology & Batch size & $\eta$ & $\alpha$ & $\lambda$ & $\epsilon$ & Epochs &
+                    MSE (TR/TS) & Accuracy (TR/TS) (\%) \\
+                    \hline
+                    MONK 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0\\
+                    \hline
+                    MONK 2 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+                    \hline
+                    MONK 3 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+                    \hline
+                    MONK 3 (reg.) & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+                    \hline
+                \end{tabular}
+            }
+        \end{subtable}
+        \caption{Average prediction results obtained for the MONK’s tasks.}
+        \label{monks}
+    \end{table}
+
+    % subsection monk_s_results (end)
+
+    \subsection{Cup results} % (fold)
+    \label{sub:cup_results}
+
+    % subsection cup_results (end)
 
 \begin{figure}[htbp]
   \centering
@@ -209,8 +269,9 @@ for each one of the datasets, we collected the data describing the results.
     \textit{Random Search for Hyper-parameter Optimization}, J. Mach. Learn. Res. 13, pp. 281-305, 2012.
 
     \bibitem{early_stopping}
-    Prechelt L..
-    \textit{Early Stopping - But When?}, Montavon G., Orr G.B., Müller KR. (eds) Neural Networks: Tricks of the Trade. Lecture Notes in Computer Science, vol 7700. Springer, Berlin, Heidelberg, 2012.
+    Prechelt Lutz.
+    \textit{Early Stopping - But When?}, Montavon G., Orr G.B., Müller KR. (eds) Neural Networks: Tricks of the
+    Trade. Lecture Notes in Computer Science, vol 7700. Springer, Berlin, Heidelberg, 2012.
 
     \bibitem{initialization}
     Xavier Glorot and Yoshua Bengio.
@@ -218,6 +279,27 @@ for each one of the datasets, we collected the data describing the results.
     Proceedings of the Thirteenth International Conference on Artificial Intelligence and Statistics, pp.
     249-256, 2010.
 \end{thebibliography}
+
+\newpage
+
+%----------------------------------------------------------------------------------------
+
+%----------------------------------------------------------------------------------------
+%   APPENDIX
+%----------------------------------------------------------------------------------------
+
+\pagenumbering{roman}
+\begin{appendices}
+    \section{Preliminary trials' learning curves} % (fold)
+    \label{sec:preliminary_trials_learning_curves}
+    % section preliminary_trials_learning_curves (end)
+
+    \section{How to run the code} % (fold)
+    \label{sec:how_to_run_the_code}
+        In this section we show how to run our code.
+    % section how_to_run_the_code (end)
+
+\end{appendices}
 
 %----------------------------------------------------------------------------------------
 
