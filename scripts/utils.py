@@ -253,15 +253,15 @@ def plot_learning_curve_info(
 
     if accuracy_h_plot is None:
         SMALL_SIZE = 11
-        MEDIUM_SIZE = 12
-        BIGGER_SIZE = 14
+        MEDIUM_SIZE = 16
+        BIGGER_SIZE = 20
 
         plt.rc('font', size=MEDIUM_SIZE)
         plt.rc('axes', labelsize=BIGGER_SIZE)
         plt.rc('xtick', labelsize=MEDIUM_SIZE)
         plt.rc('ytick', labelsize=MEDIUM_SIZE)
         plt.rc('legend', fontsize=BIGGER_SIZE)
-        plt.rc('figure', titlesize=BIGGER_SIZE)
+        # plt.rc('figure', titlesize=BIGGER_SIZE)
         plt.rc('axes', titlesize=BIGGER_SIZE)
 
         x_epochs = np.arange(len(error_per_epochs))
@@ -269,9 +269,10 @@ def plot_learning_curve_info(
         if figsize is None:
             figsize = (10, 5)
         plt.figure(figsize=figsize)
-        grid = plt.GridSpec(1, 4, wspace=0.1, hspace=0.3, left=0.1)
+        grid = plt.GridSpec(1, 7, wspace=0.1, hspace=0.7, left=0.1,
+                            top=0.9, bottom=0.15)
 
-        plt.subplot(grid[0, :3])
+        plt.subplot(grid[0, :6])
         plt.plot(x_epochs, y_tr, label='Training', linestyle='-')
         plt.plot(x_epochs, y_va, label=task_str, linestyle='--')
 
@@ -285,10 +286,10 @@ def plot_learning_curve_info(
         plt.legend()
         plt.grid()
 
-        plt.subplot(grid[0, 3:])
+        plt.subplot(grid[0, 6:])
 
         plt.title('Info')
-        plt.text(x=0., y=0.97, s=info,
+        plt.text(x=0.2, y=0.97, s=info,
                  ha='left', va='top', fontsize=MEDIUM_SIZE)
 
         plt.axis('off')

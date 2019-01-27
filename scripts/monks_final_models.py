@@ -34,7 +34,7 @@ datasets = {name: pd.read_csv(fpath+name+'_bin.csv').values
 ###########################################################
 
 
-def final_training(dataset, trials, hyperparams, info='', epochs_plot=None):
+def final_training(dataset, trials, hyperparams, info='', epochs_plot=None, figsize=(15,5)):
     ''' Final training for Monks'''
 
     design_set = datasets['monks-{}_train'.format(dataset)]
@@ -65,6 +65,7 @@ def final_training(dataset, trials, hyperparams, info='', epochs_plot=None):
             error_per_epochs_va=nn.error_per_epochs_va[:epochs_plot],
             hyperparams=nn.get_params(),
             task='testing',
+            figsize=figsize,
             title='Monks-{}, MSE Learning Curve'.format(dataset),
             fname=fpath+'monks_{}_{}MSE_final_{:02d}'.format(
                 dataset, info, trial))
@@ -74,6 +75,7 @@ def final_training(dataset, trials, hyperparams, info='', epochs_plot=None):
             error_per_epochs_va=nn.accuracy_per_epochs_va[:epochs_plot],
             hyperparams=nn.get_params(),
             task='testing',
+            figsize=figsize,
             accuracy=True,
             title='Monks-{}, Accuracy Learning Curve'.format(dataset),
             fname=fpath+'monks_{}_{}ACC_final_{:02d}'.format(
@@ -103,6 +105,7 @@ hyperparams_1 = dict(
         w_par=1./17
 )
 
+imp.reload(u)
 final_training(dataset=1, trials=20, hyperparams=hyperparams_1)
 
 ###########################################################
@@ -126,7 +129,7 @@ hyperparams_2 = dict(
         w_par=1./17
 )
 
-# final_training(dataset=2, trials=20, hyperparams=hyperparams_2)
+final_training(dataset=2, trials=10, hyperparams=hyperparams_2)
 
 ###########################################################
 
@@ -150,8 +153,8 @@ hyperparams_3 = dict(
         w_par=1./17
 )
 
-# final_training(dataset=3, trials=20, hyperparams=hyperparams_3,
-#               info='noreg_')
+final_training(dataset=3, trials=20, hyperparams=hyperparams_3,
+               info='noreg_')
 
 
 # with regularization
@@ -172,8 +175,8 @@ hyperparams_3_reg = dict(
         w_par=1./17
 )
 
-# final_training(dataset=3, trials=10, hyperparams=hyperparams_3_reg,
-#               info='withreg_')
+final_training(dataset=3, trials=20, hyperparams=hyperparams_3_reg,
+               info='withreg_')
 
 '''
 # deep
