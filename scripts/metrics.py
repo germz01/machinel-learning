@@ -132,6 +132,32 @@ def mse(y_true, y_pred):
     return np.sum((y_true-y_pred)**2)/p
 
 
+def mee(y_true, y_pred):
+    """
+    Mean Euclidean Error
+
+    Parameters
+    ----------
+    y_true :
+
+    y_pred :
+
+
+    Returns
+    -------
+
+    """
+    if type(y_true) is list:
+        y_true = np.array(y_true)
+    if type(y_pred) is list:
+        y_pred = np.array(y_pred)
+
+    assert y_true.shape == y_pred.shape
+    p = y_true.shape[0]
+
+    return np.sum(np.sqrt(np.sum((y_true-y_pred)**2, axis=1)))/p
+
+
 if __name__ == "__main__":
     y_true = np.hstack((np.zeros(10), np.ones(10)))
     y_pred = np.hstack((np.zeros(12), np.ones(8)))

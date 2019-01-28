@@ -232,7 +232,7 @@ def plot_learning_curve_info(
 
     # hyperparameters string
     info += '\nHyperparameters:' + '\n'
-    info += r'$\eta= {}$'.format(np.round(hyperparams['eta'], 2))+'\n'
+    info += r'$\eta= {}$'.format(np.round(hyperparams['eta'], 6))+'\n'
     info += r'$\alpha= {}$'.format(np.round(hyperparams['alpha'], 2))+'\n'
 
     info += r'${}$ regularization'.format(
@@ -267,7 +267,7 @@ def plot_learning_curve_info(
         x_epochs = np.arange(len(error_per_epochs))
 
         if figsize is None:
-            figsize = (10, 5)
+            figsize = (15, 7)
         plt.figure(figsize=figsize)
         grid = plt.GridSpec(1, 7, wspace=0.1, hspace=0.7, left=0.1,
                             top=0.9, bottom=0.15)

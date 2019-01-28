@@ -13,3 +13,4 @@ images/*
 /report/report.xdv
 /report/report.log
 /report/report.pdf
+*.json.gz
