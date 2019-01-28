@@ -18,13 +18,19 @@ from pprint import pprint
 
 imp.reload(validation)
 
-
 ###########################################################
 
-experiment = 3
+
+'''
+Exp 0:
+Esperimento iniziale con hidden sizes tra 10-100
+con 1000 valori della griglia ed epochs ridotti a 300
+../exp0/
+'''
+nexp = 3
 
 # read experiment parameters
-with open('../data/CUP/results/cup_experiment_{}_parameters.json'.format(experiment)) as f:
+with open('../data/CUP/results/exp0/cup_experiment_{}_parameters.json'.format(nexp)) as f:
     experiment_params = json.load(f)
 
 pprint(experiment_params)
@@ -32,8 +38,8 @@ pprint(experiment_params)
 # load results
 selection = validation.ModelSelectionCV(
     grid=None,
-    fname='../data/CUP/results/' +
-    'cup_experiment_{}_results.json.gz'.format(experiment))
+    fname='../data/CUP/results/exp0/' +
+    'cup_experiment_{}_results.json.gz'.format(nexp))
 
 df = selection.load_results_pandas(flat=False)
 df.shape
@@ -44,27 +50,54 @@ df.shape
 ###########################################################
 df[['id_grid', 'id_fold', 'id_trial']].head(20)
 
-df_filtered = df.query('mse_va<4.5')
-df_filtered.describe()['eta']
+df_filtered = df.query('mee_va<1.8')
+# df_filtered = df_filtered.query('hidden_sizes>40')
 
 data = df_filtered
-
-plt.close()
-sns.scatterplot(
-    data=data,
-    x='hidden_sizes',
-    # x='eta',
-    y='mse_va',
-    hue='eta',
-    markers=True, alpha=0.6)
-
+data.head()
 
 plt.close()
 sns.lmplot(
     data=data,
     x='hidden_sizes',
-    y='mse_va',
-    hue='id_fold'
+    y='mee_va',
+    hue='id_fold',
+    robust=False,
+    scatter=False
+)
+plt.scatter(x=data['hidden_sizes'], y=data['mee_va'],
+            color='gray', alpha=0.3)
+plt.grid()
+
+
+sns.scatterplot(
+    data=data,
+    x='hidden_sizes',
+    # x='eta',
+    y='mee_va',
+    markers=True, alpha=0.7,
+    palette={"red": "#FF9999"},
+    hue='red',
+    legend=False
+)
+plt.grid()
+
+
+sns.regplot(
+    data=data,
+    x='hidden_sizes',
+    y='mee_va',
+    marker=True,
+    scatter=False
+)
+plt.grid()
+
+plt.close()
+sns.lmplot(
+    data=data,
+    x='hidden_sizes',
+    y='mee_va',
+    scatter=False
 )
 plt.grid()
 
@@ -85,12 +118,18 @@ plt.close()
 
 sns.lineplot(data=df,
              x='hidden_sizes',
-             y='mse_va', hue='id_fold',
+             y='mse_va', style='id_fold',
              err_style='band')
 
 
 ###########################################################
 
+'''
+experiment in exp1/
+griglia con topologie fissate con scala logaritmica, per osservare 
+comportamento per alto numero di hidden sizes
+
+'''
 # leggo dati experiment 1
 exp1_params = []
 exp1_res = []
@@ -121,7 +160,10 @@ sns.scatterplot(
     y='mee_va',
     hue='id_fold',
     style='id_fold',
+    legend=False,
     markers=True, alpha=1.)
+plt.grid()
+
 
 exp1_1000 = exp1.query('hidden_sizes>900 and hidden_sizes<1200')
 exp1_1000.head()
@@ -135,25 +177,28 @@ sns.scatterplot(
     y='mee_va',
     hue='id_fold',
     markers=True, alpha=1.)
-a
 
-exp1_1000.describe().
+exp1_1000.describe()
 exp1_1000.sort_values(['eta'], inplace=True)
+
+exp1.sort_values(['mee_va'], inplace=True)
+
+exp1.head()[['mee_va', 'hidden_sizes', 'eta']]
 
 # plot learning curves
 imp.reload(u)
 min_epochs = 50
 max_epochs = len(exp1.iloc[0]['error_per_epochs'])
 # max_epochs = 500
-for i in range(60):
-    row = exp1_1000.iloc[i]
+for i in range(20):
+    row = exp1.iloc[i]
     u.plot_learning_curve_info(
         error_per_epochs=row['mee_per_epochs'][min_epochs:max_epochs],
         error_per_epochs_va=row['mee_per_epochs_va'][min_epochs:max_epochs],
         task='validation',
         hyperparams=row['hyperparams'],
         fname='../data/CUP/results/exp1_img/exp_{}_curve_{:02d}.png'.format(
-            experiment, i)
+            1, i)
     )
 a
 # cerco di capire l'intervallo migliore per eta
@@ -170,276 +215,177 @@ sns.scatterplot(
     style='id_fold',
     markers=True, alpha=1.)
 a
+###########################################################
+''' osservazioni:
 
+con hidden sizes > di qualche centinaio si hanno mediamente risultati
+migliori, serve approfondire il comportamento per valori 
+compresi tra 300-1500 circa
 
-
+'''
+###########################################################
 
 ###########################################################
-# 
-df.sort_values(['accuracy', 'mse_va'], ascending=[False, True], inplace=True)
-df[['accuracy', 'mse_va', 'eta']].head(200).describe()
 
-df.shape
+'''
+Exp 2/
+Esperimento con griglia su valori di hidden sizes alti
 
-# seleziona la migliore per ciascun valore della griglia, ovvero prendendo il minimo al variare di fold e trial
+'''
 
-df_min = df.groupby(['id_grid']).agg({
-    'mse_va': [np.median, np.std],
-    'accuracy': [np.median, np.std]
-})
-df_min.sort_values(('mse_va', 'median'), inplace=True)
-df_min.head()
-df_min.sort_values(('accuracy', 'median'), ascending=False, inplace=True)
-df_min.head(30)
-df_min.shape
-df_min
+nexp = 1
+# read experiment parameters
+with open('../data/CUP/results/exp2/cup_experiment_{}_parameters.json'.format(nexp)) as f:
+    experiment_params = json.load(f)
 
-df_min.columns = ['_'.join(x) for x in df_min.columns.ravel()]
-# index_min = df.groupby(['id_grid'])['mse_va'].idxmin()
-df_min.head()
+pprint(experiment_params)
 
-df_min['threshold']=df_min['mse_va_median'].iloc[0]+2*df_min['mse_va_std']
+# load results
+selection = validation.ModelSelectionCV(
+    grid=None,
+    fname='../data/CUP/results/exp2/' +
+    'cup_experiment_{}_results.json.gz'.format(nexp))
 
-# migliori risultati per accuracy
-df_best = df_min.query('accuracy_median==1')
+exp2 = selection.load_results_pandas(flat=False)
 
-# faccio la join
-df_parameters = df.drop_duplicates('id_grid')
+exp2.describe()['mee_va']
 
-df_join = pd.merge(df_best, df_parameters, on='id_grid', how='inner')
-df_join.shape
-
-df_join.describe()[['eta','alpha', 'hidden_sizes']]
-
-
-
-
-
-df_min.query('mse_va_median<threshold')
-
-df.query('id_grid==80').iloc[0][['id_grid', 'eta', 'alpha', 'hidden_sizes']]
-
-
-
-
-
-df_agg.query('accuracy==1.00').sort_values(['mse_va_std']).head()
-df_agg['threshold']=df_agg['mse_va_median'].iloc[0]+3*df_agg['mse_va_std']
-
-
-
-df_agg['mse_va_median'].iloc[0]
-
-df_agg.head(37)
-
-df_agg[['mse_va_std', 'mse_va_median', 'threshold',
-        'eta']]
-df_agg.head(100).describe()['eta']
-
-
-
-
-
-len(index_min)
-
-df_min = df.iloc[index_min]
-
-
-grouped = df.groupby(['id_grid']).agg({
-    'mse_va': [np.median, np.std],
-    'accuracy': [np.median, np.std]
-})
-
-
+exp2_filtered = exp2.query('mee_va<1.4')
 
 plt.close()
-###########################################################
+sns.lmplot(
+    data=exp2_filtered,
+    x='hidden_sizes',
+    y='mee_va',
+    hue='id_fold',
+    robust=False,
+    scatter=False
+)
+plt.scatter(x=exp2['hidden_sizes'], y=exp2['mee_va'],
+            color='gray', alpha=0.3)
+plt.grid()
+
+'''
+osservazioni: 
+valori medi abbastanza costanti, vediamo le learning curves
+
+'''
+
+# plotting learning curve
+exp2.sort_values(['mee_va'], inplace=True)
+exp2_filtered.sort_values(['mee_va'], inplace=True)
+
+exp2.describe()['mee_va']
+exp3.describe()['mee_va']
 
 
-df.sort_values(['mee_va'])
-
+exp2.shape
 
 imp.reload(u)
-max_epochs = len(df.iloc[0]['error_per_epochs'])
-# max_epochs = 500
+max_epochs = len(exp2.iloc[0]['error_per_epochs'])
+min_epochs = 50
 for i in range(100):
-    row = df.iloc[i]
+    row = exp2_filtered.iloc[i]
     u.plot_learning_curve_info(
-        error_per_epochs=row['error_per_epochs'][:max_epochs],
-        error_per_epochs_va=row['error_per_epochs_va'][:max_epochs],
+        error_per_epochs=row['mee_per_epochs'][min_epochs:max_epochs],
+        error_per_epochs_va=row['mee_per_epochs_va'][min_epochs:max_epochs],
         task='validation',
         hyperparams=row['hyperparams'],
-        fname='../data/CUP/results/img/exp_{}_curve_{:02d}.png'.format(
+        fname='../data/CUP/results/exp2_img/exp_{}_curve_{:02d}.png'.format(
             experiment, i)
     )
 
+###########################################################
 
 ###########################################################
 
-df_sorted = df.sort_values('accuracy', ascending=False)
-df_sorted[['mse_va', 'accuracy', 'mse_tr', 'eta', 'alpha']].head(10)
+'''
+Exp 3/
+hidden sizes con valori intermedi, compresi tra 100 e 300
 
-df_sorted['accuracy'].iloc[0]
+'''
 
-grouped = df.groupby(['id_grid']).agg({
-    'mse_va': [np.median, np.std],
-    'accuracy': [np.median, np.std]
-})
+nexp = 1
+# read experiment parameters
+with open('../data/CUP/results/exp3/cup_experiment_{}_parameters.json'.format(nexp)) as f:
+    experiment_params = json.load(f)
 
-grouped['id_grid']=grouped.index
-grouped.columns = ['_'.join(x) for x in grouped.columns.ravel()]
+pprint(experiment_params)
 
-(grouped.head())
+# load results
+selection = validation.ModelSelectionCV(
+    grid=None,
+    fname='../data/CUP/results/exp3/' +
+    'cup_experiment_{}_results.json.gz'.format(nexp))
 
-grouped.shape
+exp3 = selection.load_results_pandas(flat=False)
 
-grouped.columns
-df_agg = pd.merge(grouped, df, on='id_grid', how='inner').drop_duplicates('id_grid')
-df_agg.shape
+exp3.head(20).describe()['mee_va']
 
-df_agg.columns
-
-df_agg.sort_values(['accuracy_median', 'mse_va_median'],
-                   ascending=[False, True], inplace=True)
-
-df_agg[['accuracy_median', 'mse_va_median', 'eta']].query('eta<1').head()
-
-
-
-df_agg.sort_values(['accuracy_median', 'mse_va_median'], ascending=[False,True]).head(10)[['id_grid','eta']]
-
-
-grouped.sort_values('mse_median')[['mse_median', 'mse_std']].head(10)
-
-df.query('id_grid==2829')[['hidden_sizes','id_fold','id_trial']]
-
-
-
-
-imp.reload(validation)
-
-df_agg_best = validation.df2df_flat(df_agg.sort_values('mse').iloc[:10])
-df_agg_best
-
-
-df_grid = df.groupby('id_grid').agg('mean').sort_values('mse', ascending=True)
-
-
-df_group_hidden = df.groupby('hidden_sizes').agg(['median','std']).sort_values(('mse','median'))
-df_group_hidden.columns
-
-df_group_hidden.head()
-
-a
-# ho individuato l'hidden size con un minimo, voglio individuare
-# gli altri parametri migliori, qual'è la combinazione migliore?
-
-# faccio la media/median sui vari fold
-
-df_h = df.query('hidden_sizes==6')
-df_h['alpha'].describe()
+exp3_filtered = exp3.query('mee_va<1.4')
 
 plt.close()
-sns.lineplot(data=df_h,
-             x='eta',
-             y='mse',
+sns.lmplot(
+    data=exp3_filtered,
+    x='hidden_sizes',
+    y='mee_va',
+    hue='id_fold',
+    robust=False,
+    scatter=False
 )
-plt.close()
-sns.lineplot(data=df_h,
-             x='eta',
-             y='mse',
-             hue='id_fold'
-)
+plt.scatter(x=exp3['hidden_sizes'], y=exp3['mee_va'],
+            color='gray', alpha=0.3)
+plt.grid()
 
+'''
+osservazioni: 
+valori medi abbastanza costanti, vediamo le learning curves
 
-plt.close()
-sns.scatterplot(data = df_h,
-                x='alpha',
-                y='mse',
-                hue='eta'
-)
-plt.axhline(df_h['mse'].median())
+'''
 
-pd.set_option('display.expand_frame_repr', True)
-df_h.query('eta>0.4 and eta<0.6').sort_values('mse')['id_grid']
+# plotting learning curve
+exp3.sort_values(['mee_va'], inplace=True)
+exp3_filtered.sort_values(['mee_va'], inplace=True)
 
-id_grid = 791
+exp3.head()['mee_va']
 
-id_grid = 7
+exp3.shape
 
-## voglio andare a plottare la learning curve corrispondente all'id_grid trovato, per ciascun fold
-
-df_selected = df.query('id_grid =={}'.format(id_grid))
-
-
-for i in range(5):
-    plt.plot(np.arange(500),
-             df_selected['error_per_epochs'].iloc[i], label='train')
-    plt.plot(np.arange(500),
-             df_selected['error_per_epochs_va'].iloc[i], label='va')
-
-    plt.legend()
-    plt.savefig('../data/monks/results/learning_fold_{}.png'.format(i))
-    plt.close()
-
+imp.reload(u)
+max_epochs = len(exp3.iloc[0]['error_per_epochs'])
+min_epochs = 50
+for i in range(300):
+    row = exp3_filtered.iloc[i]
+    u.plot_learning_curve_info(
+        error_per_epochs=row['mee_per_epochs'][min_epochs:max_epochs],
+        error_per_epochs_va=row['mee_per_epochs_va'][min_epochs:max_epochs],
+        task='validation',
+        hyperparams=row['hyperparams'],
+        fname='../data/CUP/results/exp3_img/exp_{}_curve_{:02d}.png'.format(
+            experiment, i)
+    )
 
 ###########################################################
 
+'''
+exp2 +exp3 together
+'''
+exp123 = pd.concat([exp1, exp2, exp3])
 
-###########################################################
+exp123_filtered = exp123.query('mee_va<1.4')
 
-
-sns.scatterplot(x='hidden_sizes', y='mse', data = df,
-                hue = 'eta')
-
-
-plt.scatter(df['hidden_sizes'], df['mse'], alpha=0.5)
-plt.plot(
-    x=df_group_hidden.index,
-    y=df_group_hidden['mse']['median'])
-plt.close()
-
-
-
-df_grid.query('hidden_sizes <= 20 & mse <= 0.1').describe()
-
-
-
-p = gg.ggplot(df_grid, gg.aes(y='mse',x='hidden_sizes', color='alpha'))
-p+gg.geom_point()
-
-p = gg.ggplot(df, gg.aes(y='f1_score',x='hidden_sizes', color='hidden_sizes'))
-p + gg.geom_point()+gg.ggtitle('')+gg.facet_wrap('~id_fold')
-
-
-df_best_flat = valid.df2df_flat(df_best)
-
-df_best = df_grid.sort_values('mse', ascending=True).iloc[:50]
-
-df_best['alpha'].describe()
-df_best['eta'].describe()
-
-p = gg.ggplot(df_best, gg.aes(y='accuracy', x='eta', color = 'alpha'))
-p+gg.geom_point()
-
-
-df_heat = df[['alpha', 'eta', 'mse', 'hidden_sizes']]
-df_heat['hidden_sizes_bin'] = np.round(df['hidden_sizes']/5)*5
-df_heat['alpha_bin'] = np.round(df['alpha'], 1)
-df_heat['eta_bin'] = np.round(df['eta'], 1)
-df_heat['eta_bin'] = np.round(df['eta'], 1)
-
-df_heat
-
-df_pivot = df_heat.pivot_table(
-    index='eta_bin',
-    columns='alpha_bin',
-    values='mse',
-    aggfunc='median')
-df_pivot
-
-sns.heatmap(df_pivot)
 
 plt.close()
-df.columns
+sns.lineplot(
+    data=exp123,
+    x='hidden_sizes',
+    y='mee_va',
+    # robust=False,
+    # scatter=False
+)
+
+plt.scatter(x=exp23['hidden_sizes'], y=exp23['mee_va'],
+            color='gray', alpha=0.3)
+plt.grid()
+
 

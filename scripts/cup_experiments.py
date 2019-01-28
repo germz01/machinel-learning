@@ -41,6 +41,8 @@ split_test = int(original_training_set.shape[0]*0.05)
 test_set = original_training_set[:split_test, :]
 design_set = original_training_set[split_test:, ]
 
+X_test, y_test = np.hsplit(test_set, [10])
+
 test_set.shape
 design_set.shape
 
@@ -55,7 +57,7 @@ imp.reload(NN)
 np.random.shuffle(design_set)
 
 # splitting training/validation
-split_percentage = 0.7
+split_percentage = 0.66
 split = int(design_set.shape[0]*split_percentage)
 
 training_set = design_set[:split, :]
@@ -66,7 +68,6 @@ X_training, y_training = np.hsplit(training_set, [10])
 np.mean(X_training, axis=0)
 
 X_validation, y_validation = np.hsplit(validation_set, [10])
-
 
 # standardization
 X_training_std = (X_training-np.mean(X_training, axis=0))/np.std(X_training, axis=0)
@@ -80,30 +81,44 @@ y_training.shape
 # babysitting
 imp.reload(NN)
 nn = NN.NeuralNetwork(
-    X_training_std, y_training,
-    eta=0.000639,
+    X_training, y_training,
+    eta=0.02,
+    # eta=0.008,
+    # eta=0.00005,
     #eta=0.00002,
-    hidden_sizes=[950],
-    alpha=0.95,
+    hidden_sizes=[200],
+    alpha=0.90,
     reg_method='l2', reg_lambda=0.000,
-    epochs=1000,
-    batch_size=128,
+    epochs=3000,
+    batch_size='batch',
     activation='relu',
     task='regression',
-    # early_stop='testing',  # 'testing',
-    epsilon=5,
+    early_stop='testing', # 'testing',  # 'testing',
+    epsilon=1,
+    early_stop_min_epochs=500,
     w_method='DL',
     w_par=6,
     # w_method='uniform',
     # w_par=1./17
 )
+# nn.train(X_training, y_training, X_validation, y_validation)
 
-nn.train(X_training_std, y_training, X_validation_std, y_validation)
+'''
+y_final = nn.mee_per_epochs_va[-1]
+y_final
+y_min = np.min(nn.mee_per_epochs_va)
+y_min
 
-nn.mee_per_epochs_va[-1]
+y_final/y_min
 
+nn.stop_GL
+nn.stop_PQ
+# u.plot_learning_curve(nn, fname='../images/learning_curve.pdf')
+
+import matplotlib.pyplot as plt
 imp.reload(u)
-epochs_plot_start = 40
+imp.reload(NN)
+epochs_plot_start = 100
 epochs_plot_end = len(nn.error_per_epochs)
 u.plot_learning_curve_info(
     nn.mee_per_epochs[epochs_plot_start:epochs_plot_end],
@@ -113,14 +128,29 @@ u.plot_learning_curve_info(
     task='validation',
     fname='../images/cup_learning_curve')
 
+nn.stop_GL
+nn.stop_PQ
+np.argmin(nn.error_per_epochs_va)
+
+y_min
+
+
+y_pred_test = nn.predict(X_test)
+metrics.mee(y_test, y_pred_test)
+'''
+
+
 ###########################################################
 # TOPOLOGY GRID
 
 # [2**i for i in range(5, 20)]
 '''
 topologies = [int((3./2)**i) for i in range(8, 20)]
+topologies
 
 topologies.reverse()
+
+
 
 
 for hidden in topologies:
@@ -213,12 +243,10 @@ for hidden in topologies:
 '''
 
 
-
-
 ###########################################################
 # EXPERIMENTAL SETUP
 
-grid_size = 100
+grid_size = 200
 
 nfolds = 3
 ntrials = 1
@@ -227,22 +255,23 @@ ntrials = 1
 # eta=0.00002,
 
 param_ranges = {
-    'eta': (0.0002, 0.002),
-    'hidden_sizes': [(500, 1500)],
-    'alpha': 0.9,
+    'eta': (0.008, 0.02),
+    'hidden_sizes': [(50, 2500)],
+    'alpha': 0.90,
     'reg_method': 'l2', 'reg_lambda': 0.0,
-    'epochs': 1000,
-    'batch_size': 128,
+    'epochs': 3000,
+    'batch_size': 'batch',
     'activation': 'relu',
     'task': 'regression',
-    # 'early_stop': None,  # 'testing',
-    'epsilon': 5,
+    'early_stop': 'PQ',
+    'early_stop_min_epochs' : 500,
+    'epsilon': 1,
     'w_method': 'DL',
     'w_par': 6.0}
 
 info = "Informazioni/appunti/scopo riguardo l'esperimento in corso"
 
-info = "infos"
+info = "batch with early stopping"
 
 experiment_params = {
     'nfolds': nfolds,
@@ -257,7 +286,7 @@ experiment_params = {
 # EXPERIMENT GRID SEARCH
 
 # controllo nomi files
-fpath = '../data/CUP/results/exp2/'
+fpath = '../data/CUP/results/exp5/'
 
 check_files = True
 experiment = 1

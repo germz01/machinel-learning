@@ -467,14 +467,13 @@ class NeuralNetwork(object):
                         stop_PQ = True
 
                 # stopping
-                if self.early_stop == 'testing':
-                    if stop_GL and self.stop_GL is None:
-                        self.stop_GL = e
-                    if stop_PQ and self.stop_PQ is None:
-                        self.stop_PQ = e
-                else:
-                    if stop_GL or stop_PQ:
-                        break
+                if stop_GL and self.stop_GL is None:
+                    self.stop_GL = e
+                if stop_PQ and self.stop_PQ is None:
+                    self.stop_PQ = e
+
+                if self.early_stop != 'testing' and (stop_GL or stop_PQ):
+                    break
 
     def predict(self, x):
         """
