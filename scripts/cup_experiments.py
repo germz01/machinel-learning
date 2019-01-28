@@ -15,28 +15,39 @@ from pprint import pprint
 
 ###########################################################
 
-# LOADING DATASET
+# LOADING DATASET, and splitting immediately an internal test set
 
 fpath = '../data/CUP/'
 
-df_design_set = pd.read_csv(fpath+'ML-CUP18-TR.csv', skiprows=10, header=None)
+df_original_training_set = pd.read_csv(fpath+'ML-CUP18-TR.csv', skiprows=10, header=None)
 colnames = ['id']+[ 'x{}'.format(i) for i in range(1,11)]+['y_1', 'y_2']
 
-df_design_set.columns = colnames
+df_original_training_set.columns = colnames
 
-df_design_set.head()
-df_design_set.drop(['id'], axis=1, inplace=True)
+df_original_training_set.head()
+df_original_training_set = df_original_training_set.drop(['id'], axis=1)
+df_original_training_set.head()
 
-df_design_set.head()
+df_original_training_set.describe()
 
-design_set = df_design_set.values
+original_training_set = df_original_training_set.values
 
+np.random.seed(27)
+np.random.shuffle(original_training_set)
+
+# separo il test set che useremo per la valutazione dei modelli
+split_test = int(original_training_set.shape[0]*0.05)
+
+test_set = original_training_set[:split_test, :]
+design_set = original_training_set[split_test:, ]
+
+test_set.shape
 design_set.shape
 
-
-X_design, y_design = np.hsplit(design_set, [10])
-
 ###########################################################
+
+# babysitting for choosing parameter ranges
+X_design, y_design = np.hsplit(design_set, [10])
 
 imp.reload(u)
 imp.reload(NN)
@@ -54,8 +65,8 @@ X_training, y_training = np.hsplit(training_set, [10])
 
 np.mean(X_training, axis=0)
 
-
 X_validation, y_validation = np.hsplit(validation_set, [10])
+
 
 # standardization
 X_training_std = (X_training-np.mean(X_training, axis=0))/np.std(X_training, axis=0)
@@ -70,12 +81,12 @@ y_training.shape
 imp.reload(NN)
 nn = NN.NeuralNetwork(
     X_training_std, y_training,
-    eta=0.002,
+    eta=0.000639,
     #eta=0.00002,
-    hidden_sizes=[800],
-    alpha=0.90,
-    reg_method='l2', reg_lambda=0.0001,
-    epochs=4000,
+    hidden_sizes=[950],
+    alpha=0.95,
+    reg_method='l2', reg_lambda=0.000,
+    epochs=1000,
     batch_size=128,
     activation='relu',
     task='regression',
@@ -86,28 +97,27 @@ nn = NN.NeuralNetwork(
     # w_method='uniform',
     # w_par=1./17
 )
-'''
+
 nn.train(X_training_std, y_training, X_validation_std, y_validation)
 
-nn.mee_per_epochs[-1]
+nn.mee_per_epochs_va[-1]
 
 imp.reload(u)
 epochs_plot_start = 40
 epochs_plot_end = len(nn.error_per_epochs)
 u.plot_learning_curve_info(
-    nn.error_per_epochs[epochs_plot_start:epochs_plot_end],
-    nn.error_per_epochs_va[epochs_plot_start:epochs_plot_end],
+    nn.mee_per_epochs[epochs_plot_start:epochs_plot_end],
+    nn.mee_per_epochs_va[epochs_plot_start:epochs_plot_end],
     nn.get_params(),
     accuracy=False,
     task='validation',
     fname='../images/cup_learning_curve')
-'''
 
 ###########################################################
 # TOPOLOGY GRID
 
 # [2**i for i in range(5, 20)]
-
+'''
 topologies = [int((3./2)**i) for i in range(8, 20)]
 
 topologies.reverse()
@@ -200,3 +210,93 @@ for hidden in topologies:
     selection.search(X_design, y_design, nfolds=nfolds, ntrials=ntrials)
 
     ###########################################################
+'''
+
+
+
+
+###########################################################
+# EXPERIMENTAL SETUP
+
+grid_size = 100
+
+nfolds = 3
+ntrials = 1
+
+# eta=0.0005,
+# eta=0.00002,
+
+param_ranges = {
+    'eta': (0.0002, 0.002),
+    'hidden_sizes': [(500, 1500)],
+    'alpha': 0.9,
+    'reg_method': 'l2', 'reg_lambda': 0.0,
+    'epochs': 1000,
+    'batch_size': 128,
+    'activation': 'relu',
+    'task': 'regression',
+    # 'early_stop': None,  # 'testing',
+    'epsilon': 5,
+    'w_method': 'DL',
+    'w_par': 6.0}
+
+info = "Informazioni/appunti/scopo riguardo l'esperimento in corso"
+
+info = "infos"
+
+experiment_params = {
+    'nfolds': nfolds,
+    'ntrials': ntrials,
+    'grid_size': grid_size,
+    'info': info,
+    'param_ranges': param_ranges
+}
+
+
+###########################################################
+# EXPERIMENT GRID SEARCH
+
+# controllo nomi files
+fpath = '../data/CUP/results/exp2/'
+
+check_files = True
+experiment = 1
+
+while(check_files):
+    fname_results = 'cup_experiment_{}_results.json.gz'.format(
+        experiment)
+    fname_params = 'cup_experiment_{}_parameters.json'.format(
+        experiment)
+
+    fres = fpath+fname_results
+    fpar = fpath+fname_params
+
+    if os.path.isfile(fres) or os.path.isfile(fpar):
+        experiment += 1
+    else:
+        check_files = False
+
+
+print '--------------------'
+print 'STARTING EXPERIMENT'
+print 'saving results in:'
+print fres
+print fpar
+print '--------------------'
+# if raw_input('Starting search ?[Y/N] ') == 'Y':
+
+# save experiment setup
+experiment_params['experiment'] = experiment
+with open(fpar, 'w') as f:
+    json.dump(experiment_params, f, indent=4)
+
+
+###########################################################
+# starting search
+
+grid = valid.HyperGrid(param_ranges, grid_size, random=True)
+selection = valid.ModelSelectionCV(grid, fname=fres)
+
+selection.search(X_design, y_design, nfolds=nfolds, ntrials=ntrials)
+
+###########################################################
