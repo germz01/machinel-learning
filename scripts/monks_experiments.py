@@ -10,13 +10,15 @@ import time
 import json
 import os.path
 import imp
+import random
+import string
 
 from pprint import pprint
 
 ###########################################################
 # EXPERIMENTAL SETUP
 
-dataset = 1
+dataset = 3
 
 grid_size = 300
 
@@ -54,6 +56,7 @@ experiment_params = {
 # LOADING DATASET
 
 fpath = '../data/monks/'
+preliminary_path = '../images/monks_preliminary_trials/'
 
 names = ['monks-1_train',
          'monks-1_test',
@@ -98,14 +101,16 @@ y_validation, X_validation = np.hsplit(validation_set, [1])
 training_set.shape
 validation_set.shape
 
+b_s = 10
+
 nn = NN.NeuralNetwork(
     X_design, y_design,
-    eta=0.7,
-    hidden_sizes=[4],
+    eta=0.4,
+    hidden_sizes=[3],
     alpha=0.9,
-    reg_method='l2', reg_lambda=0.0,
+    reg_method='l2', reg_lambda=0.001,
     epochs=1000,
-    batch_size=10, #'batch',  # 'batch',
+    batch_size=b_s, #'batch',  # 'batch',
     activation='sigmoid',
     task='classifier',
     # early_stop='testing',  # 'testing',
@@ -117,16 +122,25 @@ nn = NN.NeuralNetwork(
 )
 nn.train(X_design, y_design, X_test, y_test)
 nn.w_par
-epochs_plot = 200
+epochs_plot = 1000
+
+preliminary_name = preliminary_path + 'monks_{}_mb_{}_{}.pdf'.\
+    format(dataset,
+           b_s,
+           ''.join([random.choice(string.ascii_letters + string.digits)
+                   for n in xrange(4)]))
+
 u.plot_learning_curve_info(
     nn.error_per_epochs[:epochs_plot],
     nn.error_per_epochs_va[:epochs_plot],
     nn.get_params(),
     task='validation',
-    accuracy_plot=True,
+    accuracy_h_plot=True,
     accuracy_per_epochs=nn.accuracy_per_epochs[:epochs_plot],
     accuracy_per_epochs_va=nn.accuracy_per_epochs_va[:epochs_plot],
-    fname='../images/monks_learning_curve.pdf')
+    fname=preliminary_name)
+
+exit()
 
 # u.plot_learning_curve(nn, fname='../images/monks_learning_curve.pdf')
 # u.plot_learning_curve(nn, fname='../images/monks_{}_{}_{}.pdf'.format(dataset, 'stochastic', 'notearly', 'relu'))

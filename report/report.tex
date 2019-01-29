@@ -183,8 +183,8 @@ for each one of the datasets, we collected the data describing the results.
         the best intervals for searching our model's hyper-parameters. During this trials we manually varied
         the model's hyper-parameters, e.g. the learning rate, the momentum constant and so on, and observed
         the resulting \textit{learning curves} (see appendix \ref{sec:preliminary_trials_learning_curves} for
-        some examples). For this part of the analysis we've used the $20\%$ of the training set as validation
-        set, and the remaining part for training the network.
+        some other cases discovered during the analysis). For this part of the analysis we've used the
+        $20\%$ of the training set as validation set, and the remaining part for training the network.
         \item We then deepen the search using the most interesting intervals discovered during the
         preliminary trials in the validation phase by using our implementation of the \textit{(random) grid
         search} algorithm, in which we also used our implementation of the \textit{k-fold cross validation}
@@ -209,16 +209,16 @@ for each one of the datasets, we collected the data describing the results.
                     Task & Topology & Batch size & Activation & $\eta$ & $\alpha$ & $\lambda$ & MSE (TR - TS) &
                     Accuracy (TR - TS) (\%) \\
                     \hline
-                    MONK 1 & 17 -> 3 -> 1 & batch & sigmoid & 0.8 & 0.9 & 0.0 & 0.0318 - 0.0487 &
+                    MONK 1 & 17 -> 3 -> 1 & batch & sigmoid & 0.8 & 0.9 & 0.0 & 0.03185 - 0.04871 &
                     97 \% - 94 \% \\
                     \hline
-                    MONK 2 & 17 -> 3 -> 1 & batch & sigmoid & 0.5 & 0.9 & 0.0 & 0.0014 - 0.0015 &
+                    MONK 2 & 17 -> 3 -> 1 & batch & sigmoid & 0.5 & 0.9 & 0.0 & 0.00139 - 0.00148 &
                     100 \% - 100 \% \\
                     \hline
-                    MONK 3 & 17 -> 3 -> 1 & batch & sigmoid & 0.6 & 0.9 & 0.0 & 0.0228 - 0.0477 &
+                    MONK 3 & 17 -> 3 -> 1 & batch & sigmoid & 0.6 & 0.9 & 0.0 & 0.02283 - 0.04771 &
                     97.8 \% - 93.7 \% \\
                     \hline
-                    MONK 3 (reg.) & 17 -> 3 -> 1 & batch & sigmoid & 0.6 & 0.9 & 0.01 & 0.0596 - 0.0482 &
+                    MONK 3 (reg.) & 17 -> 3 -> 1 & batch & sigmoid & 0.6 & 0.9 & 0.01 & 0.05955 - 0.04820 &
                     93.3 \% - 97.1 \% \\
                     \hline
                 \end{tabular}
@@ -425,11 +425,56 @@ This learning time is quite expensive for our computing resources, so we decided
 
 \pagenumbering{roman}
 \begin{appendices}
-    \section{Preliminary trials' learning curves for MONKS} % (fold)
+    \section{Preliminary trials' for MONKS dataset} % (fold)
     \label{sec:preliminary_trials_learning_curves}
+        In Table \ref{tab:monks_preliminary} you can see some interesting results discovered during the
+        preliminary trials for the MONKS dataset.
+
+        \begin{table}[H]
+        \centering
+        \begin{subtable}{\textwidth}
+            \resizebox{\textwidth}{!}{
+                \begin{tabular}{| c | c | c | c | c | c | c | c | c |}
+                    \hline
+                    Task & Topology & Batch size & Activation & $\eta$ & $\alpha$ & $\lambda$
+                    & MSE (TR - TS) & Accuracy (TR - TS) (\%) \\
+                    \hline
+                    MONK 1 & 17 -> 10 -> 1 & 1 & sigmoid & 0.1 & 0.9 & 0.0 & $2e^{-05}$ - $3e^{-05}$ &
+                    97 \% - 94 \% \\
+                    \hline
+                    MONK 1 & 17 -> 3 -> 1 & 10 & sigmoid & 0.8 & 0.9 & 0.0 & 0.00018 - 0.00026 &
+                    100 \% - 100 \% \\
+                    \hline
+                    MONK 1 & 17 -> 3 -> 1 & batch & relu & 0.5 & 0.5 & 0.0 & 0.0 - 0.0 & 100 \% - 100 \% \\
+                    \hline
+                    MONK 2 & 17 -> 3 -> 1 & 1 & sigmoid & 0.1 & 0.5 & 0.0 & 0.00012 - 0.00013 &
+                    100 \% - 100 \% \\
+                    \hline
+                    MONK 2 & 17 -> 3 -> 1 & 10 & sigmoid & 0.6 & 0.9 & 0.0 & 0.00026 - 0.00027 &
+                    100 \% - 100 \% \\
+                    \hline
+                    MONK 2 & 17 -> 3 -> 1 & 10 & relu & 0.1 & 0.5 & 0.0 & 0.0 - $1e^{-05}$ &
+                    100 \% - 100 \% \\
+                    \hline
+                    MONK 3 (no reg) & 17 -> 3 -> 1 & 1 & sigmoid & 0.1 & 0.9 & 0.0 & 0.00073 - 0.07279
+                    & 100 \% - 91.4 \% \\
+                    \hline
+                    MONK 3 (no reg) & 17 -> 3 -> 1 & 10 & sigmoid & 0.5 & 0.9 & 0.0 & 0.0249 - 0.05952
+                    & 98 \% - 93.5 \% \\
+                    \hline
+                    MONK 3 (reg) & 17 -> 3 -> 1 & 10 & sigmoid & 0.4 & 0.9 & 0.001 & 0.01537 - 0.03656
+                    & 99 \% - 96.5 \% \\
+                    \hline
+                \end{tabular}
+            }
+        \end{subtable}
+        \caption{Preliminary cases discovered during the analysis of the MONKS dataset.}
+        \label{tab:monks_preliminary}
+    \end{table}
+
     % section preliminary_trials_learning_curves (end)
 
-    \section{Preliminary trials' learning curves for CUP} % (fold)
+    \section{Preliminary trials' for CUP dataset} % (fold)
     \label{sec:preliminary_trials_learning_curves_for_cup}
 
     % section preliminary_trials_learning_curves_for_cup (end)

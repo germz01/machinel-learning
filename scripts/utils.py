@@ -4,8 +4,6 @@ import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 
-from collections import defaultdict
-
 # CONSTANTS
 
 # This is the path for the directory in which the images are saved.
@@ -189,6 +187,8 @@ def plot_learning_curve_info(
     ###########################################################
     plt.close()
 
+    x_epochs = np.arange(len(error_per_epochs))
+
     if accuracy_h_plot is None:
         SMALL_SIZE = 11
         MEDIUM_SIZE = 16
@@ -201,8 +201,6 @@ def plot_learning_curve_info(
         plt.rc('legend', fontsize=BIGGER_SIZE)
         # plt.rc('figure', titlesize=BIGGER_SIZE)
         plt.rc('axes', titlesize=BIGGER_SIZE)
-
-        x_epochs = np.arange(len(error_per_epochs))
 
         if figsize is None:
             figsize = (15, 7)
@@ -294,7 +292,7 @@ def plot_learning_curve_info(
 
         plt.axis('off')
 
-        plt.savefig(fname)
+        plt.savefig(fname, bbox_inches='tight')
 
         plt.close()
 
