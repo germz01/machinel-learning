@@ -489,10 +489,13 @@ class NeuralNetwork(object):
         self.error_per_epochs = []
         self.error_per_epochs_old = []
         self.error_per_batch = []
+        self.mee_per_epochs = []
         if X_va is not None:
             self.error_per_epochs_va = []
+            self.mee_per_epochs_va = []
         else:
             self.error_per_epochs_va = None
+            self.mee_per_epochs_va = None
 
         if self.task == 'classifier':
             self.accuracy_per_epochs = []
@@ -548,10 +551,13 @@ class NeuralNetwork(object):
 
             y_pred = self.predict(X)
             self.error_per_epochs.append(metrics.mse(y, y_pred))
+            self.mee_per_epochs.append(metrics.mee(y, y_pred))
             if X_va is not None:
                 y_pred_va = self.predict(X_va)
                 self.error_per_epochs_va.append(
                     metrics.mse(y_va, y_pred_va))
+                self.mee_per_epochs_va.append(
+                    metrics.mee(y_va, y_pred_va))
 
             if self.task == 'classifier':
                 y_pred_bin = np.apply_along_axis(
@@ -598,14 +604,13 @@ class NeuralNetwork(object):
                         stop_PQ = True
 
                 # stopping
-                if self.early_stop == 'testing':
-                    if stop_GL and self.stop_GL is None:
-                        self.stop_GL = e
-                    if stop_PQ and self.stop_PQ is None:
-                        self.stop_PQ = e
-                else:
-                    if stop_GL or stop_PQ:
-                        break
+                if stop_GL and self.stop_GL is None:
+                    self.stop_GL = e
+                if stop_PQ and self.stop_PQ is None:
+                    self.stop_PQ = e
+
+                if self.early_stop != 'testing' and (stop_GL or stop_PQ):
+                    break
 
     def predict(self, x):
         """

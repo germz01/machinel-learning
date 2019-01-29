@@ -7,9 +7,12 @@
 \usepackage[hmarginratio=1:1,top=20mm,bottom=20mm,columnsep=20pt,left=30mm]{geometry}
 \usepackage[hang, small,labelfont=bf,up,textfont=it,up]{caption}
 \usepackage[page]{appendix}
-\usepackage{float,graphicx,wrapfig,subcaption,booktabs,lettrine,enumitem,amsmath}
+\usepackage{float,graphicx,wrapfig,subcaption,booktabs,lettrine,enumitem,amsmath,}
 \setlist[itemize]{noitemsep}
 \usepackage{graphicx}
+
+\usepackage{comment}
+
 
 \usepackage{abstract}
 \renewcommand{\abstractnamefont}{\normalfont\bfseries}
@@ -54,6 +57,9 @@ validated by searching for the best hyper-parameters' combination via well-known
 for each one of the datasets, we collected the data describing the results.
 \end{abstract}
 }
+
+\graphicspath{{img/}}
+\setlength\parindent{0pt}
 
 %----------------------------------------------------------------------------------------
 
@@ -185,18 +191,22 @@ for each one of the datasets, we collected the data describing the results.
         \centering
         \begin{subtable}{\textwidth}
             \resizebox{\textwidth}{!}{
-                \begin{tabular}{| c | c | c | c | c | c | c | c | c | c |}
+                \begin{tabular}{| c | c | c | c | c | c | c | c | c |}
                     \hline
-                    Task & Topology & Batch size & $\eta$ & $\alpha$ & $\lambda$ & $\epsilon$ & Epochs &
-                    MSE (TR/TS) & Accuracy (TR/TS) (\%) \\
+                    Task & Topology & Batch size & Activation & $\eta$ & $\alpha$ & $\lambda$ & MSE (TR - TS) &
+                    Accuracy (TR - TS) (\%) \\
                     \hline
-                    MONK 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0\\
+                    MONK 1 & 17 -> 3 -> 1 & batch & sigmoid & 0.8 & 0.9 & 0.0 & 0.00223 - 0.00343 &
+                    100 \% - 100 \% \\
                     \hline
-                    MONK 2 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+                    MONK 2 & 17 -> 3 -> 1 & batch & sigmoid & 0.5 & 0.9 & 0.0 & 0.00125 - 0.00135 &
+                    100 \% - 100 \% \\
                     \hline
-                    MONK 3 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+                    MONK 3 & 17 -> 3 -> 1 & batch & sigmoid & 0.6 & 0.9 & 0.0 & 0.01668 - 0.03858 &
+                    96.7 \% - 95.1 \% \\
                     \hline
-                    MONK 3 (reg.) & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+                    MONK 3 (reg.) & 17 -> 3 -> 1 & batch & sigmoid & 0.6 & 0.9 & 0.01 & 0.05904 - 0.04669 &
+                    93.4 \% - 97.2 \% \\
                     \hline
                 \end{tabular}
             }
@@ -205,45 +215,157 @@ for each one of the datasets, we collected the data describing the results.
         \label{monks}
     \end{table}
 
+    \begin{figure}[htbp]
+        \centering
+        \begin{subfigure}{0.90\textwidth}
+            \resizebox{\textwidth}{!}{
+                \includegraphics{img/monks_1_MSE_final_04.pdf}
+            }
+            \caption{}
+            \label{fig:monks_1_MSE}
+        \end{subfigure}
+        \begin{subfigure}{0.90\textwidth}
+            \resizebox{\textwidth}{!}{
+                \includegraphics{img/monks_1_ACC_final_04.pdf}
+            }
+            \caption{}
+            \label{fig:monks_1_ACC}
+        \end{subfigure}
+        \caption{MONKS 1 final results.}
+        \label{fig:monks_1_final_results}
+    \end{figure}
+
+    \begin{figure}[htbp]
+        \centering
+        \begin{subfigure}{0.90\textwidth}
+            \resizebox{\textwidth}{!}{
+                \includegraphics{img/monks_2_MSE_final_03.pdf}
+            }
+            \caption{}
+            \label{fig:monks_2_MSE}
+        \end{subfigure}
+        \begin{subfigure}{0.90\textwidth}
+            \resizebox{\textwidth}{!}{
+                \includegraphics{img/monks_2_ACC_final_03.pdf}
+            }
+            \caption{}
+            \label{fig:monks_2_ACC}
+        \end{subfigure}
+        \caption{MONKS 2 final results.}
+        \label{fig:monks_2_final_results}
+    \end{figure}
+
+    \begin{figure}[htbp]
+        \centering
+        \begin{subfigure}{0.90\textwidth}
+            \resizebox{\textwidth}{!}{
+                \includegraphics{img/monks_3_noreg_MSE_final_01.pdf}
+            }
+            \caption{}
+            \label{fig:monks_3_MSE}
+        \end{subfigure}
+        \begin{subfigure}{0.90\textwidth}
+            \resizebox{\textwidth}{!}{
+                \includegraphics{img/monks_3_noreg_ACC_final_01.pdf}
+            }
+            \caption{}
+            \label{fig:monks_3_ACC}
+        \end{subfigure}
+        \caption{MONKS 3 (without regularization) final results.}
+        \label{fig:monks_3_final_results}
+    \end{figure}
+
+    \begin{figure}[htbp]
+        \centering
+        \begin{subfigure}{0.90\textwidth}
+            \resizebox{\textwidth}{!}{
+                \includegraphics{img/monks_3_withreg_MSE_final_00.pdf}
+            }
+            \caption{}
+            \label{fig:monks_3_MSE_reg}
+        \end{subfigure}
+        \begin{subfigure}{0.90\textwidth}
+            \resizebox{\textwidth}{!}{
+                \includegraphics{img/monks_3_withreg_ACC_final_00.pdf}
+            }
+            \caption{}
+            \label{fig:monks_3_ACC_reg}
+        \end{subfigure}
+        \caption{MONKS 3 (with regularization) final results.}
+        \label{fig:monks_3_final_results}
+    \end{figure}
+
     % subsection monk_s_results (end)
 
     \subsection{Cup results} % (fold)
     \label{sub:cup_results}
+        We now proceed to detail the results we obtained for the CUP dataset. As for the MONKS dataset, we've
+        employed a \textit{validation schema} consisting in an application of the \textit{random grid search}
+        algorithm in conjunction with the \textit{k-fold cross validation} algorithm. As we've said before,
+        we've chosen a standard value of $3$ for algorithm's $k$ parameter. In order to come up with final
+        ranges for model's hyper-parameters we've performed some preliminary tests on the dataset, as for the
+        MONKS dataset.
+
+        % \begin{comment}
+        \begin{table}[hbtp]
+            \centering
+            \begin{tabular}{| c | c |}
+                \hline
+                Hyper-parameter & Range \\
+                \hline
+                $\eta$ & $\left [ 0.08, 0.02 \right ]$ \\
+                \hline
+                $\alpha$ & $0.9$ \\
+                \hline
+                $\lambda$ & $0.0$ \\
+                \hline
+                $\epsilon$ & $1.0$ \\
+                \hline
+                hidden sizes & $\left [ 50, 2500 \right ]$ \\
+                \hline
+            \end{tabular}
+            \caption{Final hyper-parameters' ranges for the random grid search algorithm.}
+            \label{tab:hyper_ranges}
+        \end{table}
+      %\end{comment}
+        Some examples of the learning curves we discover during this preliminary phase can be seen in appendix
+        \ref{sec:preliminary_trials_learning_curves_for_cup}. In table \ref{tab:hyper_ranges} you can see the
+        final ranges we selected for the random grid search algorithm for the CUP dataset.
+
+\newpage
+The validation schema for the Cup dataset it is summarized by the following steps.
+
+\begin{enumerate}
+\item The original training dataset has been splitted randomly in a \textit{design set}, used for the model selection phase, and an internal \textit{test set} used only for the final models assessment.
+  We have chosen a small $5\%$ sample size percentage for the test set (50 samples), because the main focus of the analysis is to perform a good model selection. The application of more complex validation methods such as double cross validation was beyond the available time and computing resources.
+\item Preliminary 'babysitting'. The design set has been splitted into training and validation sets, with $70\%$ and $30\%$ percentages, in order to initially explore the behaviour of the neural network on the cup dataset, and to identify good parameter ranges. We tried to achieve overtraining by varying the learning rate, the number of units and momentum without using regularization approaches. We have chosen to use the \textit{relu} activation function for the hidden layer, which is faster respect to the sigmoid, and more suitable for a regression task REF?.
+  We have observed that the learning time to achieve overtraining for a wide range of different number of units requires at least 2000 epochs. We fixed the maximum amount of learning time to 3000 epochs.
+This learning time is quite expensive for our computing resources, so we decided to use a \textit{batch} gradient descent approach.
+
+\item Early Stopping testing.
+  The 'batch' approach allows to obtain smoother learning curves respect to minibatch/online and permits to apply easily an early stopping technique. We tested two approaches, by comparing the minimum of the validation curve for overtrained test cases with the stopping points obtained.
+  In Fig. REF
+
+
+
+
+
+\item Wide grid search
+
+
+\item Finer grid search
+
+
+
+\end{enumerate}
+
+
+
+
+
+
 
     % subsection cup_results (end)
-
-\begin{figure}[htbp]
-  \centering
-    \includegraphics[width=\textwidth]{img/monks_1_MSE_final_04.pdf}
-  \includegraphics[width=\textwidth]{img/monks_1_ACC_final_04.pdf}
-  \caption{prova}
-\end{figure}
-
-\begin{figure}[htbp]
-  \centering
-    \includegraphics[width=\textwidth]{img/monks_2_MSE_final_03.pdf}
-  \includegraphics[width=\textwidth]{img/monks_2_ACC_final_03.pdf}
-  \caption{prova}
-\end{figure}
-
-\begin{figure}[htbp]
-  \centering
-    \includegraphics[width=\textwidth]{img/monks_3_noreg_MSE_final_01.pdf}
-  \includegraphics[width=\textwidth]{img/monks_3_noreg_ACC_final_01.pdf}
-  \caption{prova}
-\end{figure}
-
-
-\begin{figure}[htbp]
-  \centering
-    \includegraphics[width=\textwidth]{img/monks_3_withreg_MSE_final_00.pdf}
-  \includegraphics[width=\textwidth]{img/monks_3_withreg_ACC_final_00.pdf}
-  \caption{prova}
-\end{figure}
-
-
-
-
 
 % section experiments (end)
 
@@ -290,9 +412,14 @@ for each one of the datasets, we collected the data describing the results.
 
 \pagenumbering{roman}
 \begin{appendices}
-    \section{Preliminary trials' learning curves} % (fold)
+    \section{Preliminary trials' learning curves for MONKS} % (fold)
     \label{sec:preliminary_trials_learning_curves}
     % section preliminary_trials_learning_curves (end)
+
+    \section{Preliminary trials' learning curves for CUP} % (fold)
+    \label{sec:preliminary_trials_learning_curves_for_cup}
+
+    % section preliminary_trials_learning_curves_for_cup (end)
 
     \section{How to run the code} % (fold)
     \label{sec:how_to_run_the_code}

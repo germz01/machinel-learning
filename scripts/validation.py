@@ -163,11 +163,16 @@ class KFoldCrossValidation(object):
                 'id_fold': i+1,
                 'mse_tr': neural_net.error_per_epochs[-1],
                 'mse_va': neural_net.error_per_epochs_va[-1],
-                # 'epochs_x': list(np.arange(len(neural_net.error_per_epochs))),
+                'mee_tr': neural_net.mee_per_epochs[-1],
+                'mee_va': neural_net.mee_per_epochs_va[-1],
+
                 'error_per_epochs': neural_net.error_per_epochs,
                 'error_per_epochs_va': neural_net.error_per_epochs_va,
-                'accuracy_per_epochs': neural_net.accuracy_per_epochs,
-                'accuracy_per_epochs_va': neural_net.accuracy_per_epochs_va,
+                'mee_per_epochs': neural_net.mee_per_epochs,
+                'mee_per_epochs_va': neural_net.mee_per_epochs_va,
+
+                # 'accuracy_per_epochs': neural_net.accuracy_per_epochs,
+                # 'accuracy_per_epochs_va': neural_net.accuracy_per_epochs_va,
                 'hyperparams': neural_net.get_params()
             }
             if neural_net.task == 'classifier':
@@ -347,7 +352,7 @@ class ModelSelectionCV(object):
         Returns
         -------
         """
-        self.n_iter = self.repetitions * len(self.grid)*ntrials
+        self.n_iter = self.repetitions * len(self.grid)
 
         if fname is None:
             fname = self.fname

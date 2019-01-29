@@ -66,6 +66,7 @@ def plot_learning_curve(nn, fname='../images/learning_curve.pdf'):
         nn.params['hidden_sizes']
     )
 
+    plt.figure(figsize=(15, 5))
     plt.plot(range(len(nn.error_per_epochs)),
              nn.error_per_epochs, linestyle='--',
              label='training')
@@ -107,7 +108,12 @@ def plot_learning_curve_info(
         fontsize_title=13,
         fontsize_labels=12,
         fontsize_info=12,
-        fontsize_legend=12):
+        fontsize_legend=12,
+        MEE_VL=None,
+        MEE_TR=None,
+        stop_GL=None,
+        stop_PQ=None
+):
     """ Plots the learning curve with infos """
 
     # ###########################################################
@@ -140,6 +146,12 @@ def plot_learning_curve_info(
             'MSE TR =' + str(np.round(y_tr[-1], 5)),
             'MSE {} ='.format(task_str_abbr) + str(np.round(y_va[-1], 5))
         ]
+        if MEE_VL is not None:
+            final_errors.extend([
+                'MEE TR =' + str(np.round(MEE_TR, 5)),
+                'MEE {} ='.format(task_str_abbr) + str(np.round(MEE_VL, 5))]
+            )
+
     # appending other errors, ex: accuracy
     final_errors_str = '\n'.join(final_errors)
     if other_errors is not None:
@@ -158,7 +170,7 @@ def plot_learning_curve_info(
 
     # hyperparameters string
     info += '\nHyperparameters:' + '\n'
-    info += r'$\eta= {}$'.format(np.round(hyperparams['eta'], 2))+'\n'
+    info += r'$\eta= {}$'.format(np.round(hyperparams['eta'], 6))+'\n'
     info += r'$\alpha= {}$'.format(np.round(hyperparams['alpha'], 2))+'\n'
 
     info += r'${}$ regularization'.format(
@@ -193,7 +205,7 @@ def plot_learning_curve_info(
         x_epochs = np.arange(len(error_per_epochs))
 
         if figsize is None:
-            figsize = (10, 5)
+            figsize = (15, 7)
         plt.figure(figsize=figsize)
         grid = plt.GridSpec(1, 7, wspace=0.1, hspace=0.7, left=0.1,
                             top=0.9, bottom=0.15)
@@ -201,8 +213,13 @@ def plot_learning_curve_info(
         plt.subplot(grid[0, :6])
         plt.plot(x_epochs, y_tr, label='Training', linestyle='-')
         plt.plot(x_epochs, y_va, label=task_str, linestyle='--')
-
         plt.xlabel('Epochs')
+        # early stopping
+
+        if stop_GL is not None:
+            plt.axvline(stop_GL, linestyle=':', label='GL early stop')
+        if stop_PQ is not None:
+            plt.axvline(stop_PQ, linestyle=':', label='PQ early stop')
         if accuracy:
             plt.ylabel('Accuracy (%)')
         else:
