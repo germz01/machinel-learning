@@ -90,8 +90,8 @@ for each one of the datasets, we collected the data describing the results.
 \label{sec:methods}
     Our code base is written using the \textit{Python} programming language, which was enhanced with
     numerical libraries like \textit{NumPy} and \textit{Pandas} to ease the computational cost involved in
-    implementating popular machine learning algorithms. Also the standard library function provided by the
-    language were utilized. Following the philosophy of type \textbf{A} projects, we haven't used
+    implementating popular machine learning algorithms. %%Also the standard library function provided by the language were utilized.
+    Following the philosophy of type \textbf{A} projects, we haven't used
     out-of-the-box implementations for the algorithms composing our framework. We now give a brief overview of
     the code's structure, discuss some implementation choices and present our neural network's initialization
     and training algorithms. Visit the project's
@@ -325,7 +325,7 @@ This learning time is quite expensive for our computing resources, so we decided
 \item Early Stopping testing.
   The 'batch' approach allows to obtain smoother learning curves respect to minibatch/online and permits to apply easily an early stopping technique. We tested two approaches from \cite{early_stopping}.
   The $GL_{\epsilon}$ approach stops the learning process when the generalization loss exceed a defined threshold $\epsilon$, given as a percentage with respect to the minimum current value of the loss. The $PQ_{\epsilon}$ approach is similar, but take into account also the progress of the training error.
-  For different hyperparameters configurations we have computed the ratio between the MEE error obtained with the two early stopping criteria and the minimum validation error of the overtrained learning curve, reported in Fig. \ref{fig:early_stop}. The early stopping methods take action only after a minimum number of epochs equal to 500, in order to avoid initial oscillation of the learning curves, and we fixed the threshold $\epsilon=1\%$. An example of early stopping computation is represented in Fig. \ref{fig:learning_early}. The results shows that the two methods are quite reliable, we opted to use the $PQ_{1\%}$ method, which in general is more stable \cite{early_stopping}.
+  For different hyperparameters configurations we have computed the ratio between the MEE error obtained with the two early stopping criteria and the minimum validation error of the overtrained learning curve, reported in Fig. \ref{fig:early_stop}. The early stopping methods take action only after a minimum number of epochs equal to 500, in order to avoid initial oscillation of the learning curves, and we fixed the threshold $\epsilon=1\%$. An example of early stopping computation is represented in Fig. \ref{fig:learning_early}. The results shows that the two methods are quite reliable, we opted to use the $PQ_{1\%}$ method, which in general is more robust \cite{early_stopping}.
 
   \begin{figure}[htbp]
     \centering
@@ -337,7 +337,7 @@ This learning time is quite expensive for our computing resources, so we decided
     \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.90\textwidth]{img/learning_early_2.pdf}
-    \caption{ Early stopping example. The vertical lines represents the early stopping points computed with $PQ_{1\%}$ and $GL_{1\%}$ methods and the point of minimum MSE validation error.}
+    \caption{ Early stopping example. The vertical lines represent the early stopping points computed with $PQ_{1\%}$ and $GL_{1\%}$ methods and the point of minimum MSE on the validation curve.}
 
     \label{fig:learning_early}
   \end{figure}
@@ -349,6 +349,11 @@ This learning time is quite expensive for our computing resources, so we decided
 
 \item Finer grid search
 
+
+\item Final model selection
+
+
+\item Model assessment  
   
 
 \end{enumerate}
