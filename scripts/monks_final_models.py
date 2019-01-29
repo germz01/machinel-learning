@@ -30,11 +30,16 @@ names = ['monks-1_train',
 
 datasets = {name: pd.read_csv(fpath+name+'_bin.csv').values
             for name in names}
+statistics = pd.DataFrame(columns=['DATASET', 'MEAN_MSE_TR', 'STD_MSE_TR',
+                                   'MEAN_MSE_TS', 'STD_MSE_TS',
+                                   'MEAN_ACCURACY_TR', 'STD_ACCURACY_TR',
+                                   'MEAN_ACCURACY_TS', 'STD_ACCURACY_TS'])
 
 ###########################################################
 
 
-def final_training(dataset, trials, hyperparams, info='', epochs_plot=None, figsize=(15,5)):
+def final_training(dataset, trials, hyperparams, info='', plot=True,
+                   epochs_plot=None, figsize=(15, 5)):
     ''' Final training for Monks'''
 
     design_set = datasets['monks-{}_train'.format(dataset)]
@@ -51,37 +56,51 @@ def final_training(dataset, trials, hyperparams, info='', epochs_plot=None, figs
 
     fpath = '../data/monks/results/monks_{}/img_final/'.format(dataset)
 
+    mse_tr, mse_ts = list(), list()
+    acc_tr, acc_ts = list(), list()
+
     for trial in range(trials):
         nn = NN.NeuralNetwork(
             X_design, y_design, **hyperparams
         )
         nn.train(X_design, y_design, X_test, y_test)
 
+        mse_tr.append(nn.error_per_epochs[-1])
+        mse_ts.append(nn.error_per_epochs_va[-1])
+        acc_tr.append(nn.accuracy_per_epochs[-1])
+        acc_ts.append(nn.accuracy_per_epochs_va[-1])
+
         if epochs_plot is None:
             epochs_plot = len(nn.error_per_epochs)
 
-        u.plot_learning_curve_info(
-            error_per_epochs=nn.error_per_epochs[:epochs_plot],
-            error_per_epochs_va=nn.error_per_epochs_va[:epochs_plot],
-            hyperparams=nn.get_params(),
-            task='testing',
-            figsize=figsize,
-            title='Monks-{}, MSE Learning Curve'.format(dataset),
-            fname=fpath+'monks_{}_{}MSE_final_{:02d}'.format(
-                dataset, info, trial))
+        if plot:
+            u.plot_learning_curve_info(
+                error_per_epochs=nn.error_per_epochs[:epochs_plot],
+                error_per_epochs_va=nn.error_per_epochs_va[:epochs_plot],
+                hyperparams=nn.get_params(),
+                task='testing',
+                figsize=figsize,
+                title='Monks-{}, MSE Learning Curve'.format(dataset),
+                fname=fpath+'monks_{}_{}MSE_final_{:02d}'.format(
+                    dataset, info, trial))
 
-        u.plot_learning_curve_info(
-            error_per_epochs=nn.accuracy_per_epochs[:epochs_plot],
-            error_per_epochs_va=nn.accuracy_per_epochs_va[:epochs_plot],
-            hyperparams=nn.get_params(),
-            task='testing',
-            figsize=figsize,
-            accuracy=True,
-            title='Monks-{}, Accuracy Learning Curve'.format(dataset),
-            fname=fpath+'monks_{}_{}ACC_final_{:02d}'.format(
-                dataset, info, trial))
+            u.plot_learning_curve_info(
+                error_per_epochs=nn.accuracy_per_epochs[:epochs_plot],
+                error_per_epochs_va=nn.accuracy_per_epochs_va[:epochs_plot],
+                hyperparams=nn.get_params(),
+                task='testing',
+                figsize=figsize,
+                accuracy=True,
+                title='Monks-{}, Accuracy Learning Curve'.format(dataset),
+                fname=fpath+'monks_{}_{}ACC_final_{:02d}'.format(
+                    dataset, info, trial))
 
     # return X_design, X_test
+    statistics.loc[statistics.shape[0]] = ['MONKS_{}{}'.format(dataset, info),
+                                           np.mean(mse_tr), np.std(mse_tr),
+                                           np.mean(mse_ts), np.std(mse_ts),
+                                           np.mean(acc_tr), np.std(acc_tr),
+                                           np.mean(acc_ts), np.std(acc_ts)]
 
 
 ###########################################################
@@ -156,7 +175,6 @@ hyperparams_3 = dict(
 final_training(dataset=3, trials=20, hyperparams=hyperparams_3,
                info='noreg_')
 
-
 # with regularization
 hyperparams_3_reg = dict(
         eta=0.6,
@@ -178,6 +196,7 @@ hyperparams_3_reg = dict(
 final_training(dataset=3, trials=20, hyperparams=hyperparams_3_reg,
                info='withreg_')
 
+statistics.to_csv(path_or_buf=fpath + 'monks_statistics.csv', index=False)
 '''
 # deep
 hyperparams_3_deep = dict(
