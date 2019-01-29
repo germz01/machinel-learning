@@ -57,7 +57,7 @@ imp.reload(NN)
 np.random.shuffle(design_set)
 
 # splitting training/validation
-split_percentage = 0.7
+split_percentage = 0.66
 split = int(design_set.shape[0]*split_percentage)
 
 training_set = design_set[:split, :]
@@ -82,18 +82,18 @@ y_training.shape
 imp.reload(NN)
 nn = NN.NeuralNetwork(
     X_training, y_training,
-    eta=0.02,
+    eta=0.015,
     # eta=0.008,
     # eta=0.00005,
-    #eta=0.00002,
-    hidden_sizes=[200],
-    alpha=0.90,
-    reg_method='l2', reg_lambda=0.000,
-    epochs=3000,
+    # eta=0.00002,
+    hidden_sizes=[1500],
+    alpha=0.9,
+    reg_method='l2', reg_lambda=0.001,
+    epochs=1200,
     batch_size='batch',
     activation='relu',
     task='regression',
-    early_stop='testing', # 'testing',  # 'testing',
+    early_stop=None,  # '', # 'testing',  # 'testing',
     epsilon=1,
     early_stop_min_epochs=500,
     w_method='DL',
@@ -111,14 +111,10 @@ y_min
 
 y_final/y_min
 
-nn.stop_GL
-nn.stop_PQ
-# u.plot_learning_curve(nn, fname='../images/learning_curve.pdf')
-
 import matplotlib.pyplot as plt
 imp.reload(u)
 imp.reload(NN)
-epochs_plot_start = 100
+epochs_plot_start = 10
 epochs_plot_end = len(nn.error_per_epochs)
 u.plot_learning_curve_info(
     nn.mee_per_epochs[epochs_plot_start:epochs_plot_end],
@@ -246,7 +242,7 @@ for hidden in topologies:
 ###########################################################
 # EXPERIMENTAL SETUP
 
-grid_size = 200
+grid_size = 100
 
 nfolds = 3
 ntrials = 1
@@ -255,15 +251,15 @@ ntrials = 1
 # eta=0.00002,
 
 param_ranges = {
-    'eta': (0.008, 0.02),
-    'hidden_sizes': [(50, 2500)],
+    'eta': (0.01, 0.025),
+    'hidden_sizes': [(1500, 2000)],
     'alpha': 0.90,
-    'reg_method': 'l2', 'reg_lambda': 0.0,
-    'epochs': 3000,
+    'reg_method': 'l2', 'reg_lambda': (0.0001, 0.002),
+    'epochs': 1200,
     'batch_size': 'batch',
     'activation': 'relu',
     'task': 'regression',
-    'early_stop': 'PQ',
+    # 'early_stop': None,
     'early_stop_min_epochs' : 500,
     'epsilon': 1,
     'w_method': 'DL',
@@ -286,7 +282,7 @@ experiment_params = {
 # EXPERIMENT GRID SEARCH
 
 # controllo nomi files
-fpath = '../data/CUP/results/exp5/'
+fpath = '../data/CUP/results/finer_grid/'
 
 check_files = True
 experiment = 1
