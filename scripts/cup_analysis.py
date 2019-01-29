@@ -76,8 +76,6 @@ sns.scatterplot(
     # x='eta',
     y='mee_va',
     markers=True, alpha=0.7,
-    palette={"red": "#FF9999"},
-    hue='red',
     legend=False
 )
 plt.grid()
@@ -384,8 +382,95 @@ sns.lineplot(
     # scatter=False
 )
 
-plt.scatter(x=exp23['hidden_sizes'], y=exp23['mee_va'],
+plt.scatter(x=exp123['hidden_sizes'], y=exp123['mee_va'],
             color='gray', alpha=0.3)
 plt.grid()
 
+###########################################################
+###########################################################
 
+'''
+exp5/ 
+Experiment using batch approach over large number of hidden sizes
+
+'''
+
+
+nexp = 1
+# read experiment parameters
+with open('../data/CUP/results/exp5/cup_experiment_{}_parameters.json'.format(nexp)) as f:
+    experiment_params = json.load(f)
+
+pprint(experiment_params)
+
+# load results
+selection = validation.ModelSelectionCV(
+    grid=None,
+    fname='../data/CUP/results/exp5/' +
+    'cup_experiment_{}_results.json.gz'.format(nexp))
+
+exp5 = selection.load_results_pandas(flat=False)
+
+
+
+exp5.sort_values(['mee_va'], inplace=True)
+exp5.head(20).describe()['mee_va']
+
+# binninng hidden sizes
+hbin = 100
+exp5['h_cat'] = (np.array(exp5['hidden_sizes'], dtype=int)/hbin)*hbin
+exp5['h_cat']
+
+
+# exp5_filtered = exp5.query('mee_va<1.4')
+exp5_filtered = exp5.query('hidden_sizes>1000')
+exp5_filtered = exp5
+
+exp5.describe()['mee_va']
+
+plt.close()
+sns.lmplot(
+    data=exp5_filtered,
+    x='h_cat',
+    y='mee_va',
+    hue='id_fold',
+    robust=False,
+    scatter=False
+)
+plt.scatter(x=exp5_filtered['h_cat'], y=exp5_filtered['mee_va'],
+            color='gray', alpha=0.3)
+plt.grid()
+
+plt.close()
+sns.lineplot(
+    data=exp5_filtered,
+    x='hidden_sizes',
+    y='mee_va',
+    hue='id_fold',
+)
+
+
+
+
+
+# plotting learning curve
+exp5.sort_values(['mee_va'], inplace=True)
+exp5_filtered.sort_values(['mee_va'], inplace=True)
+
+exp5.head()['mee_va']
+
+exp5.shape
+
+imp.reload(u)
+max_epochs = len(exp5.iloc[0]['error_per_epochs'])
+min_epochs = 50
+for i in range(200):
+    row = exp5.iloc[i]
+    u.plot_learning_curve_info(
+        error_per_epochs=row['mee_per_epochs'][min_epochs:max_epochs],
+        error_per_epochs_va=row['mee_per_epochs_va'][min_epochs:max_epochs],
+        task='validation',
+        hyperparams=row['hyperparams'],
+        fname='../data/CUP/results/exp5_img/exp_{}_curve_{:02d}.png'.format(
+            nexp, i)
+    )

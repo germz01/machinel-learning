@@ -11,6 +11,9 @@
 \setlist[itemize]{noitemsep}
 \usepackage{graphicx}
 
+\usepackage{comment}
+
+
 \usepackage{abstract}
 \renewcommand{\abstractnamefont}{\normalfont\bfseries}
 \renewcommand{\abstracttextfont}{\normalfont\small}
@@ -214,14 +217,14 @@ for each one of the datasets, we collected the data describing the results.
 
     \begin{figure}[htbp]
         \centering
-        \begin{subfigure}{0.80\textwidth}
+        \begin{subfigure}{0.90\textwidth}
             \resizebox{\textwidth}{!}{
                 \includegraphics{img/monks_1_MSE_final_04.pdf}
             }
             \caption{}
             \label{fig:monks_1_MSE}
         \end{subfigure}
-        \begin{subfigure}{0.80\textwidth}
+        \begin{subfigure}{0.90\textwidth}
             \resizebox{\textwidth}{!}{
                 \includegraphics{img/monks_1_ACC_final_04.pdf}
             }
@@ -234,14 +237,14 @@ for each one of the datasets, we collected the data describing the results.
 
     \begin{figure}[htbp]
         \centering
-        \begin{subfigure}{0.80\textwidth}
+        \begin{subfigure}{0.90\textwidth}
             \resizebox{\textwidth}{!}{
                 \includegraphics{img/monks_2_MSE_final_03.pdf}
             }
             \caption{}
             \label{fig:monks_2_MSE}
         \end{subfigure}
-        \begin{subfigure}{0.80\textwidth}
+        \begin{subfigure}{0.90\textwidth}
             \resizebox{\textwidth}{!}{
                 \includegraphics{img/monks_2_ACC_final_03.pdf}
             }
@@ -254,14 +257,14 @@ for each one of the datasets, we collected the data describing the results.
 
     \begin{figure}[htbp]
         \centering
-        \begin{subfigure}{0.80\textwidth}
+        \begin{subfigure}{0.90\textwidth}
             \resizebox{\textwidth}{!}{
-                \includegraphics{img/monks_2_MSE_final_03.pdf}
+                \includegraphics{img/monks_3_noreg_MSE_final_01.pdf}
             }
             \caption{}
             \label{fig:monks_3_MSE}
         \end{subfigure}
-        \begin{subfigure}{0.80\textwidth}
+        \begin{subfigure}{0.90\textwidth}
             \resizebox{\textwidth}{!}{
                 \includegraphics{img/monks_3_noreg_ACC_final_01.pdf}
             }
@@ -274,14 +277,14 @@ for each one of the datasets, we collected the data describing the results.
 
     \begin{figure}[htbp]
         \centering
-        \begin{subfigure}{0.80\textwidth}
+        \begin{subfigure}{0.90\textwidth}
             \resizebox{\textwidth}{!}{
                 \includegraphics{img/monks_3_withreg_MSE_final_00.pdf}
             }
             \caption{}
             \label{fig:monks_3_MSE_reg}
         \end{subfigure}
-        \begin{subfigure}{0.80\textwidth}
+        \begin{subfigure}{0.90\textwidth}
             \resizebox{\textwidth}{!}{
                 \includegraphics{img/monks_3_withreg_ACC_final_00.pdf}
             }
@@ -303,26 +306,60 @@ for each one of the datasets, we collected the data describing the results.
         ranges for model's hyper-parameters we've performed some preliminary tests on the dataset, as for the
         MONKS dataset.
 
-        \begin{wraptable}{hr}{5cm}
-            \begin{tabular}{| c | c |}
-                \hline
-                Hyper-parameter & Range \\
-                \hline
-                $\eta$ & $\left [ 0.2, 10.0 \right ]$ \\
-                \hline
-                $\alpha$ & $\left [ 0.5, 0.9 \right ]$ \\
-                \hline
-                $\lambda$ & $0.0$ \\
-                \hline
+        % \begin{comment}
+        \begin{table}[hbtp]
+          \centering
+          \begin{tabular}{| c | c |}
+            \hline
+            Hyper-parameter & Range \\
+            \hline
+            $\eta$ & $\left [ 0.2, 10.0 \right ]$ \\
+            \hline
+            $\alpha$ & $\left [ 0.5, 0.9 \right ]$ \\
+            \hline
+            $\lambda$ & $0.0$ \\
+            \hline
             \end{tabular}
             \caption{Final hyper-parameters' ranges for the random grid search algorithm.}
             \label{tab:hyper_ranges}
-        \end{wraptable}
-
+        \end{table}
+      %\end{comment}
         Some examples of the learning curves we discover during this preliminary phase can be seen in appendix
         \ref{sec:preliminary_trials_learning_curves_for_cup}. In table \ref{tab:hyper_ranges} you can see the
         final ranges we selected for the random grid search algorithm for the CUP dataset.
 
+\newpage        
+The validation schema for the Cup dataset it is summarized by the following steps.
+
+\begin{enumerate}
+\item The original training dataset has been splitted randomly in a \textit{design set}, used for the model selection phase, and an internal \textit{test set} used only for the final models assessment.
+  We have chosen a small $5\%$ sample size percentage for the test set (50 samples), because the main focus of the analysis is to perform a good model selection. The application of more complex validation methods such as double cross validation was beyond the available time and computing resources.
+\item Preliminary 'babysitting'. The design set has been splitted into training and validation sets, with $70\%$ and $30\%$ percentages, in order to initially explore the behaviour of the neural network on the cup dataset, and to identify good parameter ranges. We tried to achieve overtraining by varying the learning rate, the number of units and momentum without using regularization approaches. We have chosen to use the \textit{relu} activation function for the hidden layer, which is faster respect to the sigmoid, and more suitable for a regression task REF?.
+  We have observed that the learning time to achieve overtraining for a wide range of different number of units requires at least 2000 epochs. We fixed the maximum amount of learning time to 3000 epochs.
+This learning time is quite expensive for our computing resources, so we decided to use a \textit{batch} gradient descent approach.
+
+\item Early Stopping testing.
+  The 'batch' approach allows to obtain smoother learning curves respect to minibatch/online and permits to apply easily an early stopping technique. We tested two approaches, by comparing the minimum of the validation curve for overtrained test cases with the stopping points obtained.
+  In Fig. REF
+
+
+
+  
+
+\item Wide grid search
+
+
+\item Finer grid search
+
+  
+  
+\end{enumerate}
+
+
+
+
+
+        
 
     % subsection cup_results (end)
 

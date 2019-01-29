@@ -57,7 +57,7 @@ imp.reload(NN)
 np.random.shuffle(design_set)
 
 # splitting training/validation
-split_percentage = 0.66
+split_percentage = 0.7
 split = int(design_set.shape[0]*split_percentage)
 
 training_set = design_set[:split, :]
