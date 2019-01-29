@@ -78,19 +78,20 @@ validation_set.shape
 X_training.shape
 y_training.shape
 
+'''
 # babysitting
 imp.reload(NN)
 nn = NN.NeuralNetwork(
     X_training, y_training,
-    eta=0.015,
-    # eta=0.008,
+    # eta=0.004, buono
+    eta=0.01,
     # eta=0.00005,
     # eta=0.00002,
-    hidden_sizes=[1500],
+    hidden_sizes=[3],
     alpha=0.9,
-    reg_method='l2', reg_lambda=0.001,
-    epochs=1200,
-    batch_size='batch',
+    reg_method='l2', reg_lambda=0.00,
+    epochs=4000,
+    batch_size='batch', #'batch',
     activation='relu',
     task='regression',
     early_stop=None,  # '', # 'testing',  # 'testing',
@@ -101,9 +102,9 @@ nn = NN.NeuralNetwork(
     # w_method='uniform',
     # w_par=1./17
 )
-# nn.train(X_training, y_training, X_validation, y_validation)
+nn.train(X_training, y_training, X_validation, y_validation)
 
-'''
+
 y_final = nn.mee_per_epochs_va[-1]
 y_final
 y_min = np.min(nn.mee_per_epochs_va)
@@ -114,7 +115,7 @@ y_final/y_min
 import matplotlib.pyplot as plt
 imp.reload(u)
 imp.reload(NN)
-epochs_plot_start = 10
+epochs_plot_start = 100
 epochs_plot_end = len(nn.error_per_epochs)
 u.plot_learning_curve_info(
     nn.mee_per_epochs[epochs_plot_start:epochs_plot_end],
@@ -133,8 +134,8 @@ y_min
 
 y_pred_test = nn.predict(X_test)
 metrics.mee(y_test, y_pred_test)
-'''
 
+'''
 
 ###########################################################
 # TOPOLOGY GRID
@@ -242,24 +243,25 @@ for hidden in topologies:
 ###########################################################
 # EXPERIMENTAL SETUP
 
-grid_size = 30
+grid_size = 200
 
-nfolds = 3
+nfolds = 5
 ntrials = 1
 
 # eta=0.0005,
 # eta=0.00002,
 
 param_ranges = {
-    'eta': (0.01, 0.025),
-    'hidden_sizes': [(1500, 2000)],
+    'eta': (0.004, 0.02),
+    'hidden_sizes': [(2, 100)],
     'alpha': 0.90,
-    'reg_method': 'l2', 'reg_lambda': (0.0001, 0.002),
-    'epochs': 1200,
+    'reg_method': 'l2',
+    'reg_lambda': 0.00,
+    'epochs': 2000,
     'batch_size': 'batch',
     'activation': 'relu',
     'task': 'regression',
-    # 'early_stop': None,
+    'early_stop': 'GL',
     'early_stop_min_epochs' : 500,
     'epsilon': 1,
     'w_method': 'DL',
@@ -282,7 +284,7 @@ experiment_params = {
 # EXPERIMENT GRID SEARCH
 
 # controllo nomi files
-fpath = '../data/CUP/results/finer_grid/'
+fpath = '../data/CUP/results/grid1/'
 
 check_files = True
 experiment = 1
