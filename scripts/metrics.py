@@ -5,6 +5,37 @@ import numpy as np
 class BinaryClassifierAssessment():
     """
     Binary Classifier Assessment
+
+    Attributes
+    ----------
+
+    tp: int
+        the number of examples classified as true positives
+
+    tn: int
+        the number of examples classified as true negatives
+
+    fp: int
+        the number of examples classified as false positives
+
+    fn: int
+        the number of examples classified as false negatives
+
+    confusion_matrix: numpy.ndarray
+        the confusion matrix
+
+    accuracy: float
+        the accuracy score
+
+    precision: float
+        the precision score
+
+    recall: float
+        the recall score
+
+    f1_score: float
+        the f1 score
+
     """
     def __init__(self, y_true, y_pred, printing=True):
         """
@@ -17,6 +48,10 @@ class BinaryClassifierAssessment():
 
         y_pred : numpy.ndarray or list
             classifier predictions.
+
+        printing: bool
+            whether of not to print the classification's results
+            (Default value = True)
 
         Returns
         -------
@@ -95,7 +130,16 @@ FN: {:4} | TN: {:4}\n""".format(self.tp, self.fp, self.fn, self.tn)
             + info_matrix
 
     def get_as_dict(self):
-        """ Returns assessment as a dict """
+        """
+        Returns assessment as a dict.
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        A dictionary containing the assessment's parameters.
+        """
         out = dict()
         out['confusion_matrix'] = self.confusion_matrix
         out['accuracy'] = self.accuracy
@@ -109,6 +153,33 @@ FN: {:4} | TN: {:4}\n""".format(self.tp, self.fp, self.fn, self.tn)
 def mse(y_true, y_pred):
     """
     Mean Square Error
+
+    Parameters
+    ----------
+    y_true: numpy.ndarray
+        the ground truth
+
+    y_pred: numpy.ndarray
+        the network's prediction
+
+    Returns
+    -------
+    A float representing the mean square error.
+    """
+    if type(y_true) is list:
+        y_true = np.array(y_true)
+    if type(y_pred) is list:
+        y_pred = np.array(y_pred)
+
+    assert y_true.shape == y_pred.shape
+    p = y_true.shape[0]
+
+    return np.sum((y_true-y_pred)**2)/p
+
+
+def mee(y_true, y_pred):
+    """
+    Mean Euclidean Error
 
     Parameters
     ----------
@@ -129,7 +200,7 @@ def mse(y_true, y_pred):
     assert y_true.shape == y_pred.shape
     p = y_true.shape[0]
 
-    return np.sum((y_true-y_pred)**2)/p
+    return np.sum(np.sqrt(np.sum((y_true-y_pred)**2, axis=1)))/p
 
 
 if __name__ == "__main__":

@@ -16,7 +16,101 @@ class NeuralNetwork(object):
 
     Attributes
     ----------
-    TODO
+    X: numpy.ndarray
+        the design matrix
+
+    hidden_sizes: list
+        a list of integers. The list's length represents the number of
+        neural network's hidden layers and each integer represents the
+        number of neurons in a hidden layer
+
+    n_layers: int
+        the network's number of layers
+
+    topology: list
+        the network's topology represented as a list
+
+    eta: float
+        the learning rate
+
+    alpha: float
+        the momentum constant
+
+    epsilon: float
+        the early stopping constant, given as a percentage %
+
+
+    batch_size: int
+        the batch size, 'batch' for batch mode
+
+    batch_method: str
+        the batch method used during the network's training phase, either
+        'batch', 'on-line' or 'minibatch'
+
+    early_stop: str
+        the early stop method,
+        to be chosen in (None, 'GL', 'PQ', 'testing').
+        The 'testing' method computes the exit points without stopping
+
+    early_stop_min_epochs: int
+        the threshold for the minimum number of epochs for the network's
+        training phase
+
+    reg_lambda: float
+        the regularization factor
+
+    reg_method: str
+        the regularization method, either l1 or l2 regularization are
+        availables
+
+    epochs: int
+        the (maximum) number of epochs for which the neural network
+        has to be trained
+
+    activation: list
+        the activation function to use for each layer, either
+        'sigmoid', 'relu', 'tanh', 'identity'. len(hidden_sizes) + 1
+        functions must be provided because also the output layer's
+        activation function is requested
+
+    w_par: int
+        the parameter for initializing the network's weights matrices
+        following the rule in Deep Learning, pag. 295
+
+    w_method: str
+        the method that has to be used for the weights' initialization,
+        either 'DL' or 'uniform'
+
+    W: list
+        the weights' matrix for each one of the network's layer
+
+    W_copy: list
+        a copy of self.W used in case the network has to be resetted
+
+    b: list
+        the biases for each one of the network's layers
+
+    b_copy: list
+        a copy of self.b used in case the network has to be resetted
+
+    params: dict
+        the network's hyperparameters as a dictionary
+
+    delta_W: list
+        a list containing the deltas for the weights' matrices
+
+    delta_b: list
+        a list containing the deltas for the biases
+
+    a: list
+        a list containing the nets for each one of the network's layers
+
+    h: list
+        a list containing the output of the activation functions for each one
+        of the network's layers
+
+    task: str
+        the network's task, either 'classifier' or 'regression'
     """
     def __init__(self, X, y, hidden_sizes=[10],
                  eta=0.5, alpha=0, epsilon=1,
@@ -41,6 +135,7 @@ class NeuralNetwork(object):
             a list of integers. The list's length represents the number of
             neural network's hidden layers and each integer represents the
             number of neurons in a hidden layer
+            (Default value = [10])
 
         eta: float
             the learning rate
@@ -54,24 +149,29 @@ class NeuralNetwork(object):
             the early stopping constant, given as a percentage %
             (Default value = 1)
 
-        epochs: int
-            the (maximum) number of epochs for which the neural network
-            has to be trained
-            (Default value = 1000)
-
-        batch_size: int
-            the batch size, 'batch' for batch mode
-            (Default value = 1)
-
-        reg_lambda: float
-            the regularization factor
-            (Default value = 0.0)
-
         early_stop: str
             the early stop method,
             to be chosen in (None, 'GL', 'PQ', 'testing').
             The 'testing' method computes the exit points without stopping
             (Default value = None)
+
+        early_stop_min_epochs: int
+            the threshold for the minimum number of epochs for the network's
+            training phase
+            (Default value = 50)
+
+        batch_size: int
+            the batch size, 'batch' for batch mode
+            (Default value = 1)
+
+        epochs: int
+            the (maximum) number of epochs for which the neural network
+            has to be trained
+            (Default value = 1000)
+
+        reg_lambda: float
+            the regularization factor
+            (Default value = 0.0)
 
         reg_method: str
             the regularization method, either l1 or l2 regularization are
@@ -82,6 +182,11 @@ class NeuralNetwork(object):
             the parameter for initializing the network's weights matrices
             following the rule in Deep Learning, pag. 295
             (Default value = 6)
+
+        w_method: str
+            the method that has to be used for the weights' initialization,
+            either 'DL' or 'uniform'
+            (Default value = 'DL')
 
         activation: list
             the activation function to use for each layer, either
@@ -150,6 +255,25 @@ class NeuralNetwork(object):
         self.task = task
 
     def set_activation(self, activation, task):
+        """
+        This function initializes the list containing the activation functions
+        for every network's layer.
+
+        Parameters
+        ----------
+        activation: list or str
+            if list represents the activation functions that have to setted
+            for every network's layer else represents the single activation
+            functions that has to be setted for every network's layer
+
+        task: str
+            the task the network has to pursue, either 'classifier' or
+            'regression'
+
+        Returns
+        -------
+        A list of activation functions
+        """
         if type(activation) is list:
             assert len(activation) == self.n_layers
 
@@ -169,12 +293,18 @@ class NeuralNetwork(object):
 
         Parameters
         ----------
-        w_par : a parameter which is plugged into the formula for estimating
+        w_par: a parameter which is plugged into the formula for estimating
                 the uniform interval for defining the network's weights
             (Default value = 6)
 
+        w_method: str
+            the method that has to be used for the weights' initialization,
+            either 'DL' or 'uniform'
+            (Default value = 'DL')
+
         Returns
         -------
+        A list of weights matrices
         """
         W = []
 
@@ -215,13 +345,18 @@ class NeuralNetwork(object):
 
     def set_bias(self):
         """
-        This function initializes the bias for the neural network
+        This function initializes the network's biases.
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        A list of biases.
         """
         b = []
 
         for i in range(1, len(self.topology)):
-            # b.append(np.random.uniform(-w_bias, +w_bias, (self.topology[i], 1)))
-            # b.append(np.random.uniform(-.0001, .0002, (self.topology[i], 1)))
             b.append(np.zeros((self.topology[i], 1)))
 
         return b
@@ -242,15 +377,14 @@ class NeuralNetwork(object):
 
     def get_params(self):
         """
-        Return the parameters of the nn instance
+        This function returns the network's parameters as a dictionary.
 
         Parameters
         ----------
 
         Returns
         -------
-        params : dict
-            parameters dictionary
+        A dictionary of parameters.
         """
         self.params = dict()
         self.params['eta'] = self.eta
@@ -276,13 +410,16 @@ class NeuralNetwork(object):
 
         Parameters
         ----------
-        x : a record, or batch, from the dataset
+        x: numpy.ndarray
+            a record, or batch, from the dataset
 
-        y : the target array for the batch given in input
+        y: numpy.ndarray
+            the target array for the batch given in input
 
 
         Returns
         -------
+        The error between the predicted output and the target one.
         """
         for i in range(self.n_layers):
             self.a[i] = self.b[i] + (self.W[i].dot(x.T if i == 0
@@ -299,10 +436,11 @@ class NeuralNetwork(object):
 
         Parameters
         ----------
-        x : a record, or batch, from the dataset
+        x: numpy.ndarray
+            a record, or batch, from the dataset
 
-        y : the target value, or target array, for the record/batch given in
-            input
+        y: numpy.ndarray
+            the target array for the batch given in input
 
         Returns
         -------
@@ -324,8 +462,7 @@ class NeuralNetwork(object):
 
     def train(self, X, y, X_va=None, y_va=None):
         """
-        This function trains the neural network whit the hyperparameters given
-        in input
+        This function implements the neural network's training routine.
 
         Parameters
         ----------
@@ -352,10 +489,13 @@ class NeuralNetwork(object):
         self.error_per_epochs = []
         self.error_per_epochs_old = []
         self.error_per_batch = []
+        self.mee_per_epochs = []
         if X_va is not None:
             self.error_per_epochs_va = []
+            self.mee_per_epochs_va = []
         else:
             self.error_per_epochs_va = None
+            self.mee_per_epochs_va = None
 
         if self.task == 'classifier':
             self.accuracy_per_epochs = []
@@ -411,10 +551,13 @@ class NeuralNetwork(object):
 
             y_pred = self.predict(X)
             self.error_per_epochs.append(metrics.mse(y, y_pred))
+            self.mee_per_epochs.append(metrics.mee(y, y_pred))
             if X_va is not None:
                 y_pred_va = self.predict(X_va)
                 self.error_per_epochs_va.append(
                     metrics.mse(y_va, y_pred_va))
+                self.mee_per_epochs_va.append(
+                    metrics.mee(y_va, y_pred_va))
 
             if self.task == 'classifier':
                 y_pred_bin = np.apply_along_axis(
@@ -461,26 +604,27 @@ class NeuralNetwork(object):
                         stop_PQ = True
 
                 # stopping
-                if self.early_stop == 'testing':
-                    if stop_GL and self.stop_GL is None:
-                        self.stop_GL = e
-                    if stop_PQ and self.stop_PQ is None:
-                        self.stop_PQ = e
-                else:
-                    if stop_GL or stop_PQ:
-                        break
+                if stop_GL and self.stop_GL is None:
+                    self.stop_GL = e
+                if stop_PQ and self.stop_PQ is None:
+                    self.stop_PQ = e
+
+                if self.early_stop != 'testing' and (stop_GL or stop_PQ):
+                    break
 
     def predict(self, x):
         """
+        This function predicts the class/regression value for the vector
+        given in input
 
         Parameters
         ----------
-        x :
+        x: np.ndarray
+            the input to predict
 
         Returns
         -------
-        y_pred: numpy.ndarray
-            Predicted values
+        A vector of predicted values
         """
         a_pred = [0 for i in range(self.n_layers)]
         h_pred = [0 for i in range(self.n_layers)]

@@ -12,44 +12,22 @@ from collections import defaultdict
 IMGS = '../images/'
 
 
-def add_bias_mul(X, axis=0):
-    """
-    Adds a row, or column, of 1s to a matrix which is given in input.
-
-    Parameters
-    ----------
-    X : the matrix in which the row (or column) of 1s has to be added;
-
-    axis :
-         (Default value = 0)
-         0 means 'row' and 1 means 'column';
-
-    Returns
-    -------
-    A new matrix.
-    """
-    if axis == 0:
-        return np.vstack((np.ones(X.shape[1]), X))
-    else:
-        tmp = np.ones(X.shape[0])
-        tmp.shape = (X.shape[0], 1)
-
-        return np.hstack((tmp, X))
-
-
 def compose_topology(X, hidden_sizes, y):
     """
+    This functions builds up the neural network's topology as a list.
 
     Parameters
     ----------
-    X : the matrix representing the dataset
+    X: numpy.ndarray
+        the design matrix
 
-    hidden_sizes : a list of integers. Every integer represents the number
-                   of neurons that will compose an hidden layer of the
-                   neural network;
+    hidden_sizes: list
+        a list of integers; every integer represents the number
+        of neurons that will compose an hidden layer of the
+        neural network
 
-    y : a list containing the targets for the dataset X;
-
+    y: numpy.ndarray
+        the target column vector
 
     Returns
     -------
@@ -60,77 +38,25 @@ def compose_topology(X, hidden_sizes, y):
 
     return topology
 
-
-def from_dict_to_list(grid):
-    """
-    This function is used in order to convert an HyperGrid or HyperRandomGrid
-    object in a dictionary in which each key is an hyperparameter's name and
-    each value is an array of possible values for that hyperparameter.
-
-    Parameters
-    ----------
-    grid: HyperGrid or HyperRandomGrid
-        the grid object to convert
-
-    Returns
-    -------
-    A dictionary. Each one of the dictionary's keys is a hyperparameter name,
-    i.e 'eta', alpha,..., and the corresponding value is an array of possible
-    value for that hyperparameter.
-    """
-    to_ret = defaultdict(list)
-
-    for record in grid:
-        for parameter, value in record.items():
-            to_ret[parameter].append(value)
-
-    return to_ret
-
 # PLOTTING RELATED FUNCTIONS
 
 
-def plot_learning_curve_old(stats, num_epochs, momentum,
-                        fname='../images/learning_curve.pdf'):
+def plot_learning_curve(nn, fname='../images/learning_curve.pdf'):
     """
-    This function is used to plot the learning curve for all the errors
-    collected during the network's training phase.
+    This functions plots the learning curves for a model given in input.
 
     Parameters
     ----------
-    stats : a list which contains the error collected during the network's
-            training phase;
+    nn: nn.NeuralNetwork
+        the neural network
 
-    num_epochs : the epochs of training;
-
-    momentum : the type of momentum selected for the training, either classic
-               or nesterov;
-
-    fname :
-         (Default value = '../images/learning_curve.pdf')
+    fname: str
+        where to save the learning curve's plot
+        (Default value = '../images/learning_curve.pdf')
 
     Returns
     -------
-    The errors' plots.
     """
-    for i in range(len(stats)):
-        plt.plot(range(num_epochs), stats[i])
-        plt.title('LEARNING CURVE FOR A {} EPOCHS TRAINING PERIOD'.
-                  format(num_epochs))
-        plt.xlabel('EPOCHS')
-        plt.ylabel('EMPIRICAL RISK')
-        initial_risk = mpatches.Patch(label='Initial E.R.: {}'.
-                                      format(stats[i][0]))
-        final_risk = mpatches.Patch(label='Final E.R.: {}'.
-                                    format(stats[i][-1]))
-        plt.legend(handles=[initial_risk, final_risk])
-        plt.grid()
-        plt.savefig(IMGS + fname[i] + momentum + '.png' if len(fname) != 1
-                    else fname, bbox_inches='tight')
-        plt.close()
-
-
-def plot_learning_curve(nn, fname='../images/learning_curve.pdf'):
-    """ plotting learning curve """
 
     par_str = r"""$\eta= {}, \alpha= {}, \lambda= {}$,'batch= {}, h-sizes={}""".format(
         np.round(nn.params['eta'], 2),
@@ -140,6 +66,7 @@ def plot_learning_curve(nn, fname='../images/learning_curve.pdf'):
         nn.params['hidden_sizes']
     )
 
+    plt.figure(figsize=(15, 5))
     plt.plot(range(len(nn.error_per_epochs)),
              nn.error_per_epochs, linestyle='--',
              label='training')
@@ -181,7 +108,12 @@ def plot_learning_curve_info(
         fontsize_title=13,
         fontsize_labels=12,
         fontsize_info=12,
-        fontsize_legend=12):
+        fontsize_legend=12,
+        MEE_VL=None,
+        MEE_TR=None,
+        stop_GL=None,
+        stop_PQ=None
+):
     """ Plots the learning curve with infos """
 
     # ###########################################################
@@ -214,6 +146,12 @@ def plot_learning_curve_info(
             'MSE TR =' + str(np.round(y_tr[-1], 5)),
             'MSE {} ='.format(task_str_abbr) + str(np.round(y_va[-1], 5))
         ]
+        if MEE_VL is not None:
+            final_errors.extend([
+                'MEE TR =' + str(np.round(MEE_TR, 5)),
+                'MEE {} ='.format(task_str_abbr) + str(np.round(MEE_VL, 5))]
+            )
+
     # appending other errors, ex: accuracy
     final_errors_str = '\n'.join(final_errors)
     if other_errors is not None:
@@ -232,7 +170,7 @@ def plot_learning_curve_info(
 
     # hyperparameters string
     info += '\nHyperparameters:' + '\n'
-    info += r'$\eta= {}$'.format(np.round(hyperparams['eta'], 2))+'\n'
+    info += r'$\eta= {}$'.format(np.round(hyperparams['eta'], 6))+'\n'
     info += r'$\alpha= {}$'.format(np.round(hyperparams['alpha'], 2))+'\n'
 
     info += r'${}$ regularization'.format(
@@ -267,7 +205,7 @@ def plot_learning_curve_info(
         x_epochs = np.arange(len(error_per_epochs))
 
         if figsize is None:
-            figsize = (10, 5)
+            figsize = (15, 7)
         plt.figure(figsize=figsize)
         grid = plt.GridSpec(1, 7, wspace=0.1, hspace=0.7, left=0.1,
                             top=0.9, bottom=0.15)
@@ -275,8 +213,13 @@ def plot_learning_curve_info(
         plt.subplot(grid[0, :6])
         plt.plot(x_epochs, y_tr, label='Training', linestyle='-')
         plt.plot(x_epochs, y_va, label=task_str, linestyle='--')
-
         plt.xlabel('Epochs')
+        # early stopping
+
+        if stop_GL is not None:
+            plt.axvline(stop_GL, linestyle=':', label='GL early stop')
+        if stop_PQ is not None:
+            plt.axvline(stop_PQ, linestyle=':', label='PQ early stop')
         if accuracy:
             plt.ylabel('Accuracy (%)')
         else:

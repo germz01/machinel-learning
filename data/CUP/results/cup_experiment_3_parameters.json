@@ -1,0 +1,29 @@
+{
+    "info": "infos", 
+    "grid_size": 1000, 
+    "param_ranges": {
+        "w_par": 6.0, 
+        "epsilon": 5, 
+        "activation": "relu", 
+        "batch_size": 128, 
+        "epochs": 300, 
+        "reg_method": "l2", 
+        "alpha": 0.9, 
+        "task": "regression", 
+        "hidden_sizes": [
+            [
+                20, 
+                100
+            ]
+        ], 
+        "reg_lambda": 0.0, 
+        "eta": [
+            0.0001, 
+            0.001
+        ], 
+        "w_method": "DL"
+    }, 
+    "experiment": 3, 
+    "ntrials": 1, 
+    "nfolds": 3
+}
