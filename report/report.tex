@@ -308,17 +308,21 @@ for each one of the datasets, we collected the data describing the results.
 
         % \begin{comment}
         \begin{table}[hbtp]
-          \centering
-          \begin{tabular}{| c | c |}
-            \hline
-            Hyper-parameter & Range \\
-            \hline
-            $\eta$ & $\left [ 0.2, 10.0 \right ]$ \\
-            \hline
-            $\alpha$ & $\left [ 0.5, 0.9 \right ]$ \\
-            \hline
-            $\lambda$ & $0.0$ \\
-            \hline
+            \centering
+            \begin{tabular}{| c | c |}
+                \hline
+                Hyper-parameter & Range \\
+                \hline
+                $\eta$ & $\left [ 0.08, 0.02 \right ]$ \\
+                \hline
+                $\alpha$ & $0.9$ \\
+                \hline
+                $\lambda$ & $0.0$ \\
+                \hline
+                $\epsilon$ & $1.0$ \\
+                \hline
+                hidden sizes & $\left [ 50, 2500 \right ]$ \\
+                \hline
             \end{tabular}
             \caption{Final hyper-parameters' ranges for the random grid search algorithm.}
             \label{tab:hyper_ranges}
@@ -328,7 +332,7 @@ for each one of the datasets, we collected the data describing the results.
         \ref{sec:preliminary_trials_learning_curves_for_cup}. In table \ref{tab:hyper_ranges} you can see the
         final ranges we selected for the random grid search algorithm for the CUP dataset.
 
-\newpage        
+\newpage
 The validation schema for the Cup dataset it is summarized by the following steps.
 
 \begin{enumerate}
@@ -344,22 +348,22 @@ This learning time is quite expensive for our computing resources, so we decided
 
 
 
-  
+
 
 \item Wide grid search
 
 
 \item Finer grid search
 
-  
-  
+
+
 \end{enumerate}
 
 
 
 
 
-        
+
 
     % subsection cup_results (end)
 
