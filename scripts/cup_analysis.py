@@ -310,9 +310,9 @@ pprint(finer_grid)
 
 # timing estimation
 
-training_time = 60 # seconds
+training_time = 80 # seconds
 n_folds = 3
-grid_size = 100
+grid_size = 30
 
 # ore stimate
 overall = training_time*n_folds*grid_size  

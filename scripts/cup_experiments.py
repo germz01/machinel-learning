@@ -242,7 +242,7 @@ for hidden in topologies:
 ###########################################################
 # EXPERIMENTAL SETUP
 
-grid_size = 100
+grid_size = 30
 
 nfolds = 3
 ntrials = 1

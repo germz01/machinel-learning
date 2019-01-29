@@ -127,7 +127,7 @@ for each one of the datasets, we collected the data describing the results.
         script, represents a neural network using the standard \textit{backpropagation algorithm} with
         \textit{gradient descent}, \textit{standard momentum} and \textit{regularization}, and follows the
         \textit{minibatch} approach, as described in \cite{deep_learning}. The \texttt{NeuralNetwork} class
-        contains also various early stopping metrics, like the $GL_{\alpha}$ and the $PQ_{\alpha}$ which we
+        contains also various early stopping metrics, like the $GL_{\epsilon}$ and the $PQ_{\epsilon}$ which we
         implemented following \cite{early_stopping}. More details about what particular combination of
         metrics was used during the experimental phase can be found in section \ref{sec:experiments}.
 
@@ -307,26 +307,6 @@ for each one of the datasets, we collected the data describing the results.
         MONKS dataset.
 
         % \begin{comment}
-        \begin{table}[hbtp]
-            \centering
-            \begin{tabular}{| c | c |}
-                \hline
-                Hyper-parameter & Range \\
-                \hline
-                $\eta$ & $\left [ 0.08, 0.02 \right ]$ \\
-                \hline
-                $\alpha$ & $0.9$ \\
-                \hline
-                $\lambda$ & $0.0$ \\
-                \hline
-                $\epsilon$ & $1.0$ \\
-                \hline
-                hidden sizes & $\left [ 50, 2500 \right ]$ \\
-                \hline
-            \end{tabular}
-            \caption{Final hyper-parameters' ranges for the random grid search algorithm.}
-            \label{tab:hyper_ranges}
-        \end{table}
       %\end{comment}
         Some examples of the learning curves we discover during this preliminary phase can be seen in appendix
         \ref{sec:preliminary_trials_learning_curves_for_cup}. In table \ref{tab:hyper_ranges} you can see the
@@ -337,16 +317,30 @@ The validation schema for the Cup dataset it is summarized by the following step
 
 \begin{enumerate}
 \item The original training dataset has been splitted randomly in a \textit{design set}, used for the model selection phase, and an internal \textit{test set} used only for the final models assessment.
-  We have chosen a small $5\%$ sample size percentage for the test set (50 samples), because the main focus of the analysis is to perform a good model selection. The application of more complex validation methods such as double cross validation was beyond the available time and computing resources.
+  We have chosen a small $5\%$ sample size percentage for the test set (50 samples), because the main focus of the analysis is to perform a good model selection. %%The application of more complex validation methods such as double cross validation was beyond the available time and computing resources.
 \item Preliminary 'babysitting'. The design set has been splitted into training and validation sets, with $70\%$ and $30\%$ percentages, in order to initially explore the behaviour of the neural network on the cup dataset, and to identify good parameter ranges. We tried to achieve overtraining by varying the learning rate, the number of units and momentum without using regularization approaches. We have chosen to use the \textit{relu} activation function for the hidden layer, which is faster respect to the sigmoid, and more suitable for a regression task REF?.
   We have observed that the learning time to achieve overtraining for a wide range of different number of units requires at least 2000 epochs. We fixed the maximum amount of learning time to 3000 epochs.
 This learning time is quite expensive for our computing resources, so we decided to use a \textit{batch} gradient descent approach.
 
 \item Early Stopping testing.
-  The 'batch' approach allows to obtain smoother learning curves respect to minibatch/online and permits to apply easily an early stopping technique. We tested two approaches, by comparing the minimum of the validation curve for overtrained test cases with the stopping points obtained.
-  In Fig. REF
+  The 'batch' approach allows to obtain smoother learning curves respect to minibatch/online and permits to apply easily an early stopping technique. We tested two approaches from \cite{early_stopping}.
+  The $GL_{\epsilon}$ approach stops the learning process when the generalization loss exceed a defined threshold $\epsilon$, given as a percentage with respect to the minimum current value of the loss. The $PQ_{\epsilon}$ approach is similar, but take into account also the progress of the training error.
+  For different hyperparameters configurations we have computed the ratio between the MEE error obtained with the two early stopping criteria and the minimum validation error of the overtrained learning curve, reported in Fig. \ref{fig:early_stop}. The early stopping methods take action only after a minimum number of epochs equal to 500, in order to avoid initial oscillation of the learning curves, and we fixed the threshold $\epsilon=1\%$. An example of early stopping computation is represented in Fig. \ref{fig:learning_early}. The results shows that the two methods are quite reliable, we opted to use the $PQ_{1\%}$ method, which in general is more stable \cite{early_stopping}.
 
+  \begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.90\textwidth]{img/early_stop.pdf}
+    \caption{Ratio between the MEE obtained with early stopping and the minimum validation MEE.}
+    \label{fig:early_stop}
+  \end{figure}
 
+    \begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.90\textwidth]{img/learning_early_2.pdf}
+    \caption{ Early stopping example. The vertical lines represents the early stopping points computed with $PQ_{1\%}$ and $GL_{1\%}$ methods and the point of minimum MSE validation error.}
+
+    \label{fig:learning_early}
+  \end{figure}
 
 
 
@@ -355,9 +349,29 @@ This learning time is quite expensive for our computing resources, so we decided
 
 \item Finer grid search
 
-
+  
 
 \end{enumerate}
+        \begin{table}[hbtp]
+            \centering
+            \begin{tabular}{ccc }
+              \toprule
+                Hyper-parameter & Wide Grid & Finer Grid\\
+                \midrule
+                $\eta$ & $\left [ 0.08, 0.02 \right ]$ & -\\
+
+                $\alpha$ & $0.9$ & - \\
+
+                $\lambda$ & $0.0$ & -\\
+
+                $\epsilon$ & $1.0\,\%$ & -\\
+
+                hidden sizes & $\left [ 50, 2500 \right ]$ & -\\
+                \midrule
+            \end{tabular}
+            \caption{Final hyper-parameters' ranges for the random grid search algorithm.}
+            \label{tab:hyper_ranges}
+          \end{table}
 
 
 

@@ -17,6 +17,17 @@ import json
 import os.path
 import imp
 
+SMALL_SIZE = 12
+MEDIUM_SIZE = 14
+BIGGER_SIZE = 15
+
+plt.rc('font', size=MEDIUM_SIZE)
+plt.rc('axes', labelsize=BIGGER_SIZE)
+plt.rc('xtick', labelsize=MEDIUM_SIZE)
+plt.rc('ytick', labelsize=MEDIUM_SIZE)
+plt.rc('legend', fontsize=BIGGER_SIZE)
+# plt.rc('figure', titlesize=BIGGER_SIZE)
+plt.rc('axes', titlesize=BIGGER_SIZE)
 
 
 
@@ -29,40 +40,55 @@ early.describe()
 
 early.columns
 plt.ion()
-early.describe()
+early.describe()[['MEE_min', 'MEE_PQ', 'MEE_GL']]
 plt.scatter(x=early['MEE_min'], y=early['MEE_GL'])
 plt.show()
 
-sns.scatterplot()
+plt.close()
 plt.scatter(x=early['stop_min'], y=early['stop_GL'], label='GL')
 plt.scatter(x=early['stop_min'], y=early['stop_PQ'], label='PQ')
 plt.xlabel('Minimum MEE epochs')
 plt.ylabel('Early stopping epochs')
 
 plt.close()
-plt.scatter(x=early['hidden_sizes'], y=early['stop_GL']-early['stop_min'], label='GL')
+
+sns.lineplot(x=early['hidden_sizes'], y=early['stop_GL']-early['stop_min'], label='GL', ci=None)
+sns.lineplot(x=early['hidden_sizes'], y=early['stop_PQ']-early['stop_min'], label='GL', ci=None)
+
+
+plt.scatter(x=early['hidden_sizes'], y=early['stop_GL']-early['stop_min'], label='GL', marker='s')
 plt.scatter(x=early['hidden_sizes'], y=early['stop_PQ']-early['stop_min'], label='PQ')
 plt.legend()
 plt.axhline(0)
-plt.axvline(100)
-
+#plt.axvline(100)
 plt.grid()
+# plt.ylim((-1000,1000))
 
-x = np.arange(0,5000,1)
+###########################################################
+'''
+mostrare la differenza tra l'errore minimo e l'errore ottenuto 
+con i due early stopping. 
 
-plt.plot(x,x)
+uso il rapporto tra gli errori
+'''
+early['ratio_PQ'] = early['MEE_PQ']/early['MEE_min']
+early['ratio_GL'] = early['MEE_GL']/early['MEE_min']
 
-plt.legend()
 
+early_filtered = early.query('ratio_PQ<1.04')
 
 plt.close()
-plt.show()
-
-plt.scatter(x=early['hidden_sizes'], y=early['MEE_final'])
-sns.lineplot(x=early['hidden_sizes'], y=early['MEE_final'])
-plt.scatter(x=early['hidden_sizes'], y=early['MEE_min'])
-sns.lineplot(x=early['hidden_sizes'], y=early['MEE_min'])
-sns.lineplot(x=early['hidden_sizes'], y=early['MEE_PQ'])
-plt.scatter(x=early['hidden_sizes'], y=early['MEE_PQ'])
+marker_size=70
+plt.figure(figsize=(7,5))
+plt.scatter('hidden_sizes', y='ratio_PQ',
+            data=early_filtered, label='PQ', s=marker_size)
+plt.scatter('hidden_sizes', y='ratio_GL', data=early, label='GL',
+            s=marker_size, marker='s')
+plt.ylabel('MEE early stopping / MEE min')
+plt.xlabel('Number of hidden units')
 plt.legend()
 plt.grid()
+plt.axhline(1)
+plt.tight_layout()
+
+plt.savefig('../report/img/early_stop.pdf')
