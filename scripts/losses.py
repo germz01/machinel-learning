@@ -4,6 +4,25 @@ import numpy as np
 
 
 def mean_squared_error(y_hat, y, gradient=False):
+    """
+    This functions computes the mean squared error, or its gradient, between
+    a target vector and a vector of network's predictions.
+
+    Parameters:
+        y_hat: numpy.ndarray
+            the network's prediction
+
+        y: numpy.ndarray
+            the target vector
+
+        gradient: bool
+            whether or not to compute the error's gradient
+            (Default value = False)
+
+    Returns
+    -------
+    A float representing the mean square error or its gradient.
+    """
     if gradient:
         return y_hat - y
     else:
@@ -11,6 +30,25 @@ def mean_squared_error(y_hat, y, gradient=False):
 
 
 def mean_euclidean_error(y_hat, y, gradient=False):
+    """
+    This functions computes the mean euclidean error, or its gradient, between
+    a target vector and a vector of network's predictions.
+
+    Parameters:
+        y_hat: numpy.ndarray
+            the network's prediction
+
+        y: numpy.ndarray
+            the target vector
+
+        gradient: bool
+            whether or not to compute the error's gradient
+            (Default value = False)
+
+    Returns
+    -------
+    A float representing the mean square error or its gradient.
+    """
     if gradient:
         return ((y_hat - y) / np.linalg.norm(y_hat - y))
     else:
