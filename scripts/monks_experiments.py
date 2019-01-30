@@ -101,17 +101,17 @@ y_validation, X_validation = np.hsplit(validation_set, [1])
 training_set.shape
 validation_set.shape
 
-b_s = 10
+b_s = 'batch'
 
 nn = NN.NeuralNetwork(
     X_design, y_design,
-    eta=0.4,
+    eta=0.5,
     hidden_sizes=[3],
-    alpha=0.9,
-    reg_method='l2', reg_lambda=0.001,
+    alpha=0.5,
+    reg_method='l2', reg_lambda=0.01,
     epochs=1000,
     batch_size=b_s, #'batch',  # 'batch',
-    activation='sigmoid',
+    activation='relu',
     task='classifier',
     # early_stop='testing',  # 'testing',
     epsilon=5,
@@ -140,7 +140,6 @@ u.plot_learning_curve_info(
     accuracy_per_epochs_va=nn.accuracy_per_epochs_va[:epochs_plot],
     fname=preliminary_name)
 
-exit()
 
 # u.plot_learning_curve(nn, fname='../images/monks_learning_curve.pdf')
 # u.plot_learning_curve(nn, fname='../images/monks_{}_{}_{}.pdf'.format(dataset, 'stochastic', 'notearly', 'relu'))
