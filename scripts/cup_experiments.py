@@ -78,19 +78,19 @@ validation_set.shape
 X_training.shape
 y_training.shape
 
-'''
+
 # babysitting
 imp.reload(NN)
 nn = NN.NeuralNetwork(
     X_training, y_training,
     # eta=0.004, buono
-    eta=0.01,
+    eta=0.02,
     # eta=0.00005,
     # eta=0.00002,
-    hidden_sizes=[3],
+    hidden_sizes=[40],
     alpha=0.9,
-    reg_method='l2', reg_lambda=0.00,
-    epochs=4000,
+    reg_method='l2', reg_lambda=0.002,
+    epochs=2000,
     batch_size='batch', #'batch',
     activation='relu',
     task='regression',
@@ -124,10 +124,6 @@ u.plot_learning_curve_info(
     accuracy=False,
     task='validation',
     fname='../images/cup_learning_curve')
-
-nn.stop_GL
-nn.stop_PQ
-np.argmin(nn.error_per_epochs_va)
 
 y_min
 

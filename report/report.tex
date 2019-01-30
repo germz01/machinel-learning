@@ -53,7 +53,7 @@
 \begin{abstract}
 \noindent With this report we describe our type \textbf{A} project for the Machine Learning course. We experiment
 two datasets, namely MONK's and CUP, by building from scratch a neural network's implementation, which we've
-validated by searching for the best hyper-parameters' combination via well-known validation techniques. Finally,
+validated by searching for the best hyperparameters' combination via well-known validation techniques. Finally,
 for each one of the datasets, we collected the data describing the results.
 \end{abstract}
 }
@@ -75,10 +75,10 @@ for each one of the datasets, we collected the data describing the results.
 \section{Introduction} % (fold)
 \label{sec:introduction}
     By chosing a type \textbf{A} project, we followed the goal of building and optimizing a
-    \textit{feedforward neural network model} by searching the best hyper-parameters' combination in order to
+    \textit{feedforward neural network model} by searching the best hyperparameters' combination in order to
     obtain the best performances on the MONK's and CUP datasets. The model we've built implements the
     standard \textit{backpropagation algorithm} with \textit{gradient descent}, as described in
-    \cite{deep_learning}. As optimization tool, we've searched the so-called hyper-parameters space by using
+    \cite{deep_learning}. As optimization tool, we've searched the so-called hyperparameters space by using
     well-known validation algorithms like \textit{k-fold cross validation} and \textit{(random) grid search},
     described in \cite{deep_learning} and \cite{random_search}. More technical details regarding the
     implementation can be found in section \ref{sec:methods}.
@@ -138,7 +138,7 @@ for each one of the datasets, we collected the data describing the results.
         During the initialization phase, we pass to the network the design matrix \texttt{X} and target column
         vector \texttt{y}. Other than that we pass the number of neurons per hidden layer
         \texttt{hidden\_sizes}, the maximum number of epochs \texttt{epochs}, the minibatch's size
-        \texttt{batch\_size}, the activation function for each layer \texttt{activation} and the hyper-parameters
+        \texttt{batch\_size}, the activation function for each layer \texttt{activation} and the hyperparameters
         for the learning rate, \texttt{$\eta$}, the momentum, \texttt{$\alpha$} and the regularization,
         \texttt{$\lambda$}. In order to initialize the network's weights matrices we followed the
         \textit{normalized initialization} technique, described in \cite{deep_learning} and
@@ -178,10 +178,10 @@ for each one of the datasets, we collected the data describing the results.
         containing the dataset's values, in order to ease the training during the validation phase by having
         a matrix of values closer to the symmetric behavior of the sigmoid functions, which is used for this
         dataset.
-        \item Since we've chosen to follow \cite{random_search} for the hyper-parameters' search during the
+        \item Since we've chosen to follow \cite{random_search} for the hyperparameters' search during the
         validation phase, we first performed some \textit{preliminary trials} in order to have a glimpse on
-        the best intervals for searching our model's hyper-parameters. During this trials we manually varied
-        the model's hyper-parameters, e.g. the learning rate, the momentum constant and so on, and observed
+        the best intervals for searching our model's hyperparameters. During this trials we manually varied
+        the model's hyperparameters, e.g. the learning rate, the momentum constant and so on, and observed
         the resulting \textit{learning curves} (see appendix \ref{sec:preliminary_trials_learning_curves} for
         some examples). For this part of the analysis we've used the $20\%$ of the training set as validation
         set, and the remaining part for training the network.
@@ -192,7 +192,7 @@ for each one of the datasets, we collected the data describing the results.
     \end{enumerate}
 
     That is, our validation schema for the MONKS dataset essentially consist in using the random grid search
-    algorithm to investigate some random sampled "points" in the hyper-parameters' space, evaluating the
+    algorithm to investigate some random sampled "points" in the hyperparameters' space, evaluating the
     performances for each one of this points and finally selecting the best combinations of parameters based
     on the diffent metrics like \textit{generalization error}, \textit{accuracy}, \textit{precision},
     \textit{recall} and \textit{f1-score}.
@@ -316,7 +316,7 @@ for each one of the datasets, we collected the data describing the results.
         employed a \textit{validation schema} consisting in an application of the \textit{random grid search}
         algorithm in conjunction with the \textit{k-fold cross validation} algorithm. As we've said before,
         we've chosen a standard value of $3$ for algorithm's $k$ parameter. In order to come up with final
-        ranges for model's hyper-parameters we've performed some preliminary tests on the dataset, as for the
+        ranges for model's hyperparameters we've performed some preliminary tests on the dataset, as for the
         MONKS dataset.
 
         % \begin{comment}
@@ -332,13 +332,16 @@ The validation schema for the Cup dataset it is summarized by the following step
 \item The original training dataset has been splitted randomly in a \textit{design set}, used for the model selection phase, and an internal \textit{test set} used only for the final models assessment.
   We have chosen a small $5\%$ sample size percentage for the test set (50 samples), because the main focus of the analysis is to perform a good model selection. %%The application of more complex validation methods such as double cross validation was beyond the available time and computing resources.
 \item Preliminary 'babysitting'. The design set has been splitted into training and validation sets, with $70\%$ and $30\%$ percentages, in order to initially explore the behaviour of the neural network on the cup dataset, and to identify good parameter ranges. We tried to achieve overtraining by varying the learning rate, the number of units and momentum without using regularization approaches. We have chosen to use the \textit{relu} activation function for the hidden layer, which is faster respect to the sigmoid, and more suitable for a regression task REF?.
-  We have observed that the learning time to achieve overtraining for a wide range of different number of units requires at least 2000 epochs. We fixed the maximum amount of learning time to 3000 epochs.
+  We have observed that the learning time needed to achieve overtraining for a wide range of different number of units requires at least 2000 epochs. We fixed the maximum amount of learning time to 3000 epochs.
 This learning time is quite expensive for our computing resources, so we decided to use a \textit{batch} gradient descent approach.
 
 \item Early Stopping testing.
   The 'batch' approach allows to obtain smoother learning curves respect to minibatch/online and permits to apply easily an early stopping technique. We tested two approaches from \cite{early_stopping}.
   The $GL_{\epsilon}$ approach stops the learning process when the generalization loss exceed a defined threshold $\epsilon$, given as a percentage with respect to the minimum current value of the loss. The $PQ_{\epsilon}$ approach is similar, but take into account also the progress of the training error.
-  For different hyperparameters configurations we have computed the ratio between the MEE error obtained with the two early stopping criteria and the minimum validation error of the overtrained learning curve, reported in Fig. \ref{fig:early_stop}. The early stopping methods take action only after a minimum number of epochs equal to 500, in order to avoid initial oscillation of the learning curves, and we fixed the threshold $\epsilon=1\%$. An example of early stopping computation is represented in Fig. \ref{fig:learning_early}. The results shows that the two methods are quite reliable, we opted to use the $PQ_{1\%}$ method, which in general is more robust \cite{early_stopping}.
+  For different hyperparameters configurations we have computed the ratio between the MEE error obtained with the two early stopping criteria and the minimum validation error of the overtrained learning curve, reported in Fig. \ref{fig:early_stop}. The early stopping methods take action only after a minimum number of epochs equal to 500, in order to avoid initial oscillation of the learning curves, and we fixed the threshold $\epsilon=1\%$. An example of early stopping computation is represented in Fig. \ref{fig:learning_early}. The Fig. \ref{fig:early_stop, fig:early_stop_point} shows that the $GL_{\epsilon}$ method is more reliable, because it gives stopping points that follows the validation minimum position, with MEE values closer to the minimum.
+
+
+  The results shows that the two methods are quite reliable, we opted to use the $GL_{1\%}$ method, which in general is more robust \cite{early_stopping}.
 
   \begin{figure}[htbp]
     \centering
@@ -347,9 +350,17 @@ This learning time is quite expensive for our computing resources, so we decided
     \label{fig:early_stop}
   \end{figure}
 
+  \begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.90\textwidth]{img/early_stop_point.pdf}
+    \caption{Difference between the epochs stopping point and the minimum of the validation curve.}
+    \label{fig:early_stop_point}
+  \end{figure}
+  
+  
     \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.90\textwidth]{img/learning_early_2.pdf}
+    \includegraphics[width=0.90\textwidth]{img/learning_early_0.pdf}
     \caption{ Early stopping example. The vertical lines represent the early stopping points computed with $PQ_{1\%}$ and $GL_{1\%}$ methods and the point of minimum MSE on the validation curve.}
 
     \label{fig:learning_early}
@@ -357,7 +368,7 @@ This learning time is quite expensive for our computing resources, so we decided
 
 
 
-\item Wide grid search
+\item Wide grid search. The main focus of this phase is to find a restricted range for the number of units in the hidden layer, which is the prominent hyperparameter regulating the model complexity. 
 
 
 \item Finer grid search
@@ -370,11 +381,11 @@ This learning time is quite expensive for our computing resources, so we decided
   
 
 \end{enumerate}
-        \begin{table}[hbtp]
+        \begin{table}[htbp]
             \centering
             \begin{tabular}{ccc }
               \toprule
-                Hyper-parameter & Wide Grid & Finer Grid\\
+              Hyperparameter & Wide Grid & Finer Grid\\
                 \midrule
                 $\eta$ & $\left [ 0.08, 0.02 \right ]$ & -\\
 
@@ -387,7 +398,7 @@ This learning time is quite expensive for our computing resources, so we decided
                 hidden sizes & $\left [ 50, 2500 \right ]$ & -\\
                 \midrule
             \end{tabular}
-            \caption{Final hyper-parameters' ranges for the random grid search algorithm.}
+            \caption{Hyperparameters ranges for the random grid search algorithm.}
             \label{tab:hyper_ranges}
           \end{table}
 

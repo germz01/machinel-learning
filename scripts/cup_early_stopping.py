@@ -85,11 +85,11 @@ imp.reload(NN)
 topologies = [int((3./2)**i) for i in range(8, 20)]
 topologies.reverse()
 
-topologies = [500, 1000]
+topologies = np.array(np.random.uniform(10, 100, 20), dtype=int)
+topologies
 
 # topologies = [50]
-ntrials = 1
-
+ntrials = 2
 
 import matplotlib.pyplot as plt
 imp.reload(u)
@@ -98,7 +98,7 @@ results = []
 i=0
 for hidden in tqdm(topologies):
     for trial in tqdm(range(ntrials)):
-        eta = np.random.uniform(0.007, 0.0011)
+        eta = np.random.uniform(0.004, 0.02)
 
         nn = NN.NeuralNetwork(
             X_training, y_training,
@@ -158,8 +158,7 @@ for hidden in tqdm(topologies):
 
 
 df_early = pd.DataFrame(results)
-# df_early.to_csv('../data/CUP/results/early_stop/df_early_stop.csv')
+df_early.to_csv('../data/CUP/results/early_stop/df_early_stop.csv')
 
 # a = pd.read_csv('../data/CUP/results/early_stop/df_early_stop.csv')
-
 

@@ -40,8 +40,11 @@ early.describe()
 
 early.columns
 plt.ion()
+plt.close()
 early.describe()[['MEE_min', 'MEE_PQ', 'MEE_GL']]
 plt.scatter(x=early['MEE_min'], y=early['MEE_GL'])
+plt.scatter(x=early['MEE_min'], y=early['MEE_PQ'])
+
 plt.show()
 
 plt.close()
@@ -50,19 +53,35 @@ plt.scatter(x=early['stop_min'], y=early['stop_PQ'], label='PQ')
 plt.xlabel('Minimum MEE epochs')
 plt.ylabel('Early stopping epochs')
 
-plt.close()
 
+plt.close()
 sns.lineplot(x=early['hidden_sizes'], y=early['stop_GL']-early['stop_min'], label='GL', ci=None)
 sns.lineplot(x=early['hidden_sizes'], y=early['stop_PQ']-early['stop_min'], label='GL', ci=None)
 
+plt.close()
 
-plt.scatter(x=early['hidden_sizes'], y=early['stop_GL']-early['stop_min'], label='GL', marker='s')
-plt.scatter(x=early['hidden_sizes'], y=early['stop_PQ']-early['stop_min'], label='PQ')
+marker_size=70
+plt.scatter(x=early['hidden_sizes'], y=early['stop_PQ']-early['stop_min'], label='PQ', s=marker_size)
+plt.scatter(x=early['hidden_sizes'], y=early['stop_GL']-early['stop_min'], label='GL', marker='s', s=marker_size)
 plt.legend()
 plt.axhline(0)
 #plt.axvline(100)
 plt.grid()
-# plt.ylim((-1000,1000))
+plt.xlim((0,100))
+plt.ylim((-1500,1000))
+
+
+plt.xlabel('Number of hidden units')
+plt.ylabel(' Early Stopping point - VL Minimum')
+plt.tight_layout()
+plt.grid()
+plt.savefig('../report/img/early_stop_point.pdf')
+
+
+
+plt.close()
+plt.scatter(x=early['hidden_sizes'], y=early['MEE_min'])
+
 
 ###########################################################
 '''
@@ -76,9 +95,9 @@ early['ratio_GL'] = early['MEE_GL']/early['MEE_min']
 
 
 early_filtered = early.query('ratio_PQ<1.04')
+early_filtered = early
 
 plt.close()
-marker_size=70
 plt.figure(figsize=(7,5))
 plt.scatter('hidden_sizes', y='ratio_PQ',
             data=early_filtered, label='PQ', s=marker_size)
@@ -90,5 +109,4 @@ plt.legend()
 plt.grid()
 plt.axhline(1)
 plt.tight_layout()
-
 plt.savefig('../report/img/early_stop.pdf')
