@@ -331,17 +331,13 @@ The validation schema for the Cup dataset it is summarized by the following step
 \begin{enumerate}
 \item The original training dataset has been splitted randomly in a \textit{design set}, used for the model selection phase, and an internal \textit{test set} used only for the final models assessment.
   We have chosen a small $5\%$ sample size percentage for the test set (50 samples), because the main focus of the analysis is to perform a good model selection. %%The application of more complex validation methods such as double cross validation was beyond the available time and computing resources.
-\item Preliminary 'babysitting'. The design set has been splitted into training and validation sets, with $70\%$ and $30\%$ percentages, in order to initially explore the behaviour of the neural network on the cup dataset, and to identify good parameter ranges. We tried to achieve overtraining by varying the learning rate, the number of units and momentum without using regularization approaches. We have chosen to use the \textit{relu} activation function for the hidden layer, which is faster respect to the sigmoid, and more suitable for a regression task REF?.
-  We have observed that the learning time needed to achieve overtraining for a wide range of different number of units requires at least 2000 epochs. We fixed the maximum amount of learning time to 3000 epochs.
-This learning time is quite expensive for our computing resources, so we decided to use a \textit{batch} gradient descent approach.
+\item Preliminary 'babysitting'. The design set has been splitted into training and validation sets, with $70\%$ and $30\%$ percentages, in order to initially explore the behaviour of the neural network on the cup dataset, and to identify good parameter ranges. We tried to achieve overtraining by increasing the number of units and adjusting the learning rate and momentum, without using regularization approaches. We have chosen to use the \textit{relu} activation function for the hidden layer, which is faster respect to the sigmoid, and more suitable for a regression task.
+  We have observed that the learning time needed to achieve overtrainingwith the \textit{batch} gradient descent approach, for a wide range of different number of units, requires at least 2000 epochs. We fixed the maximum amount of learning time to 3000 epochs.
 
 \item Early Stopping testing.
   The 'batch' approach allows to obtain smoother learning curves respect to minibatch/online and permits to apply easily an early stopping technique. We tested two approaches from \cite{early_stopping}.
   The $GL_{\epsilon}$ approach stops the learning process when the generalization loss exceed a defined threshold $\epsilon$, given as a percentage with respect to the minimum current value of the loss. The $PQ_{\epsilon}$ approach is similar, but take into account also the progress of the training error.
-  For different hyperparameters configurations we have computed the ratio between the MEE error obtained with the two early stopping criteria and the minimum validation error of the overtrained learning curve, reported in Fig. \ref{fig:early_stop}. The early stopping methods take action only after a minimum number of epochs equal to 500, in order to avoid initial oscillation of the learning curves, and we fixed the threshold $\epsilon=1\%$. An example of early stopping computation is represented in Fig. \ref{fig:learning_early}. The Fig. \ref{fig:early_stop, fig:early_stop_point} shows that the $GL_{\epsilon}$ method is more reliable, because it gives stopping points that follows the validation minimum position, with MEE values closer to the minimum.
-
-
-  The results shows that the two methods are quite reliable, we opted to use the $GL_{1\%}$ method, which in general is more robust \cite{early_stopping}.
+  For different hyperparameters configurations we have computed the ratio between the MEE error obtained with the two early stopping criteria,using a threshold fixed to $\epsilon=1\%$, and the minimum validation error of the overtrained learning curve, reported in Fig. \ref{fig:early_stop}. The early stopping methods take action only after a minimum number of epochs, fixed to 500, in order to avoid initial oscillation of the learning curves. An example of early stopping computation is represented in Fig. \ref{fig:learning_early}. The Figs. \ref{fig:early_stop}, \ref{fig:early_stop_point} show that the $GL_{\epsilon=1\%}$ method is more reliable, because it computes stopping points at positions located after the validation minimum, and gives MEE values closer to the minimum respect to $PQ$.
 
   \begin{figure}[htbp]
     \centering
@@ -368,44 +364,71 @@ This learning time is quite expensive for our computing resources, so we decided
 
 
 
-\item Wide grid search. The main focus of this phase is to find a restricted range for the number of units in the hidden layer, which is the prominent hyperparameter regulating the model complexity. 
+\item Initial grid search. The main focus of this phase is to find a restricted range for the number of units in the hidden layer, which is the prominent hyperparameter regulating the model complexity. We applied the search on a random grid with the hyperparameters reported in Fig \ref{tab:hyper_ranges} using a 5-fold cross validation. In this phase we haven't used a regularization penalization, but we used the $PQ_{1\%}$ early stopping criteria. We observed that for a number of hidden units less than 10 the MEE are high. For each hyperparameter combination we computed the mean and the standard deviation over the 5 folds, represented in Fig. \ref{fig:initial-grid}. The average error decreases fast over the first 25 hidden units, and at the same time its standard deviation increases. The two quantities remains quite stable after 25 units.
+
+  \begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1.0\textwidth]{img/initial_grid.pdf}
+\caption{Initial grid search results. On the left the average MEE for each hyperparameter combination over the 5 folds. On the right the MEE standard deviation.}
+    \label{fig:initial-grid}
+  \end{figure}
 
 
-\item Finer grid search
+\item Finer grid search. Considering the bias-variance trade off dilemma, we restricted a finer research to an interval for hidden units between 15 and 55, the zone where the average error is starting stabilizing and the variance is not yet at its maximum, as shown in Fig. \ref{fig:initial-grid}. Furthermore, instead of using the early stopping method we added a $l2$ regularization in the range reported in Tab. \ref{tab:hyper_ranges}. We fixed the maximum number of epochs looking at the stopping epochs of the initial grid, taking as value 2000 epochs, sufficients to include all the best results of the initial grid.
 
-
-\item Final model selection
+\item Final model selection. In Tab. \ref{tab:final-models} are reported the three best model, chosen by considering the minimum average MEE over the five fold, for the finer grid. 
 
 
 \item Model assessment  
   
 
 \end{enumerate}
-        \begin{table}[htbp]
-            \centering
-            \begin{tabular}{ccc }
-              \toprule
-              Hyperparameter & Wide Grid & Finer Grid\\
-                \midrule
-                $\eta$ & $\left [ 0.08, 0.02 \right ]$ & -\\
 
-                $\alpha$ & $0.9$ & - \\
+\begin{table}[htbp]
+  \centering
+  \begin{tabular}{ccc }
+    \toprule
+    Hyperparameter & Initial Grid & Finer Grid\\
+    \midrule
+    $\eta$ & $\left [ 0.004, 0.02 \right ]$ & $\left[0.004, 0.02 \right]$\\
+    
+    $\alpha$ & $0.9$ & $0.9$ \\
 
-                $\lambda$ & $0.0$ & -\\
+    $\lambda$ & $0.0$ & $[0.0003-0.003]$ \\
 
-                $\epsilon$ & $1.0\,\%$ & -\\
+    $\epsilon$ & $1.0\,\%$ & -\\
 
-                hidden sizes & $\left [ 50, 2500 \right ]$ & -\\
-                \midrule
-            \end{tabular}
-            \caption{Hyperparameters ranges for the random grid search algorithm.}
-            \label{tab:hyper_ranges}
-          \end{table}
-
-
-
+    hidden sizes & $\left [ 2, 100 \right ]$ &  $\left [ 15, 55 \right ]$\\
+    max epochs & $3000$  & $2000$ \\
+    \midrule
+  \end{tabular}
+  \caption{Hyperparameters ranges for the random grid search algorithm.}
+  \label{tab:hyper_ranges}
+\end{table}
 
 
+\begin{table}[htbp]
+  \centering
+\begin{tabular}{lrrrl}
+\toprule
+{} &  $MEE_{TS}$ &  $MEE_{TR}$ &    $MEE_{VL}$ & Hyperparameters\\
+\midrule
+Model 1 &  1.146941 &     1.110408 &  1.208584 & $\eta = 0.018\, units=20\, \lambda = 0.0014$\\
+Model 2 &  1.084561 &     1.062624 &  1.201784 &$\eta = 0.020\, units=43\, \lambda = 0.0018$\\
+Model 3 &  1.097758 &     1.083953 &  1.215992 & $\eta = 0.019\, units=36\, \lambda = 0.0020$\\
+\bottomrule
+\end{tabular}
+\caption{ Best 3 models.}
+  \label{tab:final-models}
+\end{table}
+
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=1.0\textwidth]{img/final_model.pdf}
+\caption{Model 2, selected for the Cup}
+\label{fig:initial-grid}
+  \end{figure}
 
 
     % subsection cup_results (end)
