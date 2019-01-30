@@ -57,7 +57,7 @@ imp.reload(NN)
 np.random.shuffle(design_set)
 
 # splitting training/validation
-split_percentage = 0.7
+split_percentage = 0.66
 split = int(design_set.shape[0]*split_percentage)
 
 training_set = design_set[:split, :]
@@ -78,22 +78,23 @@ validation_set.shape
 X_training.shape
 y_training.shape
 
+
 # babysitting
 imp.reload(NN)
 nn = NN.NeuralNetwork(
     X_training, y_training,
+    # eta=0.004, buono
     eta=0.02,
-    # eta=0.008,
     # eta=0.00005,
-    #eta=0.00002,
-    hidden_sizes=[200],
-    alpha=0.90,
-    reg_method='l2', reg_lambda=0.000,
-    epochs=3000,
-    batch_size='batch',
+    # eta=0.00002,
+    hidden_sizes=[40],
+    alpha=0.9,
+    reg_method='l2', reg_lambda=0.002,
+    epochs=2000,
+    batch_size='batch', #'batch',
     activation='relu',
     task='regression',
-    early_stop='testing', # 'testing',  # 'testing',
+    early_stop=None,  # '', # 'testing',  # 'testing',
     epsilon=1,
     early_stop_min_epochs=500,
     w_method='DL',
@@ -101,19 +102,15 @@ nn = NN.NeuralNetwork(
     # w_method='uniform',
     # w_par=1./17
 )
-# nn.train(X_training, y_training, X_validation, y_validation)
+nn.train(X_training, y_training, X_validation, y_validation)
 
-'''
+
 y_final = nn.mee_per_epochs_va[-1]
 y_final
 y_min = np.min(nn.mee_per_epochs_va)
 y_min
 
 y_final/y_min
-
-nn.stop_GL
-nn.stop_PQ
-# u.plot_learning_curve(nn, fname='../images/learning_curve.pdf')
 
 import matplotlib.pyplot as plt
 imp.reload(u)
@@ -128,17 +125,13 @@ u.plot_learning_curve_info(
     task='validation',
     fname='../images/cup_learning_curve')
 
-nn.stop_GL
-nn.stop_PQ
-np.argmin(nn.error_per_epochs_va)
-
 y_min
 
 
 y_pred_test = nn.predict(X_test)
 metrics.mee(y_test, y_pred_test)
-'''
 
+'''
 
 ###########################################################
 # TOPOLOGY GRID
@@ -248,22 +241,23 @@ for hidden in topologies:
 
 grid_size = 200
 
-nfolds = 3
+nfolds = 5
 ntrials = 1
 
 # eta=0.0005,
 # eta=0.00002,
 
 param_ranges = {
-    'eta': (0.008, 0.02),
-    'hidden_sizes': [(50, 2500)],
+    'eta': (0.004, 0.02),
+    'hidden_sizes': [(2, 100)],
     'alpha': 0.90,
-    'reg_method': 'l2', 'reg_lambda': 0.0,
-    'epochs': 3000,
+    'reg_method': 'l2',
+    'reg_lambda': 0.00,
+    'epochs': 2000,
     'batch_size': 'batch',
     'activation': 'relu',
     'task': 'regression',
-    'early_stop': 'PQ',
+    'early_stop': 'GL',
     'early_stop_min_epochs' : 500,
     'epsilon': 1,
     'w_method': 'DL',
@@ -286,7 +280,7 @@ experiment_params = {
 # EXPERIMENT GRID SEARCH
 
 # controllo nomi files
-fpath = '../data/CUP/results/exp5/'
+fpath = '../data/CUP/results/grid1/'
 
 check_files = True
 experiment = 1

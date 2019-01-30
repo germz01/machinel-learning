@@ -83,18 +83,22 @@ y_training.shape
 imp.reload(NN)
 
 topologies = [int((3./2)**i) for i in range(8, 20)]
-topologies
 topologies.reverse()
+
+topologies = np.array(np.random.uniform(10, 100, 20), dtype=int)
+topologies
+
+# topologies = [50]
+ntrials = 2
 
 import matplotlib.pyplot as plt
 imp.reload(u)
 
-ntrials = 2
 results = []
 i=0
 for hidden in tqdm(topologies):
     for trial in tqdm(range(ntrials)):
-        eta = np.random.uniform(0.007, 0.0011)
+        eta = np.random.uniform(0.004, 0.02)
 
         nn = NN.NeuralNetwork(
             X_training, y_training,
@@ -110,7 +114,7 @@ for hidden in tqdm(topologies):
             task='regression',
             early_stop='testing',  # 'testing',
             epsilon=1,
-            early_stop_min_epochs=300,
+            early_stop_min_epochs=500,
             w_method='DL',
             w_par=6,
             # w_method='uniform',
@@ -122,15 +126,17 @@ for hidden in tqdm(topologies):
         epochs_plot_end = len(nn.error_per_epochs)
         u.plot_learning_curve_info(
             nn.error_per_epochs[epochs_plot_start:epochs_plot_end],
-            nn.mee_per_epochs_va[epochs_plot_start:epochs_plot_end],
+            nn.error_per_epochs_va[epochs_plot_start:epochs_plot_end],
             nn.get_params(),
             accuracy=False,
             task='validation',
+            title='Early stopping comparison',
             fname='../data/CUP/results/early_stop/img/learning_early_{}'.format(i),
             MEE_TR=nn.mee_per_epochs[-1],
             MEE_VL=nn.mee_per_epochs_va[-1],
             stop_GL=nn.stop_GL,
-            stop_PQ=nn.stop_PQ
+            stop_PQ=nn.stop_PQ,
+            figsize=(11, 7)
         )
 
         i += 1
@@ -155,5 +161,4 @@ df_early = pd.DataFrame(results)
 df_early.to_csv('../data/CUP/results/early_stop/df_early_stop.csv')
 
 # a = pd.read_csv('../data/CUP/results/early_stop/df_early_stop.csv')
-
 

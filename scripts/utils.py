@@ -216,8 +216,9 @@ def plot_learning_curve_info(
 
         if stop_GL is not None:
             plt.axvline(stop_GL, linestyle=':', label='GL early stop')
+            plt.axvline(np.argmin(error_per_epochs_va), linestyle='-', label='MSE VL min')
         if stop_PQ is not None:
-            plt.axvline(stop_PQ, linestyle=':', label='PQ early stop')
+            plt.axvline(stop_PQ, linestyle='-.', label='PQ early stop')
         if accuracy:
             plt.ylabel('Accuracy (%)')
         else:
