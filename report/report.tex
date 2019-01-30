@@ -352,8 +352,8 @@ The validation schema for the Cup dataset it is summarized by the following step
     \caption{Difference between the epochs stopping point and the minimum of the validation curve.}
     \label{fig:early_stop_point}
   \end{figure}
-  
-  
+
+
     \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.90\textwidth]{img/learning_early_0.pdf}
@@ -376,10 +376,10 @@ The validation schema for the Cup dataset it is summarized by the following step
 
 \item Finer grid search. Considering the bias-variance trade off dilemma, we restricted a finer grid search to an interval for hidden units between 15 and 55, the zone where the average error is starting stabilizing and the variance is not yet at its maximum, as shown in Fig. \ref{fig:initial-grid}. Furthermore, instead of using the early stopping method we added a $l2$ regularization in the range reported in Tab. \ref{tab:hyper_ranges}. We fixed the maximum number of epochs looking at the stopping epochs of the initial grid, taking as value 2000 epochs, sufficients to include all the best results of the initial grid.
 
-\item Final model selection. In Tab. \ref{tab:final-models} are reported the three best model, chosen by considering the minimum average MEE over the five fold, for the finer grid.  The final three models has been re-trained on the whole design set, and assessed on the internal test set, held out before the beginning of the analysis. The re-training has been repeated for ten trials, the average $MEE$ measure are reported in \ref{tab:final-models}, with also the computing time estimated during the final re-training on an \textit{Intel i5-7200U 2.5GhZ} CPU. 
+\item Final model selection. In Tab. \ref{tab:final-models} are reported the three best model, chosen by considering the minimum average MEE over the five fold, for the finer grid.  The final three models has been re-trained on the whole design set, and assessed on the internal test set, held out before the beginning of the analysis. The re-training has been repeated for ten trials, the average $MEE$ measure are reported in \ref{tab:final-models}, with also the computing time estimated during the final re-training on an \textit{Intel i5-7200U 2.5GhZ} CPU.
 
 \item Cup Model. The model choosen for the cup it is Model 2. We have chosen this model because at almost equal performance on the validation 5-fold sets it has higher flexibility with respect to the other two models.
-  
+
 
 \end{enumerate}
 
@@ -390,7 +390,7 @@ The validation schema for the Cup dataset it is summarized by the following step
     Hyperparameter & Initial Grid & Finer Grid\\
     \midrule
     $\eta$ & $\left [ 0.004, 0.02 \right ]$ & $\left[0.004, 0.02 \right]$\\
-    
+
     $\alpha$ & $0.9$ & $0.9$ \\
 
     $\lambda$ & $0.0$ & $[0.0003-0.003]$ \\
@@ -437,7 +437,7 @@ Model 3 &  1.098 &     1.084 &  1.216 & $\eta = 0.019\, units=36\, \lambda = 0.0
 \label{fig:initial-grid}
   \end{figure}
 
-  
+
 
     % subsection cup_results (end)
 
@@ -453,8 +453,7 @@ The test on the Monks dataset have permitted us to check the implementation of a
 
 The limited time and computing resources has pushed us to think more about reasonable choices or shortcuts to speed up the searching for a fine model selection for the Cup dataset, showing us how necessary is the integration between artificial and human intelligence.
 
-The results of the Cup dataset are in the file NOMEFILE,
-NOMEGRUPPO.
+The results of the Cup dataset are in the file carpricc_ML-CUP18-TS.csv, carpricc.
 
 
 
