@@ -374,12 +374,11 @@ The validation schema for the Cup dataset it is summarized by the following step
   \end{figure}
 
 
-\item Finer grid search. Considering the bias-variance trade off dilemma, we restricted a finer research to an interval for hidden units between 15 and 55, the zone where the average error is starting stabilizing and the variance is not yet at its maximum, as shown in Fig. \ref{fig:initial-grid}. Furthermore, instead of using the early stopping method we added a $l2$ regularization in the range reported in Tab. \ref{tab:hyper_ranges}. We fixed the maximum number of epochs looking at the stopping epochs of the initial grid, taking as value 2000 epochs, sufficients to include all the best results of the initial grid.
+\item Finer grid search. Considering the bias-variance trade off dilemma, we restricted a finer grid search to an interval for hidden units between 15 and 55, the zone where the average error is starting stabilizing and the variance is not yet at its maximum, as shown in Fig. \ref{fig:initial-grid}. Furthermore, instead of using the early stopping method we added a $l2$ regularization in the range reported in Tab. \ref{tab:hyper_ranges}. We fixed the maximum number of epochs looking at the stopping epochs of the initial grid, taking as value 2000 epochs, sufficients to include all the best results of the initial grid.
 
-\item Final model selection. In Tab. \ref{tab:final-models} are reported the three best model, chosen by considering the minimum average MEE over the five fold, for the finer grid. 
+\item Final model selection. In Tab. \ref{tab:final-models} are reported the three best model, chosen by considering the minimum average MEE over the five fold, for the finer grid.  The final three models has been re-trained on the whole design set, and assessed on the internal test set, held out before the beginning of the analysis. The re-training has been repeated for ten trials, the average $MEE$ measure are reported in \ref{tab:final-models}, with also the computing time estimated during the final re-training on an \textit{Intel i5-7200U 2.5GhZ} CPU. 
 
-
-\item Model assessment  
+\item Cup Model. The model choosen for the cup it is Model 2. We have chosen this model because at almost equal performance on the validation 5-fold sets it has higher flexibility with respect to the other two models.
   
 
 \end{enumerate}
@@ -409,27 +408,36 @@ The validation schema for the Cup dataset it is summarized by the following step
 
 \begin{table}[htbp]
   \centering
-\begin{tabular}{lrrrl}
+\begin{tabular}{lccclc}
 \toprule
-{} &  $MEE_{TS}$ &  $MEE_{TR}$ &    $MEE_{VL}$ & Hyperparameters\\
+{} &  $MEE_{TS}$ &  $MEE_{TR}$ &   $MEE_{VL}$ & Hyperparameters &Training Time (s)\\
 \midrule
-Model 1 &  1.146941 &     1.110408 &  1.208584 & $\eta = 0.018\, units=20\, \lambda = 0.0014$\\
-Model 2 &  1.084561 &     1.062624 &  1.201784 &$\eta = 0.020\, units=43\, \lambda = 0.0018$\\
-Model 3 &  1.097758 &     1.083953 &  1.215992 & $\eta = 0.019\, units=36\, \lambda = 0.0020$\\
+Model 1 &  1.145 &     1.110 &  1.208 & $\eta = 0.018\, units=20\, \lambda = 0.0014$ & 2.9\\
+\textbf{Model 2} &  1.085 &     1.062 &  1.202 &$\eta = 0.020\, units=43\, \lambda = 0.0018$ & 6.7 \\
+Model 3 &  1.098 &     1.084 &  1.216 & $\eta = 0.019\, units=36\, \lambda = 0.0020$& 5.9\\
 \bottomrule
 \end{tabular}
-\caption{ Best 3 models.}
+\caption{ Best 3 models, with average errors on training, validation and test set and computing time on a single retraining on the $95\%$ design set. All the three models use a momentum $\alpha=0.9$.}
   \label{tab:final-models}
 \end{table}
 
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=1.0\textwidth]{img/final_model.pdf}
-\caption{Model 2, selected for the Cup}
+  \includegraphics[width=1.0\textwidth]{img/final_model_validation.pdf}
+\caption{Model 2, selected for the cup, training and validation curve.}
 \label{fig:initial-grid}
   \end{figure}
 
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=1.0\textwidth]{img/final_model.pdf}
+\caption{Model 2, selected for the Cup, training and test curve.}
+\label{fig:initial-grid}
+  \end{figure}
+
+  
 
     % subsection cup_results (end)
 
@@ -440,6 +448,17 @@ Model 3 &  1.097758 &     1.083953 &  1.215992 & $\eta = 0.019\, units=36\, \lam
 
 \section{Conclusions} % (fold)
 \label{sec:conclusions}
+
+The test on the Monks dataset have permitted us to check the implementation of a simple artificial neural network, and to explore the effect of the hyperparameters on the learning curves.
+
+The limited time and computing resources has pushed us to think more about reasonable choices or shortcuts to speed up the searching for a fine model selection for the Cup dataset, showing us how necessary is the integration between artificial and human intelligence.
+
+The results of the Cup dataset are in the file NOMEFILE,
+NOMEGRUPPO.
+
+
+
+
 
 % section conclusions (end)
 
