@@ -1,5 +1,2 @@
-# machinel-learning
-
-## Papers
-* [Random Search for Hyper-Parameter Optimization](http://www.jmlr.org/papers/volume13/bergstra12a/bergstra12a.pdf)
-* [Dropout: A Simple Way to Prevent Neural Networks from Overfitting](http://jmlr.org/papers/volume15/srivastava14a.old/srivastava14a.pdf)
+# machine-learning
+This reporsitory contains the code for the type **A** project of the Machine Learning course at University of Pisa's Master's Degree in Computer Science.
